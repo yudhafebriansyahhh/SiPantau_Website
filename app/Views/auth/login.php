@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halaman Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="<?= base_url('assets/css/output.css') ?>" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Left Side - Form -->
+        <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+            <div class="mx-auto w-full max-w-sm lg:w-96 login-form">
+                <!-- Back Button -->
+                <div class="mb-8">
+                    <a href="#" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Back 
+                    </a>
+                </div>
+
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Login Mitra</h1>
+                    <p class="text-gray-600">Masukkan Sobat Id dan Password untuk Login!</p>
+                </div>
+
+
+                <!-- Divider -->
+                <div class="relative mb-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-gray-50 text-gray-500"></span>
+                    </div>
+                </div>
+
+                <!-- Login Form -->
+                <form class="space-y-6" action="<?= base_url('admin') ?>" method="GET">
+                    <?= csrf_field() ?>
+                    
+                    <div>
+                        <label for="sobatId" class="block text-sm font-medium text-gray-900 mb-2">
+                            Sobat Id<span class="text-red-500">*</span>
+                        </label>
+                        <input id="sobatId" name="sobatId" type="text" required 
+                               class="input-field w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                               placeholder="123456" value="<?= old('sobatId') ?>">
+                        <?php if (session('errors.sobatId')): ?>
+                            <p class="mt-1 text-sm text-red-600"><?= session('errors.sobatId') ?></p>
+                        <?php endif; ?>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-900 mb-2">
+                            Password<span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input id="password" name="password" type="password" required 
+                                   class="input-field w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 pr-10"
+                                   placeholder="Enter your password">
+                            <button type="button" onclick="togglePassword()" 
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <svg id="eye-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <?php if (session('errors.password')): ?>
+                            <p class="mt-1 text-sm text-red-600"><?= session('errors.password') ?></p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input id="remember" name="remember" type="checkbox" 
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="remember" class="ml-2 block text-sm text-gray-600">
+                                Keep me logged in
+                            </label>
+                        </div>
+                        <a href="<?= base_url('forgot-password') ?>" class="text-sm text-blue-600 hover:text-blue-500 font-medium">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <!-- Error Message -->
+                    <?php if (session('error')): ?>
+                        <div class="flash-message bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p class="text-sm text-red-600"><?= session('error') ?></p>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Success Message -->
+                    <?php if (session('success')): ?>
+                        <div class="flash-message bg-green-50 border border-green-200 rounded-lg p-3">
+                            <p class="text-sm text-green-600"><?= session('success') ?></p>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Sign In Button -->
+                    <button type="submit" 
+                            class="btn-primary w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        Login
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Right Side - Brand & Background -->
+        <div class="hidden lg:block relative w-0 flex-1 gradient-bg pattern-bg bg-blue-700">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center text-white brand-section">
+                    <div class="flex items-center justify-center mb-6">
+                        
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-3xl font-bold">SiPantau</h2>
+                    </div>
+                    <p class="text-lg text-white text-opacity-90 max-w-md">
+                        Sistem Pelaporan Kegiatan Lapangan BPS Provinsi Riau
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Decorative elements -->
+            <div class="decorative-box floating absolute top-10 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-lg"></div>
+            <div class="decorative-box floating absolute top-32 right-20 w-16 h-16 bg-white bg-opacity-10 rounded-lg"></div>
+            <div class="decorative-box floating absolute bottom-20 left-20 w-24 h-24 bg-white bg-opacity-10 rounded-lg"></div>
+            <div class="decorative-box floating absolute bottom-40 right-10 w-12 h-12 bg-white bg-opacity-10 rounded-lg"></div>
+        </div>
+    </div>
+
+    <script src="<?= base_url('assets/js/login.js') ?>"></script>
+</body>
+</html>
