@@ -275,3 +275,57 @@ textarea:focus {
   background-color: #3b82f6;
   color: white;
 }
+
+/* Progress Bar Animation */
+@layer utilities {
+  .progress-bar-animated {
+    transition: width 1s ease-out;
+  }
+}
+
+/* Responsive Table Adjustments */
+@media (max-width: 639px) {
+    /* Hide avatar on mobile untuk save space */
+    .mobile-hide-avatar {
+        display: none !important;
+    }
+    
+    /* Adjust table cell padding */
+    table td {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    
+    /* Make badges smaller on mobile */
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+    }
+}
+
+/* Chart Responsive Adjustments */
+@media (max-width: 639px) {
+    #kegiatanChart {
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+    
+    .apexcharts-xaxis-label,
+    .apexcharts-yaxis-label {
+        font-size: 9px !important;
+    }
+    
+    .apexcharts-legend {
+        padding: 0 !important;
+    }
+    
+    .apexcharts-legend-series {
+        margin: 2px 6px !important;
+    }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+    .apexcharts-xaxis-label {
+        font-size: 10px !important;
+    }
+}

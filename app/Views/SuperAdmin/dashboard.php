@@ -43,7 +43,6 @@
             <div>
                 <p class="text-sm text-gray-600 mb-1">Kegiatan Aktif</p>
                 <h3 class="text-3xl font-bold text-gray-900">45</h3>
-                
             </div>
             <div class="w-14 h-14 bg-orange-50 rounded-lg flex items-center justify-center">
                 <i class="fas fa-chart-line text-2xl text-[#fb8c00]"></i>
@@ -76,12 +75,12 @@
                 <p class="text-sm text-gray-600">Progres Kumulatif Kegiatan</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <select id="filterKegiatan" class="input-field w-auto text-sm" onchange="updateChart()">
+                <select id="filterKegiatan" class="input-field w-full sm:w-auto text-sm" onchange="updateChart()">
                     <option value="sunsenas">SUNSENAS 2025</option>
                     <option value="sakernas">SAKERNAS 2025</option>
                     <option value="susenas">SUSENAS 2025</option>
                 </select>
-                <select id="filterWilayah" class="input-field w-auto text-sm" onchange="updateChart()">
+                <select id="filterWilayah" class="input-field w-full sm:w-auto text-sm" onchange="updateChart()">
                     <option value="all">Semua Wilayah</option>
                     <option value="pekanbaru">Kota Pekanbaru</option>
                     <option value="dumai">Kota Dumai</option>
@@ -119,35 +118,81 @@
             </div>
         </div>
         
-        <div id="kegiatanChart"></div>
+        <!-- Chart Container -->
+        <div class="relative -mx-2 sm:mx-0">
+            <div id="kegiatanChart" class="w-full"></div>
+        </div>
     </div>
     
     <!-- Progress Kegiatan -->
     <div class="card">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">Progres Kegiatan Sedang Berjalan</h3>
         <div class="space-y-4">
-            <?php 
-            $kegiatanList = [
-                ['nama' => 'SUNSENAS 2025', 'progress' => 95, 'color' => 'blue'],
-                ['nama' => 'SAKERNAS 2025', 'progress' => 78, 'color' => 'green'],
-                ['nama' => 'SUSENAS 2025', 'progress' => 62, 'color' => 'yellow'],
-                ['nama' => 'SP2025', 'progress' => 45, 'color' => 'purple'],
-                ['nama' => 'VHTL 2025', 'progress' => 30, 'color' => 'red'],
-                ['nama' => 'SKDI 2025', 'progress' => 20, 'color' => 'indigo']
-            ];
-            
-            foreach($kegiatanList as $kegiatan): 
-            ?>
-            <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+            <!-- SUNSENAS 2025 -->
+            <div class="pb-4 border-b border-gray-100">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-900"><?= $kegiatan['nama'] ?></span>
-                    <span class="text-sm font-semibold text-<?= $kegiatan['color'] ?>-600"><?= $kegiatan['progress'] ?>%</span>
+                    <span class="text-sm font-medium text-gray-900">SUNSENAS 2025</span>
+                    <span class="text-sm font-semibold" style="color: #1e88e5;">95%</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-<?= $kegiatan['color'] ?>-600 h-2 rounded-full" style="width: <?= $kegiatan['progress'] ?>%"></div>
+                    <div class="h-2 rounded-full transition-all duration-500" style="width: 95%; background-color: #1e88e5;"></div>
                 </div>
             </div>
-            <?php endforeach; ?>
+
+            <!-- SAKERNAS 2025 -->
+            <div class="pb-4 border-b border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-900">SAKERNAS 2025</span>
+                    <span class="text-sm font-semibold" style="color: #43a047;">78%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-500" style="width: 78%; background-color: #43a047;"></div>
+                </div>
+            </div>
+
+            <!-- SUSENAS 2025 -->
+            <div class="pb-4 border-b border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-900">SUSENAS 2025</span>
+                    <span class="text-sm font-semibold" style="color: #fdd835;">62%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-500" style="width: 62%; background-color: #fdd835;"></div>
+                </div>
+            </div>
+
+            <!-- SP2025 -->
+            <div class="pb-4 border-b border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-900">SP2025</span>
+                    <span class="text-sm font-semibold" style="color: #8e24aa;">45%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-500" style="width: 45%; background-color: #8e24aa;"></div>
+                </div>
+            </div>
+
+            <!-- VHTL 2025 -->
+            <div class="pb-4 border-b border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-900">VHTL 2025</span>
+                    <span class="text-sm font-semibold" style="color: #e53935;">30%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-500" style="width: 30%; background-color: #e53935;"></div>
+                </div>
+            </div>
+
+            <!-- SKDI 2025 -->
+            <div class="pb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-900">SKDI 2025</span>
+                    <span class="text-sm font-semibold" style="color: #5e35b1;">20%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-500" style="width: 20%; background-color: #5e35b1;"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -160,20 +205,20 @@
             <p class="text-sm text-gray-600 mt-1">Monitoring progres petugas lapangan</p>
         </div>
         <div class="flex flex-wrap gap-2 mt-4 sm:mt-0">
-            <select class="input-field w-auto text-sm">
+            <select class="input-field w-full sm:w-auto text-sm">
                 <option>Month</option>
                 <option>January</option>
                 <option>February</option>
             </select>
-            <select class="input-field w-auto text-sm">
+            <select class="input-field w-full sm:w-auto text-sm">
                 <option>Kegiatan</option>
                 <option>SUNSENAS 2025</option>
             </select>
-            <select class="input-field w-auto text-sm">
+            <select class="input-field w-full sm:w-auto text-sm">
                 <option>Kabupaten/Kota</option>
                 <option>Pekanbaru</option>
             </select>
-            <select class="input-field w-auto text-sm">
+            <select class="input-field w-full sm:w-auto text-sm">
                 <option>All</option>
                 <option>Active</option>
             </select>
@@ -200,7 +245,7 @@
                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                     <td class="px-4 py-4">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 bg-blue-600 rounded-full items-center justify-center mr-3 hidden md:flex mobile-hide-avatar">
+                            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
                                 <span class="text-white text-sm font-medium">GM</span>
                             </div>
                             <div>
@@ -216,10 +261,10 @@
                         <div class="flex items-center">
                             <div class="flex-1 mr-3">
                                 <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 50%"></div>
+                                    <div class="bg-yellow-500 h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
                                 </div>
                             </div>
-                            <span class="text-sm font-semibold text-gray-900">50</span>
+                            <span class="text-sm font-semibold text-gray-900 min-w-[2rem] text-right">50</span>
                         </div>
                     </td>
                 </tr>
@@ -227,7 +272,7 @@
                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                     <td class="px-4 py-4">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 bg-green-600 rounded-full items-center justify-center mr-3 hidden md:flex mobile-hide-avatar">
+                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center mr-3">
                                 <span class="text-white text-sm font-medium">MS</span>
                             </div>
                             <div>
@@ -243,10 +288,10 @@
                         <div class="flex items-center">
                             <div class="flex-1 mr-3">
                                 <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-600 h-2 rounded-full" style="width: 75%"></div>
+                                    <div class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 75%"></div>
                                 </div>
                             </div>
-                            <span class="text-sm font-semibold text-gray-900">75</span>
+                            <span class="text-sm font-semibold text-gray-900 min-w-[2rem] text-right">75</span>
                         </div>
                     </td>
                 </tr>
@@ -254,7 +299,7 @@
                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                     <td class="px-4 py-4">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 bg-purple-600 rounded-full items-center justify-center mr-3 hidden md:flex mobile-hide-avatar">
+                            <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center mr-3">
                                 <span class="text-white text-sm font-medium">AW</span>
                             </div>
                             <div>
@@ -270,10 +315,10 @@
                         <div class="flex items-center">
                             <div class="flex-1 mr-3">
                                 <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                                    <div class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
                                 </div>
                             </div>
-                            <span class="text-sm font-semibold text-gray-900">100</span>
+                            <span class="text-sm font-semibold text-gray-900 min-w-[2rem] text-right">100</span>
                         </div>
                     </td>
                 </tr>
@@ -292,11 +337,10 @@
 const kegiatanConfig = {
     sunsenas: {
         nama: 'SUNSENAS 2025',
-        targetTotal: 1000,        // Target total provinsi
-        targetAwalPersen: 5,      // Target awal (%)
-        tanggalMulai: 2,          // Tanggal mulai (2 September)
-        tanggalSelesai: 25,       // Tanggal target 100% (25 September)
-        // Pembagian target per wilayah
+        targetTotal: 1000,
+        targetAwalPersen: 5,
+        tanggalMulai: 2,
+        tanggalSelesai: 25,
         wilayah: {
             all: 1000,
             pekanbaru: 120,
@@ -371,28 +415,23 @@ function generateDynamicSCurve(config, wilayah) {
     const curve = [];
     const labels = [];
     
-    // Generate untuk 30 hari September
+    // Generate labels tanpa "Sep"
     for (let day = 1; day <= 30; day++) {
-        labels.push(`${day} Sep`);
+        labels.push(day);
         
         if (day < tanggalMulai) {
-            // Sebelum mulai: 0
             curve.push(0);
         } else if (day >= tanggalSelesai) {
-            // Setelah target: 100%
             curve.push(targetTotal);
         } else {
-            // Di antara: gunakan kurva S logistic
             const totalDays = tanggalSelesai - tanggalMulai;
             const currentDay = day - tanggalMulai;
             const progress = currentDay / totalDays;
             
-            // Sigmoid function untuk kurva S
-            const k = 8; // Kecuraman kurva
-            const x0 = 0.5; // Titik tengah
+            const k = 8;
+            const x0 = 0.5;
             const sigmoid = 1 / (1 + Math.exp(-k * (progress - x0)));
             
-            // Scale dari targetAwal ke targetTotal
             const value = targetAwal + (targetTotal - targetAwal) * sigmoid;
             curve.push(Math.round(value));
         }
@@ -411,26 +450,20 @@ function generateAktualData(targetCurve, config, wilayah) {
     
     for (let day = 1; day <= 30; day++) {
         if (day < tanggalMulai) {
-            // Sebelum mulai
             aktual.push(0);
         } else {
-            // Simulasi laporan harian dengan kemungkinan stagnan
             const targetHariIni = targetCurve[day - 1];
             const targetKemarin = day > 1 ? targetCurve[day - 2] : 0;
             const targetIncrement = targetHariIni - targetKemarin;
             
-            // 70% kemungkinan ada laporan, 30% stagnan
             const adaLaporan = Math.random() > 0.3;
             
             if (adaLaporan && targetIncrement > 0) {
-                // Ada laporan: 85-98% dari target increment
                 const achievementRate = 0.85 + Math.random() * 0.13;
                 const increment = Math.round(targetIncrement * achievementRate);
                 lastValue = lastValue + increment;
             }
-            // Else: stagnan (lastValue tidak berubah)
             
-            // Pastikan tidak melebihi target
             lastValue = Math.min(lastValue, targetHariIni);
             aktual.push(lastValue);
         }
@@ -477,7 +510,6 @@ function updateStats(targetData, aktualData) {
     document.getElementById('statPersentase').textContent = persentase + '%';
     document.getElementById('statSelisih').textContent = (selisih >= 0 ? '+' : '') + selisih.toLocaleString('id-ID');
     
-    // Update color based on achievement
     const persentaseEl = document.getElementById('statPersentase');
     const selisihEl = document.getElementById('statSelisih');
     
@@ -496,7 +528,9 @@ function updateStats(targetData, aktualData) {
     }
 }
 
-// Update Chart
+// ============================================
+// UPDATE CHART WITH RESPONSIVE SETTINGS
+// ============================================
 function updateChart() {
     const kegiatan = document.getElementById('filterKegiatan').value;
     const wilayah = document.getElementById('filterWilayah').value;
@@ -504,8 +538,10 @@ function updateChart() {
     const data = dataKegiatan[kegiatan][wilayah];
     const config = kegiatanConfig[kegiatan];
     
-    // Update stats
     updateStats(data.target, data.aktual);
+    
+    const isMobile = window.innerWidth < 640;
+    const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
     
     const options = {
         series: [
@@ -521,11 +557,11 @@ function updateChart() {
             }
         ],
         chart: {
-            height: 380,
+            height: isMobile ? 300 : 380,
             type: 'area',
             fontFamily: 'Poppins, sans-serif',
             toolbar: {
-                show: true,
+                show: !isMobile,
                 tools: {
                     download: true,
                     selection: false,
@@ -545,7 +581,7 @@ function updateChart() {
                 }
             },
             dropShadow: {
-                enabled: true,
+                enabled: !isMobile,
                 top: 2,
                 left: 0,
                 blur: 4,
@@ -558,7 +594,7 @@ function updateChart() {
             enabled: false
         },
         stroke: {
-            width: [3, 3],
+            width: isMobile ? [2, 2] : [3, 3],
             curve: 'smooth',
             dashArray: [0, 5]
         },
@@ -581,40 +617,91 @@ function updateChart() {
             strokeColors: '#fff',
             strokeWidth: 2,
             hover: {
-                size: 7,
+                size: isMobile ? 5 : 7,
                 sizeOffset: 3
             }
         },
         xaxis: {
             categories: data.labels,
             title: {
-                text: 'Tanggal (September 2025)',
+                text: 'Periode September 2025',
                 style: {
-                    fontSize: '12px',
-                    fontWeight: 600
+                    fontSize: isMobile ? '11px' : '12px',
+                    fontWeight: 600,
+                    color: '#4b5563'
                 }
             },
             labels: {
-                rotate: -45,
+                rotate: 0,
                 rotateAlways: false,
+                hideOverlappingLabels: true,
+                trim: false,
                 style: {
-                    fontSize: '11px'
+                    fontSize: isMobile ? '10px' : '11px',
+                    colors: '#6b7280'
+                },
+                formatter: function(value) {
+                    // value adalah angka tanggal (1-30)
+                    if (isMobile) {
+                        // Mobile: tampilkan setiap 5 hari
+                        if (value === 1 || value === 5 || value === 10 || value === 15 || value === 20 || value === 25 || value === 30) {
+                            return value;
+                        }
+                        return '';
+                    } else if (isTablet) {
+                        // Tablet: tampilkan setiap 3 hari
+                        if (value % 3 === 0 || value === 1) {
+                            return value;
+                        }
+                        return '';
+                    } else {
+                        // Desktop: tampilkan semua tanggal
+                        return value;
+                    }
                 }
+            },
+            axisBorder: {
+                show: true,
+                color: '#e5e7eb',
+                height: 1
+            },
+            axisTicks: {
+                show: !isMobile,
+                height: 4,
+                color: '#e5e7eb'
+            },
+            crosshairs: {
+                show: true,
+                stroke: {
+                    color: '#cbd5e0',
+                    width: 1,
+                    dashArray: 3
+                }
+            },
+            tooltip: {
+                enabled: false
             }
         },
         yaxis: {
             title: {
-                text: 'Jumlah Survei (Kumulatif)',
+                text: isMobile ? '' : 'Jumlah Survei (Kumulatif)',
                 style: {
                     fontSize: '12px',
                     fontWeight: 600
                 }
             },
             labels: {
+                style: {
+                    fontSize: isMobile ? '9px' : '11px'
+                },
                 formatter: function(value) {
+                    if (isMobile && value >= 1000) {
+                        return (value / 1000).toFixed(1) + 'k';
+                    }
                     return Math.round(value).toLocaleString('id-ID');
                 }
-            }
+            },
+            tickAmount: isMobile ? 4 : 6
         },
         tooltip: {
             shared: true,
@@ -629,17 +716,18 @@ function updateChart() {
                 const aktual = series[1][dataPointIndex];
                 const persentase = target > 0 ? ((aktual / target) * 100).toFixed(1) : 0;
                 const selisih = aktual - target;
+                const tanggal = data.labels[dataPointIndex];
                 
                 return `
-                    <div class="px-3 py-2 bg-gray-900 text-white rounded-lg shadow-lg">
-                        <div class="font-semibold mb-1">${data.labels[dataPointIndex]}</div>
-                        <div class="text-sm space-y-1">
+                    <div class="px-3 py-2 bg-gray-900 text-white rounded-lg shadow-lg" style="min-width: ${isMobile ? '200px' : '220px'}">
+                        <div class="font-semibold mb-1 text-${isMobile ? 'xs' : 'sm'}">${tanggal} September 2025</div>
+                        <div class="text-xs space-y-1">
                             <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 bg-[#1e88e5] rounded-full"></span>
+                                <span class="w-2 h-2 bg-[#1e88e5] rounded-full"></span>
                                 <span>Target: ${target.toLocaleString('id-ID')}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 bg-[#e53935] rounded-full"></span>
+                                <span class="w-2 h-2 bg-[#e53935] rounded-full"></span>
                                 <span>Aktual: ${aktual.toLocaleString('id-ID')}</span>
                             </div>
                             <div class="border-t border-gray-700 pt-1 mt-1">
@@ -652,17 +740,26 @@ function updateChart() {
             }
         },
         legend: {
-            position: 'top',
-            horizontalAlign: 'left',
+            position: isMobile ? 'bottom' : 'top',
+            horizontalAlign: isMobile ? 'center' : 'left',
+            fontSize: isMobile ? '11px' : '13px',
             markers: {
-                width: 12,
-                height: 12,
+                width: isMobile ? 10 : 12,
+                height: isMobile ? 10 : 12,
                 radius: 12
+            },
+            itemMargin: {
+                horizontal: isMobile ? 8 : 10,
+                vertical: isMobile ? 4 : 5
             }
         },
         grid: {
             borderColor: '#f3f4f6',
             strokeDashArray: 3,
+            padding: {
+                left: isMobile ? 0 : 10,
+                right: isMobile ? 0 : 10
+            },
             xaxis: {
                 lines: {
                     show: false
@@ -675,26 +772,44 @@ function updateChart() {
             }
         },
         annotations: {
-            xaxis: [
+            xaxis: isMobile ? [] : [
                 {
-                    x: `${config.tanggalMulai} Sep`,
+                    x: config.tanggalMulai,
                     borderColor: '#43a047',
+                    strokeDashArray: 0,
                     label: {
                         text: 'Mulai',
                         style: {
                             color: '#fff',
-                            background: '#43a047'
+                            background: '#43a047',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            padding: {
+                                left: 8,
+                                right: 8,
+                                top: 4,
+                                bottom: 4
+                            }
                         }
                     }
                 },
                 {
-                    x: `${config.tanggalSelesai} Sep`,
+                    x: config.tanggalSelesai,
                     borderColor: '#e53935',
+                    strokeDashArray: 0,
                     label: {
                         text: 'Target 100%',
                         style: {
                             color: '#fff',
-                            background: '#e53935'
+                            background: '#e53935',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            padding: {
+                                left: 8,
+                                right: 8,
+                                top: 4,
+                                bottom: 4
+                            }
                         }
                     }
                 }
@@ -702,19 +817,42 @@ function updateChart() {
         }
     };
     
-    // Destroy previous chart if exists
     if (chartInstance) {
         chartInstance.destroy();
     }
     
-    // Create new chart
     chartInstance = new ApexCharts(document.querySelector("#kegiatanChart"), options);
     chartInstance.render();
 }
 
-// Initialize chart on page load
+// ============================================
+// WINDOW RESIZE LISTENER
+// ============================================
+let resizeTimer;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+        updateChart();
+    }, 250);
+});
+
+// ============================================
+// INITIALIZE ON PAGE LOAD
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     updateChart();
+    
+    // Animate progress bars on load
+    setTimeout(function() {
+        const progressBars = document.querySelectorAll('.card .h-2.rounded-full[style*="width"]');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    }, 100);
 });
 </script>
 

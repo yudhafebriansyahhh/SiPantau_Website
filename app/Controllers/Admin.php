@@ -109,4 +109,38 @@ class Admin extends BaseController
         ];
         return view('SuperAdmin/MasterKegiatanDetail/show', $data);
     }
+
+    public function kelola_pengguna()
+    {
+        $data = [
+            'title' => 'Kelola Pengguna',
+            'active_menu' => 'kelola-pengguna'
+        ];
+        return view('SuperAdmin/KelolaPengguna/index', $data);
+    }
+    public function tambah_kelola_pengguna()
+    {
+        $data = [
+            'title' => 'Kelola Pengguna',
+            'active_menu' => 'kelola-pengguna'
+        ];
+        return view('SuperAdmin/KelolaPengguna/create', $data);
+    }
+    public function edit_kelola_pengguna()
+    {
+        $data = [
+            'title' => 'Kelola Pengguna',
+            'active_menu' => 'kelola-pengguna'
+        ];
+        return view('SuperAdmin/KelolaPengguna/edit', $data);
+    }
+
+    public function kelola_admin_prov()
+    {
+        $data = [
+            'title' => 'Kelola Admin Survey',
+            'active_menu' => 'kelola-admin-surveyprov'
+        ];
+        return view('SuperAdmin/KelolaAdminSurvey/index', $data);
+    }
 }
