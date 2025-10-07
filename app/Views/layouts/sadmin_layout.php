@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Dashboard' ?> - SiPantau</title>
-    <!-- Di <head> section admin_layout.php, tambahkan: -->
-    <link href="<?= base_url('assets/css/style.css') ?>" rel="stylesheet">
+    <title>SiPantau - <?= $title ?? 'Dashboard' ?></title>
+    <link rel="shortcut icon" type="image/png" href="<?= base_url('assets/gambar/LOGO_BPS.png') ?>">
+    
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <!-- Tailwind CSS -->
     <link href="<?= base_url('assets/css/output.css') ?>" rel="stylesheet">
+    
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    
+
 </head>
 <body class="bg-gray-50">
     
@@ -33,24 +42,18 @@
             </div>
             
             <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto scrollbar-thin py-4 px-3">
+            <nav class="flex-1 overflow-y-auto scrollbar-thin py-4 px-3 pb-20">
                 <div class="space-y-1">
                     <!-- Dashboard -->
                     <a href="<?= base_url('admin') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
-                        <i class="fas fa-home w-5"></i>
+                        <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
                     
                     <!-- Calendar -->
-                    <a href="<?= base_url('calendar') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
-                        <i class="far fa-calendar w-5"></i>
+                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
+                        <i class="far fa-calendar-alt w-5"></i>
                         <span class="ml-3">Calendar</span>
-                    </a>
-                    
-                    <!-- User Profile -->
-                    <a href="<?= base_url('profile') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'profile' ? 'active' : '' ?>">
-                        <i class="far fa-user w-5"></i>
-                        <span class="ml-3">User Profile</span>
                     </a>
                     
                     <!-- Divider -->
@@ -58,7 +61,7 @@
                         <div class="border-t border-gray-200"></div>
                     </div>
                     
-                    <!-- Task Menu -->
+                    <!-- Master Data Menu -->
                     <div class="space-y-1">
                         <button onclick="toggleSubmenu('task')" class="sidebar-link w-full justify-between">
                             <div class="flex items-center">
@@ -68,85 +71,58 @@
                             <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="task-icon"></i>
                         </button>
                         <div id="task-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('kegiatan') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'kegiatan' ? 'active' : '' ?>">
-                                <span>Kegiatan</span>
+                            <a href="<?= base_url('master-output') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-output' ? 'active' : '' ?>">
+                                <i class="fas fa-bullseye w-4 mr-2"></i>    
+                                <span>Master Output</span>
                             </a>
-                            <a href="<?= base_url('kegiatan-detail') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'kegiatan-detail' ? 'active' : '' ?>">
-                                <span>Detail Proses</span>
+                            <a href="<?= base_url('master-kegiatan') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan' ? 'active' : '' ?>">
+                                <i class="fas fa-clipboard-list w-4 mr-2"></i>
+                                <span>Master Kegiatan</span>
                             </a>
-                            <a href="<?= base_url('kegiatan-wilayah') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'kegiatan-wilayah' ? 'active' : '' ?>">
-                                <span>Target Wilayah</span>
+                            <a href="<?= base_url('master-kegiatan-detail') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail' ? 'active' : '' ?>">
+                                <i class="fas fa-list-check w-4 mr-2"></i>
+                                <span>Master Kegiatan Detail</span>
                             </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Forms Menu -->
-                    <div class="space-y-1">
-                        <button onclick="toggleSubmenu('forms')" class="sidebar-link w-full justify-between">
-                            <div class="flex items-center">
-                                <i class="far fa-file-alt w-5"></i>
-                                <span class="ml-3">Forms</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="forms-icon"></i>
-                        </button>
-                        <div id="forms-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('petugas') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'petugas' ? 'active' : '' ?>">
-                                <span>Petugas</span>
-                            </a>
-                            <a href="<?= base_url('assignment') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'assignment' ? 'active' : '' ?>">
-                                <span>Assignment</span>
+                            <a href="<?= base_url('comingsoon') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                                <i class="fas fa-tasks w-4 mr-2"></i>
+                                <span>Master Kegiatan Detail Proses</span>
                             </a>
                         </div>
                     </div>
-                    
-                    <!-- Tables Menu -->
-                    <div class="space-y-1">
-                        <button onclick="toggleSubmenu('tables')" class="sidebar-link w-full justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-table w-5"></i>
-                                <span class="ml-3">Tables</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="tables-icon"></i>
-                        </button>
-                        <div id="tables-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('laporan') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'laporan' ? 'active' : '' ?>">
-                                <span>Laporan</span>
-                            </a>
-                            <a href="<?= base_url('monitoring') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'monitoring' ? 'active' : '' ?>">
-                                <span>Monitoring</span>
-                            </a>
-                        </div>
+
+                    <!-- Divider -->
+                    <div class="py-2">
+                        <div class="border-t border-gray-200"></div>
                     </div>
-                    
-                    <!-- Pages Menu -->
-                    <div class="space-y-1">
-                        <button onclick="toggleSubmenu('pages')" class="sidebar-link w-full justify-between">
-                            <div class="flex items-center">
-                                <i class="far fa-copy w-5"></i>
-                                <span class="ml-3">Pages</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="pages-icon"></i>
-                        </button>
-                        <div id="pages-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('users') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'users' ? 'active' : '' ?>">
-                                <span>Users</span>
-                            </a>
-                            <a href="<?= base_url('settings') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'settings' ? 'active' : '' ?>">
-                                <span>Settings</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Support Section -->
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Support</p>
-                    <a href="<?= base_url('logout') ?>" class="sidebar-link text-red-600 hover:bg-red-50">
-                        <i class="fas fa-sign-out-alt w-5"></i>
-                        <span class="ml-3">Log Out</span>
+
+                    <!-- Kelola Pengguna -->
+                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                        <i class="fas fa-users w-5"></i>
+                        <span class="ml-3">Kelola Pengguna</span>
                     </a>
+                    
+                    <!-- Kelola Admin Survey Provinsi -->
+                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                        <i class="fas fa-user-shield w-5"></i>
+                        <span class="ml-3">Kelola Admin Survey Provinsi</span>
+                    </a>
+                    
+                    <!-- Feedback -->
+                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                        <i class="fas fa-comment-dots w-5"></i>
+                        <span class="ml-3">Feedback</span>
+                    </a>
+                    
                 </div>
             </nav>
+                
+            <!-- Logout Button - Fixed at Bottom -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+                <a href="<?= base_url('/') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span class="ml-3">Log Out</span>
+                </a>
+            </div>
         </div>
     </aside>
     
@@ -170,14 +146,14 @@
                     <div class="flex items-center space-x-4 ml-auto">
                         
                         <!-- Notifications -->
-                        <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                        <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                             <i class="far fa-bell text-xl"></i>
                             <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                         </button>
                         
                         <!-- User Menu -->
                         <div class="relative">
-                            <button onclick="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100">
+                            <button onclick="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                                 <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                                     <span class="text-white text-sm font-medium">SA</span>
                                 </div>
@@ -190,16 +166,16 @@
                             
                             <!-- Dropdown -->
                             <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                                <a href="<?= base_url('profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="<?= base_url('profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="far fa-user w-5"></i>
                                     <span class="ml-2">Profile</span>
                                 </a>
-                                <a href="<?= base_url('settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="<?= base_url('settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="fas fa-cog w-5"></i>
                                     <span class="ml-2">Settings</span>
                                 </a>
                                 <div class="border-t border-gray-200 my-1"></div>
-                                <a href="<?= base_url('logout') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <a href="<?= base_url('/') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
@@ -220,11 +196,6 @@
             <div class="px-4 sm:px-6 lg:px-8 py-4">
                 <div class="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
                     <p>&copy; <?= date('Y') ?> SiPantau - BPS Provinsi Riau. All rights reserved.</p>
-                    <div class="flex space-x-4 mt-2 sm:mt-0">
-                        <a href="#" class="hover:text-blue-600">Documentation</a>
-                        <a href="#" class="hover:text-blue-600">Support</a>
-                        <a href="#" class="hover:text-blue-600">Privacy Policy</a>
-                    </div>
                 </div>
             </div>
         </footer>
