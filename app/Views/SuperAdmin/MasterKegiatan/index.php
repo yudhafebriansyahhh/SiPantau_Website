@@ -79,6 +79,11 @@
                     </td>
                     <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="<?= base_url('master-kegiatan/detail') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="<?= base_url('master-kegiatan/edit') ?>" 
                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                                title="Edit">
@@ -109,6 +114,11 @@
                     </td>
                     <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="<?= base_url('master-kegiatan/detail') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="<?= base_url('master-kegiatan/edit') ?>" 
                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                                title="Edit">
@@ -139,6 +149,11 @@
                     </td>
                     <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="<?= base_url('master-kegiatan/detail') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="<?= base_url('master-kegiatan/edit') ?>" 
                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                                title="Edit">
@@ -169,6 +184,11 @@
                     </td>
                     <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="<?= base_url('master-kegiatan/detail') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="<?= base_url('master-kegiatan/edit') ?>" 
                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                                title="Edit">
@@ -199,6 +219,11 @@
                     </td>
                     <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="<?= base_url('master-kegiatan/detail') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="<?= base_url('master-kegiatan/edit') ?>" 
                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                                title="Edit">

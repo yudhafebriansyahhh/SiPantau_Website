@@ -19,6 +19,7 @@
     
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+     <!-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> -->
     
 
 </head>
@@ -83,7 +84,7 @@
                                 <i class="fas fa-list-check w-4 mr-2"></i>
                                 <span>Master Kegiatan Detail</span>
                             </a>
-                            <a href="<?= base_url('comingsoon') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                            <a href="<?= base_url('master-kegiatan-detail-proses') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail-proses' ? 'active' : '' ?>">
                                 <i class="fas fa-tasks w-4 mr-2"></i>
                                 <span>Master Kegiatan Detail Proses</span>
                             </a>

@@ -6,6 +6,8 @@
     <title>Halaman Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="<?= base_url('assets/css/output.css') ?>" rel="stylesheet">
+    <link rel="shortcut icon" type="image/png" href="<?= base_url('assets/gambar/LOGO_BPS.png') ?>">
+
 </head>
 <body class="min-h-screen bg-gray-50">
     <div class="min-h-screen flex">

@@ -19,7 +19,7 @@ class Admin extends BaseController
             'title' => 'Master Output',
             'active_menu' => 'master-output'
         ];
-        return view('SuperAdmin/Master Output/index', $data);
+        return view('SuperAdmin/MasterOutput/index', $data);
     }
 
     public function tambah_master_output()
@@ -28,7 +28,7 @@ class Admin extends BaseController
             'title' => 'Master Output',
             'active_menu' => 'master-output'
         ];
-        return view('SuperAdmin/Master Output/create', $data);
+        return view('SuperAdmin/MasterOutput/create', $data);
     }
 
     public function edit_master_output()
@@ -37,7 +37,7 @@ class Admin extends BaseController
             'title' => 'Master Output',
             'active_menu' => 'master-output'
         ];
-        return view('SuperAdmin/Master Output/edit', $data);
+        return view('SuperAdmin/MasterOutput/edit', $data);
     }
 
     public function master_kegiatan()
@@ -46,7 +46,7 @@ class Admin extends BaseController
             'title' => 'Master Kegiatan',
             'active_menu' => 'master-kegiatan'
         ];
-        return view('SuperAdmin/Master Kegiatan/index', $data);
+        return view('SuperAdmin/MasterKegiatan/index', $data);
     }
 
     public function tambah_master_kegiatan()
@@ -55,7 +55,7 @@ class Admin extends BaseController
             'title' => 'Master Kegiatan',
             'active_menu' => 'master-kegiatan'
         ];
-        return view('SuperAdmin/Master Kegiatan/create', $data);
+        return view('SuperAdmin/MasterKegiatan/create', $data);
     }
 
     public function edit_master_kegiatan()
@@ -64,7 +64,16 @@ class Admin extends BaseController
             'title' => 'Master Kegiatan',
             'active_menu' => 'master-kegiatan'
         ];
-        return view('SuperAdmin/Master Kegiatan/edit', $data);
+        return view('SuperAdmin/MasterKegiatan/edit', $data);
+    }
+
+    public function detail_master_kegiatan()
+    {
+        $data = [
+            'title' => 'Master Kegiatan Detail',
+            'active_menu' => 'master-kegiatan'
+        ];
+        return view('SuperAdmin/MasterKegiatan/show', $data);
     }
 
     public function master_kegiatan_detail()
@@ -73,6 +82,31 @@ class Admin extends BaseController
             'title' => 'Master Kegiatan Detail',
             'active_menu' => 'master-kegiatan-detail'
         ];
-        return view('SuperAdmin/Master Kegiatan Detail/index', $data);
+        return view('SuperAdmin/MasterKegiatanDetail/index', $data);
+    }
+    public function tambah_master_kegiatan_detail()
+    {
+        $data = [
+            'title' => 'Master Kegiatan Detail',
+            'active_menu' => 'master-kegiatan-detail'
+        ];
+        return view('SuperAdmin/MasterKegiatanDetail/create', $data);
+    }
+    public function edit_master_kegiatan_detail()
+    {
+        $data = [
+            'title' => 'Master Kegiatan Detail',
+            'active_menu' => 'master-kegiatan-detail'
+        ];
+        return view('SuperAdmin/MasterKegiatanDetail/edit', $data);
+    }
+
+    public function detail_master_kegiatan_detail()
+    {
+        $data = [
+            'title' => 'Master Kegiatan Detail',
+            'active_menu' => 'master-kegiatan-detail'
+        ];
+        return view('SuperAdmin/MasterKegiatanDetail/show', $data);
     }
 }
