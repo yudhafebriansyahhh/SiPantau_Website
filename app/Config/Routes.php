@@ -8,6 +8,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Login::index');
 $routes->get('admin', 'Admin::index');
 $routes->get('comingsoon', 'ComingSoon::index');
+$routes->get('adminsurvei','AdminSurveiProvController::index');
 
 // Master Output
 $routes->get('master-output', 'Admin::master_output');
@@ -24,3 +25,14 @@ $routes->get('master-kegiatan-detail', 'Admin::master_kegiatan_detail');
 $routes->get('master-kegiatan-detail/create', 'Admin::tambah_master_kegiatan');
 $routes->get('master-kegiatan-detail/edit', 'Admin::edit_master_kegiatan');
 
+// Master Kegiatan Detail Proses
+$routes->get('master-kegiatan-detail-proses', 'AdminSurveiProvController::master_detail_proses');
+$routes->get('master-kegiatan-detail-proses/create','AdminSurveiProvController::tambah_detail_proses');
+
+//Master Kegiatan Wilayah
+$routes->get('master-kegiatan-wilayah','AdminSurveiProvController::master_kegiatan_wilayah::index');
+$routes->get('master-kegiatan-wilayah/create','AdminSurveiProvController::tambah_master_kegiatan_wilayah');
+
+//Assign Petugas Survei 
+$routes->get('assign-admin-kab','AdminSurveiProvController::AssignAdminSurveiKab');
+$routes->get('assign-admin-kab/create','AdminSurveiProvController::tambah_AssignAdminSurveiKab');
