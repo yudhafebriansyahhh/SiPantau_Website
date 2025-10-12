@@ -59,5 +59,14 @@ class AdminSurveiKabController extends BaseController
         return view('AdminSurveiKab/AssignPetugasSurvei/kurva_s', $data);
     }
 
+    public function approve_laporan() {
+        $data = [
+            'title' => 'Approval Laporan',
+            'active_menu' => 'comingsoon'
+        ];
+
+        return view('AdminSurveiKab/ApprovalLaporan/index', $data);
+    }
+
 
 }

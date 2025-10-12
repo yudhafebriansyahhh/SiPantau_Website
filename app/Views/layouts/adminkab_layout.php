@@ -64,7 +64,7 @@
                     
                     
                     <!-- Feedback -->
-                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                    <a href="<?= base_url('approval-laporan') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
                         <span class="ml-3">Approval Laporan</span>
                     </a>

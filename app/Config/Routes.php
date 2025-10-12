@@ -45,3 +45,6 @@ $routes->get('assign-petugas','AdminSurveiKabController::AssignPetugas');
 $routes->get('assign-petugas/create','AdminSurveiKabController::createAssignPetugas');
 $routes->get('assign-petugas/detail/(:num)','AdminSurveiKabController::detail/$1');
 $routes->get('assign-petugas/pcl-detail/(:num)','AdminSurveiKabController::kurva_s/$1');
+
+//Approval Laporan Petugas
+$routes->get('approval-laporan','AdminSurveiKabController::approve_laporan');
