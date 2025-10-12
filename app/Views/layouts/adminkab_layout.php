@@ -45,7 +45,7 @@
             <nav class="flex-1 overflow-y-auto scrollbar-thin py-4 px-3 pb-20">
                 <div class="space-y-1">
                     <!-- Dashboard -->
-                    <a href="<?= base_url('adminsurvei') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
+                    <a href="<?= base_url('adminsurvei-kab') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
                         <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
@@ -55,49 +55,18 @@
                         <i class="far fa-calendar-alt w-5"></i>
                         <span class="ml-3">Calendar</span>
                     </a>
-                    
-                    <!-- Divider -->
-                    <div class="py-2">
-                        <div class="border-t border-gray-200"></div>
-                    </div>
-                    
-                    <!-- Master Data Menu -->
-                    <div class="space-y-1">
-                        <button onclick="toggleSubmenu('task')" class="sidebar-link w-full justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-database w-5"></i>
-                                <span class="ml-3">Master Data</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="task-icon"></i>
-                        </button>
-                        <div id="task-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('master-kegiatan-detail-proses') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail-proses' ? 'active' : '' ?>">
-                                <i class="fas fa-bullseye w-4 mr-2"></i>    
-                                <span>Master Kegiatan Detail Proses</span>
-                            </a>
-                            <a href="<?= base_url('master-kegiatan-wilayah') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-wilayah' ? 'active' : '' ?>">
-                                <i class="fas fa-clipboard-list w-4 mr-2"></i>
-                                <span>Master Kegiatan Wilayah</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Divider -->
-                    <div class="py-2">
-                        <div class="border-t border-gray-200"></div>
-                    </div>
 
                     <!-- Kelola Pengguna -->
-                    <a href="<?= base_url('assign-admin-kab') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
+                    <a href="<?= base_url('assign-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
                         <i class="fas fa-users w-5"></i>
-                        <span class="ml-3">Assign Admin Survei Kab</span>
+                        <span class="ml-3">Assign Petugas Survei</span>
                     </a>
                     
                     
                     <!-- Feedback -->
                     <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
-                        <span class="ml-3">Feedback</span>
+                        <span class="ml-3">Approval Laporan</span>
                     </a>
                     
                 </div>
@@ -146,7 +115,7 @@
                                 </div>
                                 <div class="hidden sm:block text-left">
                                     <p class="text-sm font-medium text-gray-900">Admin</p>
-                                    <p class="text-xs text-gray-500">Admin Survei Provinsi</p>
+                                    <p class="text-xs text-gray-500">Admin Survei Kab</p>
                                 </div>
                                 <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                             </button>

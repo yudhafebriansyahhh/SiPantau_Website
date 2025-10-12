@@ -159,8 +159,8 @@
                                     <span class="text-white text-sm font-medium">SA</span>
                                 </div>
                                 <div class="hidden sm:block text-left">
-                                    <p class="text-sm font-medium text-gray-900">Super Admin</p>
-                                    <p class="text-xs text-gray-500">Admin Provinsi</p>
+                                    <p class="text-sm font-medium text-gray-900">Admin</p>
+                                    <p class="text-xs text-gray-500">Super Admin</p>
                                 </div>
                                 <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                             </button>

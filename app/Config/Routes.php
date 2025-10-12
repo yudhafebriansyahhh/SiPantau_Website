@@ -9,6 +9,7 @@ $routes->get('/', 'Login::index');
 $routes->get('admin', 'Admin::index');
 $routes->get('comingsoon', 'ComingSoon::index');
 $routes->get('adminsurvei','AdminSurveiProvController::index');
+$routes->get('adminsurvei-kab','AdminSurveiKabController');
 
 // Master Output
 $routes->get('master-output', 'Admin::master_output');
@@ -35,6 +36,12 @@ $routes->get('master-kegiatan-detail-proses/create','AdminSurveiProvController::
 $routes->get('master-kegiatan-wilayah','AdminSurveiProvController::master_kegiatan_wilayah::index');
 $routes->get('master-kegiatan-wilayah/create','AdminSurveiProvController::tambah_master_kegiatan_wilayah');
 
-//Assign Petugas Survei 
+//Assign Admin Survei Kab
 $routes->get('assign-admin-kab','AdminSurveiProvController::AssignAdminSurveiKab');
 $routes->get('assign-admin-kab/create','AdminSurveiProvController::tambah_AssignAdminSurveiKab');
+
+//Assign Petugas Survei
+$routes->get('assign-petugas','AdminSurveiKabController::AssignPetugas');
+$routes->get('assign-petugas/create','AdminSurveiKabController::createAssignPetugas');
+$routes->get('assign-petugas/detail/(:num)','AdminSurveiKabController::detail/$1');
+$routes->get('assign-petugas/pcl-detail/(:num)','AdminSurveiKabController::kurva_s/$1');

@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/adminprov_layout') ?>
+<?= $this->extend('layouts/adminkab_layout') ?>
 <?= $this->section('content') ?>
 
 <!-- Page Header -->
