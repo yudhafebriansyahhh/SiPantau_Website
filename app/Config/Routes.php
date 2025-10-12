@@ -10,6 +10,8 @@ $routes->get('admin', 'Admin::index');
 $routes->get('comingsoon', 'ComingSoon::index');
 $routes->get('adminsurvei','AdminSurveiProvController::index');
 $routes->get('adminsurvei-kab','AdminSurveiKabController');
+$routes->get('pemantau','PemantauController');
+
 
 // Master Output
 $routes->get('master-output', 'Admin::master_output');
@@ -48,3 +50,15 @@ $routes->get('assign-petugas/pcl-detail/(:num)','AdminSurveiKabController::kurva
 
 //Approval Laporan Petugas
 $routes->get('approval-laporan','AdminSurveiKabController::approve_laporan');
+
+//Detail Proses - Pemantau
+$routes->get('detail-proses','PemantauController::DetailProses');
+
+
+//Kegiatan Wilayah Pemantau 
+$routes->get('kegiatan-wilayah-pemantau', 'PemantauController::KegiatanWilayah');
+$routes->get('data-petugas','PemantauController::DataPetugas');
+
+//laporan Petugas - Pemantau
+$routes->get('laporan-petugas','PemantauController::LaporanPetugas');
+$routes->get('laporan-petugas/detail/(:num)', 'PemantauController::detailLaporanPetugas/$1');

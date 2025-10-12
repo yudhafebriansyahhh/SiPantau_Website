@@ -1023,8 +1023,16 @@ video {
   margin-right: 0.25rem;
 }
 
+.ml-1 {
+  margin-left: 0.25rem;
+}
+
 .block {
   display: block;
+}
+
+.inline-block {
+  display: inline-block;
 }
 
 .flex {
@@ -1183,6 +1191,10 @@ video {
   width: 100%;
 }
 
+.min-w-\[200px\] {
+  min-width: 200px;
+}
+
 .max-w-2xl {
   max-width: 42rem;
 }
@@ -1315,6 +1327,10 @@ video {
   gap: 1.5rem;
 }
 
+.gap-1 {
+  gap: 0.25rem;
+}
+
 .space-x-2 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
   margin-right: calc(0.5rem * var(--tw-space-x-reverse));
@@ -1427,6 +1443,10 @@ video {
   border-top-width: 1px;
 }
 
+.border-b-2 {
+  border-bottom-width: 2px;
+}
+
 .border-blue-200 {
   --tw-border-opacity: 1;
   border-color: rgb(191 219 254 / var(--tw-border-opacity, 1));
@@ -1469,6 +1489,11 @@ video {
 
 .border-transparent {
   border-color: transparent;
+}
+
+.border-blue-600 {
+  --tw-border-opacity: 1;
+  border-color: rgb(37 99 235 / var(--tw-border-opacity, 1));
 }
 
 .bg-\[\#1e88e5\] {
@@ -1625,6 +1650,31 @@ video {
   background-color: rgb(75 85 99 / var(--tw-bg-opacity, 1));
 }
 
+.bg-orange-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(234 88 12 / var(--tw-bg-opacity, 1));
+}
+
+.bg-yellow-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(250 204 21 / var(--tw-bg-opacity, 1));
+}
+
+.bg-yellow-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(202 138 4 / var(--tw-bg-opacity, 1));
+}
+
+.bg-teal-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(13 148 136 / var(--tw-bg-opacity, 1));
+}
+
+.bg-emerald-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(5 150 105 / var(--tw-bg-opacity, 1));
+}
+
 .bg-opacity-10 {
   --tw-bg-opacity: 0.1;
 }
@@ -1676,6 +1726,11 @@ video {
 .object-contain {
   -o-object-fit: contain;
      object-fit: contain;
+}
+
+.object-cover {
+  -o-object-fit: cover;
+     object-fit: cover;
 }
 
 .p-2 {
@@ -1763,6 +1818,21 @@ video {
   padding-bottom: 2rem;
 }
 
+.px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.px-2\.5 {
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+}
+
+.py-0\.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+
 .pb-20 {
   padding-bottom: 5rem;
 }
@@ -1805,6 +1875,10 @@ video {
 
 .pr-4 {
   padding-right: 1rem;
+}
+
+.pl-4 {
+  padding-left: 1rem;
 }
 
 .text-left {
@@ -2059,6 +2133,21 @@ video {
 .text-yellow-800 {
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity, 1));
+}
+
+.text-gray-800 {
+  --tw-text-opacity: 1;
+  color: rgb(31 41 55 / var(--tw-text-opacity, 1));
+}
+
+.text-blue-500 {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246 / var(--tw-text-opacity, 1));
+}
+
+.text-green-500 {
+  --tw-text-opacity: 1;
+  color: rgb(34 197 94 / var(--tw-text-opacity, 1));
 }
 
 .text-opacity-90 {
@@ -2524,6 +2613,31 @@ textarea:focus {
   background-color: rgb(21 128 61 / var(--tw-bg-opacity, 1));
 }
 
+.hover\:bg-orange-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(194 65 12 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-yellow-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(161 98 7 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-purple-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(126 34 206 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-teal-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(15 118 110 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-emerald-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(4 120 87 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:from-blue-700:hover {
   --tw-gradient-from: #1d4ed8 var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(29 78 216 / 0) var(--tw-gradient-to-position);
@@ -2567,6 +2681,10 @@ textarea:focus {
 .hover\:text-blue-800:hover {
   --tw-text-opacity: 1;
   color: rgb(30 64 175 / var(--tw-text-opacity, 1));
+}
+
+.hover\:underline:hover {
+  text-decoration-line: underline;
 }
 
 .hover\:opacity-100:hover {
@@ -2661,6 +2779,10 @@ textarea:focus {
     width: auto;
   }
 
+  .sm\:w-64 {
+    width: 16rem;
+  }
+
   .sm\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2675,6 +2797,10 @@ textarea:focus {
 
   .sm\:flex-row {
     flex-direction: row;
+  }
+
+  .sm\:items-end {
+    align-items: flex-end;
   }
 
   .sm\:items-center {
