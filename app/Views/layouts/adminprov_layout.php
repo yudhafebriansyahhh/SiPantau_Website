@@ -130,14 +130,7 @@
                     <div class="hidden lg:block"></div>
                     
                     <!-- Right Section -->
-                    <div class="flex items-center space-x-4 ml-auto">
-                        
-                        <!-- Notifications -->
-                        <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i class="far fa-bell text-xl"></i>
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
-                        
+                    <div class="flex items-center space-x-4 ml-auto">                       
                         <!-- User Menu -->
                         <div class="relative">
                             <button onclick="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">

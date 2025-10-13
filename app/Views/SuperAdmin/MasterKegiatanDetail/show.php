@@ -93,7 +93,6 @@
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">No</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Proses</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Deskripsi</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Urutan</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Aksi</th>
                 </tr>
             </thead>
@@ -112,22 +111,12 @@
                         <p class="text-sm text-gray-600">Pengumpulan data di lapangan oleh petugas survei</p>
                     </td>
                     <td class="px-4 py-4">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                            <i class="fas fa-sort-numeric-down mr-2"></i>1
-                        </span>
-                    </td>
-                    <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('kegiatan-detail-proses/edit/1') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
+                            <a href="<?= base_url('comingsoon') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
                             </a>
-                            <button onclick="confirmDelete(1, 'Lapangan')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
                         </div>
                     </td>
                 </tr>
@@ -146,22 +135,12 @@
                         <p class="text-sm text-gray-600">Verifikasi dan validasi data hasil lapangan</p>
                     </td>
                     <td class="px-4 py-4">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            <i class="fas fa-sort-numeric-down mr-2"></i>2
-                        </span>
-                    </td>
-                    <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('kegiatan-detail-proses/edit/2') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
+                            <a href="<?= base_url('comingsoon') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
                             </a>
-                            <button onclick="confirmDelete(2, 'Administrasi')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
                         </div>
                     </td>
                 </tr>
@@ -180,22 +159,12 @@
                         <p class="text-sm text-gray-600">Pengolahan dan analisis data untuk menghasilkan output</p>
                     </td>
                     <td class="px-4 py-4">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                            <i class="fas fa-sort-numeric-down mr-2"></i>3
-                        </span>
-                    </td>
-                    <td class="px-4 py-4">
                         <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('kegiatan-detail-proses/edit/3') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
+                            <a href="<?= base_url('comingsoon') ?>" 
+                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
                             </a>
-                            <button onclick="confirmDelete(3, 'Pengolahan')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
                         </div>
                     </td>
                 </tr>

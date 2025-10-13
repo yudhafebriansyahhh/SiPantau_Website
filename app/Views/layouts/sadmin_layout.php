@@ -52,10 +52,10 @@
                     </a>
                     
                     <!-- Calendar -->
-                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
+                    <!-- <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
                         <i class="far fa-calendar-alt w-5"></i>
                         <span class="ml-3">Calendar</span>
-                    </a>
+                    </a> -->
                     
                     <!-- Divider -->
                     <div class="py-2">
@@ -84,26 +84,22 @@
                                 <i class="fas fa-list-check w-4 mr-2"></i>
                                 <span>Master Kegiatan Detail</span>
                             </a>
-                            <a href="<?= base_url('master-kegiatan-detail-proses') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail-proses' ? 'active' : '' ?>">
-                                <i class="fas fa-tasks w-4 mr-2"></i>
-                                <span>Master Kegiatan Detail Proses</span>
-                            </a>
                         </div>
                     </div>
 
                     <!-- Divider -->
-                    <div class="py-2">
+                    <!-- <div class="py-2">
                         <div class="border-t border-gray-200"></div>
-                    </div>
+                    </div> -->
 
                     <!-- Kelola Pengguna -->
-                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                    <a href="<?= base_url('kelola-pengguna') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-pengguna' ? 'active' : '' ?>">
                         <i class="fas fa-users w-5"></i>
                         <span class="ml-3">Kelola Pengguna</span>
                     </a>
                     
                     <!-- Kelola Admin Survey Provinsi -->
-                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                    <a href="<?= base_url('kelola-admin-surveyprov') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-admin-surveyprov' ? 'active' : '' ?>">
                         <i class="fas fa-user-shield w-5"></i>
                         <span class="ml-3">Kelola Admin Survey Provinsi</span>
                     </a>
@@ -145,12 +141,7 @@
                     
                     <!-- Right Section -->
                     <div class="flex items-center space-x-4 ml-auto">
-                        
-                        <!-- Notifications -->
-                        <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i class="far fa-bell text-xl"></i>
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
+                    
                         
                         <!-- User Menu -->
                         <div class="relative">

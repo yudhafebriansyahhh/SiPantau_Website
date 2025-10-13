@@ -30,6 +30,15 @@ $routes->get('master-kegiatan-detail/create', 'Admin::tambah_master_kegiatan_det
 $routes->get('master-kegiatan-detail/edit', 'Admin::edit_master_kegiatan_detail');
 $routes->get('master-kegiatan-detail/detail', 'Admin::detail_master_kegiatan_detail');
 
+// Kelola Pengguna 
+$routes->get('kelola-pengguna', 'Admin::kelola_pengguna');
+$routes->get('kelola-pengguna/create', 'Admin::tambah_kelola_pengguna');
+$routes->get('kelola-pengguna/edit', 'Admin::edit_kelola_pengguna');
+
+$routes->get('kelola-admin-surveyprov', 'Admin::kelola_admin_prov');
+
+
+// ======================== Admin Survey Provinsi ========================
 // Master Kegiatan Detail Proses
 $routes->get('master-kegiatan-detail-proses', 'AdminSurveiProvController::master_detail_proses');
 $routes->get('master-kegiatan-detail-proses/create','AdminSurveiProvController::tambah_detail_proses');
