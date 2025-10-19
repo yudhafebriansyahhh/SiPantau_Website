@@ -19,9 +19,6 @@
     
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-     <!-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> -->
-    
-
 </head>
 <body class="bg-gray-50">
     
@@ -50,19 +47,13 @@
                         <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
-                    
-                    <!-- Calendar -->
-                    <!-- <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
-                        <i class="far fa-calendar-alt w-5"></i>
-                        <span class="ml-3">Calendar</span>
-                    </a> -->
-                    
+
                     <!-- Divider -->
                     <div class="py-2">
                         <div class="border-t border-gray-200"></div>
                     </div>
                     
-                    <!-- Master Data Menu -->
+                    <!-- Master Data -->
                     <div class="space-y-1">
                         <button onclick="toggleSubmenu('task')" class="sidebar-link w-full justify-between">
                             <div class="flex items-center">
@@ -72,50 +63,44 @@
                             <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="task-icon"></i>
                         </button>
                         <div id="task-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('master-output') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-output' ? 'active' : '' ?>">
+                            <a href="<?= base_url('admin/master-output') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-output' ? 'active' : '' ?>">
                                 <i class="fas fa-bullseye w-4 mr-2"></i>    
                                 <span>Master Output</span>
                             </a>
-                            <a href="<?= base_url('master-kegiatan') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan' ? 'active' : '' ?>">
+                            <a href="<?= base_url('admin/master-kegiatan') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan' ? 'active' : '' ?>">
                                 <i class="fas fa-clipboard-list w-4 mr-2"></i>
                                 <span>Master Kegiatan</span>
                             </a>
-                            <a href="<?= base_url('master-kegiatan-detail') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail' ? 'active' : '' ?>">
+                            <a href="<?= base_url('admin/master-kegiatan-detail') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail' ? 'active' : '' ?>">
                                 <i class="fas fa-list-check w-4 mr-2"></i>
                                 <span>Master Kegiatan Detail</span>
                             </a>
                         </div>
                     </div>
 
-                    <!-- Divider -->
-                    <!-- <div class="py-2">
-                        <div class="border-t border-gray-200"></div>
-                    </div> -->
-
                     <!-- Kelola Pengguna -->
-                    <a href="<?= base_url('kelola-pengguna') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-pengguna' ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/kelola-pengguna') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-pengguna' ? 'active' : '' ?>">
                         <i class="fas fa-users w-5"></i>
                         <span class="ml-3">Kelola Pengguna</span>
                     </a>
                     
                     <!-- Kelola Admin Survey Provinsi -->
-                    <a href="<?= base_url('kelola-admin-surveyprov') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-admin-surveyprov' ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/kelola-admin-surveyprov') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-admin-surveyprov' ? 'active' : '' ?>">
                         <i class="fas fa-user-shield w-5"></i>
                         <span class="ml-3">Kelola Admin Survey Provinsi</span>
                     </a>
                     
                     <!-- Feedback -->
-                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
                         <span class="ml-3">Feedback</span>
                     </a>
-                    
                 </div>
             </nav>
                 
-            <!-- Logout Button - Fixed at Bottom -->
+            <!-- Logout -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-                <a href="<?= base_url('/') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200">
+                <a href="<?= base_url('logout') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200">
                     <i class="fas fa-sign-out-alt w-5"></i>
                     <span class="ml-3">Log Out</span>
                 </a>
@@ -131,19 +116,13 @@
             <div class="px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
                     
-                    <!-- Left Section - Mobile Menu Button -->
+                    <!-- Mobile Menu -->
                     <button onclick="toggleSidebar()" class="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     
-                    <!-- Spacer for desktop -->
-                    <div class="hidden lg:block"></div>
-                    
                     <!-- Right Section -->
                     <div class="flex items-center space-x-4 ml-auto">
-                    
-                        
-                        <!-- User Menu -->
                         <div class="relative">
                             <button onclick="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                                 <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -155,19 +134,17 @@
                                 </div>
                                 <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                             </button>
-                            
-                            <!-- Dropdown -->
                             <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                                <a href="<?= base_url('profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <a href="<?= base_url('admin/profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="far fa-user w-5"></i>
                                     <span class="ml-2">Profile</span>
                                 </a>
-                                <a href="<?= base_url('settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <a href="<?= base_url('admin/settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="fas fa-cog w-5"></i>
                                     <span class="ml-2">Settings</span>
                                 </a>
                                 <div class="border-t border-gray-200 my-1"></div>
-                                <a href="<?= base_url('/') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <a href="<?= base_url('logout') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
@@ -193,10 +170,9 @@
         </footer>
     </div>
     
-    <!-- Sidebar Overlay (Mobile) -->
+    <!-- Overlay (Mobile) -->
     <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onclick="toggleSidebar()"></div>
     
-    <!-- Scripts -->
     <script src="<?= base_url('assets/js/admin.js') ?>"></script>
 </body>
 </html>

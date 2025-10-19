@@ -5,69 +5,71 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Login::index');
-$routes->get('admin', 'Admin::index');
-$routes->get('comingsoon', 'ComingSoon::index');
-$routes->get('adminsurvei','AdminSurveiProvController::index');
-$routes->get('adminsurvei-kab','AdminSurveiKabController');
-$routes->get('pemantau','PemantauController');
 
+// ================== AUTH ==================
+$routes->get('/', 'Auth\LoginController::index');
+$routes->get('login', 'Auth\LoginController::index');
+$routes->post('auth/login', 'Auth\LoginController::process');
+$routes->get('logout', 'Auth\LoginController::logout');
 
-// Master Output
-$routes->get('master-output', 'Admin::master_output');
-$routes->get('master-output/create', 'Admin::tambah_master_output');
-$routes->get('master-output/edit', 'Admin::edit_master_output');
+// ================== HALAMAN TIDAK BERIZIN ==================
+$routes->get('unauthorized', 'ErrorController::unauthorized');
 
-// Master Kegiatan
-$routes->get('master-kegiatan', 'Admin::master_kegiatan');
-$routes->get('master-kegiatan/create', 'Admin::tambah_master_kegiatan');
-$routes->get('master-kegiatan/edit', 'Admin::edit_master_kegiatan');
-$routes->get('master-kegiatan/detail', 'Admin::detail_master_kegiatan');
+// ================== SUPER ADMIN (id_role = 1) ==================
+$routes->group('admin', ['filter' => 'role:1'], static function ($routes) {
+    $routes->get('/', 'Admin::index');
 
-// Master Kegiatan Detail
-$routes->get('master-kegiatan-detail', 'Admin::master_kegiatan_detail');
-$routes->get('master-kegiatan-detail/create', 'Admin::tambah_master_kegiatan_detail');
-$routes->get('master-kegiatan-detail/edit', 'Admin::edit_master_kegiatan_detail');
-$routes->get('master-kegiatan-detail/detail', 'Admin::detail_master_kegiatan_detail');
+    // Master Output
+    $routes->get('master-output', 'Admin::master_output');
+    $routes->get('master-output/create', 'Admin::tambah_master_output');
+    $routes->get('master-output/edit', 'Admin::edit_master_output');
 
-// Kelola Pengguna 
-$routes->get('kelola-pengguna', 'Admin::kelola_pengguna');
-$routes->get('kelola-pengguna/create', 'Admin::tambah_kelola_pengguna');
-$routes->get('kelola-pengguna/edit', 'Admin::edit_kelola_pengguna');
+    // Master Kegiatan
+    $routes->get('master-kegiatan', 'Admin::master_kegiatan');
+    $routes->get('master-kegiatan/create', 'Admin::tambah_master_kegiatan');
+    $routes->get('master-kegiatan/edit', 'Admin::edit_master_kegiatan');
+    $routes->get('master-kegiatan/detail', 'Admin::detail_master_kegiatan');
 
-$routes->get('kelola-admin-surveyprov', 'Admin::kelola_admin_prov');
+    // Master Kegiatan Detail
+    $routes->get('master-kegiatan-detail', 'Admin::master_kegiatan_detail');
+    $routes->get('master-kegiatan-detail/create', 'Admin::tambah_master_kegiatan_detail');
+    $routes->get('master-kegiatan-detail/edit', 'Admin::edit_master_kegiatan_detail');
+    $routes->get('master-kegiatan-detail/detail', 'Admin::detail_master_kegiatan_detail');
 
+    // Kelola Pengguna
+    $routes->get('kelola-pengguna', 'Admin::kelola_pengguna');
+    $routes->get('kelola-pengguna/create', 'Admin::tambah_kelola_pengguna');
+    $routes->get('kelola-pengguna/edit', 'Admin::edit_kelola_pengguna');
+    $routes->get('kelola-admin-surveyprov', 'Admin::kelola_admin_prov');
+});
 
-// ======================== Admin Survey Provinsi ========================
-// Master Kegiatan Detail Proses
-$routes->get('master-kegiatan-detail-proses', 'AdminSurveiProvController::master_detail_proses');
-$routes->get('master-kegiatan-detail-proses/create','AdminSurveiProvController::tambah_detail_proses');
+// ================== ADMIN SURVEI PROVINSI (id_role = 2) ==================
+$routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) {
+    $routes->get('/', 'AdminSurveiProvController::index');
+    $routes->get('master-kegiatan-detail-proses', 'AdminSurveiProvController::master_detail_proses');
+    $routes->get('master-kegiatan-detail-proses/create', 'AdminSurveiProvController::tambah_detail_proses');
+    $routes->get('master-kegiatan-wilayah', 'AdminSurveiProvController::master_kegiatan_wilayah');
+    $routes->get('master-kegiatan-wilayah/create', 'AdminSurveiProvController::tambah_master_kegiatan_wilayah');
+    $routes->get('assign-admin-kab', 'AdminSurveiProvController::AssignAdminSurveiKab');
+    $routes->get('assign-admin-kab/create', 'AdminSurveiProvController::tambah_AssignAdminSurveiKab');
+});
 
-//Master Kegiatan Wilayah
-$routes->get('master-kegiatan-wilayah','AdminSurveiProvController::master_kegiatan_wilayah::index');
-$routes->get('master-kegiatan-wilayah/create','AdminSurveiProvController::tambah_master_kegiatan_wilayah');
+// ================== ADMIN SURVEI KABUPATEN (id_role = 3) ==================
+$routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($routes) {
+    $routes->get('/', 'AdminSurveiKabController::index');
+    $routes->get('assign-petugas', 'AdminSurveiKabController::AssignPetugas');
+    $routes->get('assign-petugas/create', 'AdminSurveiKabController::createAssignPetugas');
+    $routes->get('assign-petugas/detail/(:num)', 'AdminSurveiKabController::detail/$1');
+    $routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
+    $routes->get('approval-laporan', 'AdminSurveiKabController::approve_laporan');
+});
 
-//Assign Admin Survei Kab
-$routes->get('assign-admin-kab','AdminSurveiProvController::AssignAdminSurveiKab');
-$routes->get('assign-admin-kab/create','AdminSurveiProvController::tambah_AssignAdminSurveiKab');
-
-//Assign Petugas Survei
-$routes->get('assign-petugas','AdminSurveiKabController::AssignPetugas');
-$routes->get('assign-petugas/create','AdminSurveiKabController::createAssignPetugas');
-$routes->get('assign-petugas/detail/(:num)','AdminSurveiKabController::detail/$1');
-$routes->get('assign-petugas/pcl-detail/(:num)','AdminSurveiKabController::kurva_s/$1');
-
-//Approval Laporan Petugas
-$routes->get('approval-laporan','AdminSurveiKabController::approve_laporan');
-
-//Detail Proses - Pemantau
-$routes->get('detail-proses','PemantauController::DetailProses');
-
-
-//Kegiatan Wilayah Pemantau 
-$routes->get('kegiatan-wilayah-pemantau', 'PemantauController::KegiatanWilayah');
-$routes->get('data-petugas','PemantauController::DataPetugas');
-
-//laporan Petugas - Pemantau
-$routes->get('laporan-petugas','PemantauController::LaporanPetugas');
-$routes->get('laporan-petugas/detail/(:num)', 'PemantauController::detailLaporanPetugas/$1');
+// ================== PEMANTAU (id_role = 4) ==================
+$routes->group('pemantau', ['filter' => 'role:4'], static function ($routes) {
+    $routes->get('/', 'PemantauController::index');
+    $routes->get('detail-proses', 'PemantauController::DetailProses');
+    $routes->get('kegiatan-wilayah-pemantau', 'PemantauController::KegiatanWilayah');
+    $routes->get('data-petugas', 'PemantauController::DataPetugas');
+    $routes->get('laporan-petugas', 'PemantauController::LaporanPetugas');
+    $routes->get('laporan-petugas/detail/(:num)', 'PemantauController::detailLaporanPetugas/$1');
+});

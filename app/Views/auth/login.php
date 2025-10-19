@@ -42,76 +42,53 @@
                 </div>
 
                 <!-- Login Form -->
-                <form class="space-y-6" action="<?= base_url('admin') ?>" method="GET">
-                    <?= csrf_field() ?>
-                    
-                    <div>
-                        <label for="sobatId" class="block text-sm font-medium text-gray-900 mb-2">
-                            Sobat Id<span class="text-red-500">*</span>
-                        </label>
-                        <input id="sobatId" name="sobatId" type="text" required 
-                               class="input-field w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
-                               placeholder="123456" value="<?= old('sobatId') ?>">
-                        <?php if (session('errors.sobatId')): ?>
-                            <p class="mt-1 text-sm text-red-600"><?= session('errors.sobatId') ?></p>
-                        <?php endif; ?>
-                    </div>
+                <form class="space-y-6" action="<?= base_url('auth/login') ?>" method="POST">
+    <?= csrf_field() ?>
 
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-900 mb-2">
-                            Password<span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <input id="password" name="password" type="password" required 
-                                   class="input-field w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 pr-10"
-                                   placeholder="Enter your password">
-                            <button type="button" onclick="togglePassword()" 
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <svg id="eye-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <?php if (session('errors.password')): ?>
-                            <p class="mt-1 text-sm text-red-600"><?= session('errors.password') ?></p>
-                        <?php endif; ?>
-                    </div>
+    <div>
+        <label for="email" class="block text-sm font-medium text-gray-900 mb-2">
+            Email<span class="text-red-500">*</span>
+        </label>
+        <input id="email" name="email" type="email" required
+               class="input-field w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+               placeholder="example@email.com" value="<?= old('email') ?>">
+        <?php if (session('errors.email')): ?>
+            <p class="mt-1 text-sm text-red-600"><?= session('errors.email') ?></p>
+        <?php endif; ?>
+    </div>
 
-                    <!-- Remember Me & Forgot Password -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input id="remember" name="remember" type="checkbox" 
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label for="remember" class="ml-2 block text-sm text-gray-600">
-                                Keep me logged in
-                            </label>
-                        </div>
-                        <a href="<?= base_url('forgot-password') ?>" class="text-sm text-blue-600 hover:text-blue-500 font-medium">
-                            Forgot password?
-                        </a>
-                    </div>
+    <div>
+        <label for="password" class="block text-sm font-medium text-gray-900 mb-2">
+            Password<span class="text-red-500">*</span>
+        </label>
+        <input id="password" name="password" type="password" required
+               class="input-field w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+               placeholder="Enter your password">
+        <?php if (session('errors.password')): ?>
+            <p class="mt-1 text-sm text-red-600"><?= session('errors.password') ?></p>
+        <?php endif; ?>
+    </div>
 
-                    <!-- Error Message -->
-                    <?php if (session('error')): ?>
-                        <div class="flash-message bg-red-50 border border-red-200 rounded-lg p-3">
-                            <p class="text-sm text-red-600"><?= session('error') ?></p>
-                        </div>
-                    <?php endif; ?>
+    <!-- Error Message -->
+    <?php if (session('error')): ?>
+        <div class="flash-message bg-red-50 border border-red-200 rounded-lg p-3">
+            <p class="text-sm text-red-600"><?= session('error') ?></p>
+        </div>
+    <?php endif; ?>
 
-                    <!-- Success Message -->
-                    <?php if (session('success')): ?>
-                        <div class="flash-message bg-green-50 border border-green-200 rounded-lg p-3">
-                            <p class="text-sm text-green-600"><?= session('success') ?></p>
-                        </div>
-                    <?php endif; ?>
+    <!-- Success Message -->
+    <?php if (session('success')): ?>
+        <div class="flash-message bg-green-50 border border-green-200 rounded-lg p-3">
+            <p class="text-sm text-green-600"><?= session('success') ?></p>
+        </div>
+    <?php endif; ?>
 
-                    <!-- Sign In Button -->
-                    <button type="submit" 
-                            class="btn-primary w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                        Login
-                    </button>
-                </form>
+    <button type="submit"
+            class="btn-primary w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+        Login
+    </button>
+</form>
+
 
             </div>
         </div>
