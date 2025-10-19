@@ -91,7 +91,7 @@
             </p>
             
             <!-- Features Preview -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-10 max-w-3xl mx-auto">
+            <!-- <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-10 max-w-3xl mx-auto">
                 
                 <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:scale-105">
                     <div class="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -117,7 +117,7 @@
                     <p class="text-sm text-gray-600">Pantau progres kegiatan secara real-time</p>
                 </div>
                 
-            </div>
+            </div> -->
             
             <!-- Back Button -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">

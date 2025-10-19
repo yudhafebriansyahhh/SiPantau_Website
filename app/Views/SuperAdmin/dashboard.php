@@ -249,7 +249,7 @@
                                 <span class="text-white text-sm font-medium">GM</span>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900">George R.R Martin</p>
+                                <p class="text-sm font-medium text-gray-900">Dadang Sunandar</p>
                                 <p class="text-xs text-gray-500">PCL - Pekanbaru</p>
                             </div>
                         </div>
@@ -276,7 +276,7 @@
                                 <span class="text-white text-sm font-medium">MS</span>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900">Markus Suzak</p>
+                                <p class="text-sm font-medium text-gray-900">Muhammad Indra Mahfuzzak</p>
                                 <p class="text-xs text-gray-500">PCL - Kampar</p>
                             </div>
                         </div>
@@ -303,7 +303,7 @@
                                 <span class="text-white text-sm font-medium">AW</span>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900">Ankur Warikoo</p>
+                                <p class="text-sm font-medium text-gray-900">T. Muhammad Alkhadafi</p>
                                 <p class="text-xs text-gray-500">PCL - Dumai</p>
                             </div>
                         </div>

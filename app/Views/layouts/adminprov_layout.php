@@ -105,7 +105,7 @@
                 
             <!-- Logout Button - Fixed at Bottom -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-                <a href="<?= base_url('/') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200">
+                <a href="<?= base_url('/') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200 hover:text-red-700">
                     <i class="fas fa-sign-out-alt w-5"></i>
                     <span class="ml-3">Log Out</span>
                 </a>
@@ -141,11 +141,10 @@
                                     <p class="text-sm font-medium text-gray-900">Admin</p>
                                     <p class="text-xs text-gray-500">Admin Survei Provinsi</p>
                                 </div>
-                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                             </button>
                             
                             <!-- Dropdown -->
-                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                            <!-- <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                                 <a href="<?= base_url('profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="far fa-user w-5"></i>
                                     <span class="ml-2">Profile</span>
@@ -159,7 +158,7 @@
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
