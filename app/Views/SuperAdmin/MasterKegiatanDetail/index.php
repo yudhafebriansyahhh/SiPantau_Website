@@ -5,7 +5,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('admin') ?>" class="hover:text-blue-600 transition-colors">
+        <a href="<?= base_url('superadmin') ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Back
         </a>
     </div>
@@ -15,24 +15,45 @@
 
 <!-- Main Card -->
 <div class="card">
-    <!-- Search and Add Button -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <!-- Search Box -->
-        <div class="relative w-full sm:w-96">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
+    <!-- Search, Filter and Add Button -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <!-- Search Box -->
+            <div class="relative w-full sm:w-80">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" 
+                       class="input-field w-full pl-10" 
+                       placeholder="Cari master kegiatan, nama detail, atau satuan..."
+                       onkeyup="searchTable()">
             </div>
-            <input type="text" id="searchInput" 
-                   class="input-field w-full pl-10" 
-                   placeholder="Cari master kegiatan, nama detail, atau satuan..."
-                   onkeyup="searchTable()">
+            
+            <!-- Filter Master Kegiatan -->
+            <div class="relative w-full sm:w-64">
+                <select id="filterKegiatan" 
+                        class="input-field w-full appearance-none pr-10"
+                        onchange="filterByKegiatan(this.value)">
+                    <option value="all" <?= ($filterKegiatan ?? 'all') == 'all' ? 'selected' : '' ?>>Semua Master Kegiatan</option>
+                    <?php if (!empty($masterKegiatans)): ?>
+                        <?php foreach ($masterKegiatans as $kegiatan): ?>
+                            <option value="<?= $kegiatan['id_kegiatan'] ?>" <?= ($filterKegiatan ?? '') == $kegiatan['id_kegiatan'] ? 'selected' : '' ?>>
+                                <?= esc($kegiatan['nama_kegiatan']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                </div>
+            </div>
         </div>
         
         <!-- Add Button -->
-        <a href="<?= base_url('master-kegiatan-detail/create') ?>" 
-           class="btn-primary whitespace-nowrap w-full sm:w-auto text-center">
+        <a href="<?= base_url('superadmin/master-kegiatan-detail/create') ?>" 
+           class="btn-primary whitespace-nowrap w-full lg:w-auto text-center">
             <i class="fas fa-plus mr-2"></i>
-            Tambah Kegiatan
+            Tambah Kegiatan Detail
         </a>
     </div>
     
@@ -65,273 +86,130 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                <!-- Static Data untuk Demo -->
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4 text-sm text-gray-900">1</td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm font-medium text-gray-900">Pendataan Lahan Pertanian</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm text-gray-600">Pencacahan Lahan Sawah</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm text-gray-600">Hektar</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-info">Q1</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm font-medium text-gray-900">2025</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('master-kegiatan-detail/detail') ?>" 
-                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
+                <?php if (empty($details)): ?>
+                    <tr>
+                        <td colspan="7" class="px-4 py-12 text-center">
+                            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+                            <p class="text-gray-500 mb-4">Belum ada data master kegiatan detail</p>
+                            <a href="<?= base_url('superadmin/master-kegiatan-detail/create') ?>" class="btn-primary inline-block">
+                                <i class="fas fa-plus mr-2"></i>Tambah Master Kegiatan Detail Pertama
                             </a>
-                            <a href="<?= base_url('master-kegiatan-detail/edit') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="confirmDelete(1, 'Pencacahan Lahan Sawah')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4 text-sm text-gray-900">2</td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm font-medium text-gray-900">Pendataan Lahan Pertanian</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm text-gray-600">Pencacahan Lahan Perkebunan</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm text-gray-600">Hektar</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-info">Q1</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm font-medium text-gray-900">2025</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('master-kegiatan-detail/detail') ?>" 
-                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="<?= base_url('master-kegiatan-detail/edit') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="confirmDelete(2, 'Pencacahan Lahan Perkebunan')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4 text-sm text-gray-900">3</td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm font-medium text-gray-900">Survey Konsumsi Rumah Tangga</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm text-gray-600">Wawancara Rumah Tangga</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm text-gray-600">Responden</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-info">Semester 1</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm font-medium text-gray-900">2025</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('master-kegiatan-detail/detail') ?>" 
-                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="<?= base_url('master-kegiatan-detail/edit') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="confirmDelete(3, 'Wawancara Rumah Tangga')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4 text-sm text-gray-900">4</td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm font-medium text-gray-900">Sensus Penduduk Daerah Terpencil</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm text-gray-600">Pendataan Individu</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm text-gray-600">Jiwa</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-info">Q1</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm font-medium text-gray-900">2025</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('master-kegiatan-detail/detail') ?>" 
-                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="<?= base_url('master-kegiatan-detail/edit') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="confirmDelete(4, 'Pendataan Individu')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4 text-sm text-gray-900">5</td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm font-medium text-gray-900">Pendataan Usaha Mikro Kecil Menengah</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm text-gray-600">Survei Usaha Perdagangan</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm text-gray-600">Unit Usaha</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-info">Triwulan II</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm font-medium text-gray-900">2025</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('master-kegiatan-detail/detail') ?>" 
-                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="<?= base_url('master-kegiatan-detail/edit') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="confirmDelete(5, 'Survei Usaha Perdagangan')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4 text-sm text-gray-900">6</td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm font-medium text-gray-900">Survey Indeks Harga Konsumen</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <p class="text-sm text-gray-600">Pencatatan Harga Pasar</p>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm text-gray-600">Komoditas</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-info">Bulanan</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="text-sm font-medium text-gray-900">2025</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('master-kegiatan-detail/detail') ?>" 
-                               class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="<?= base_url('master-kegiatan-detail/edit') ?>" 
-                               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="confirmDelete(6, 'Pencatatan Harga Pasar')"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($details as $index => $detail): ?>
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-4 py-4 text-sm text-gray-900"><?= $index + 1 ?></td>
+                            <td class="px-4 py-4">
+                                <p class="text-sm font-medium text-gray-900"><?= esc($detail['nama_kegiatan'] ?? '-') ?></p>
+                                <?php if (!empty($detail['periode_kegiatan'])): ?>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        <i class="fas fa-calendar-alt mr-1"></i><?= esc($detail['periode_kegiatan']) ?>
+                                    </p>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-4">
+                                <p class="text-sm text-gray-900"><?= esc($detail['nama_kegiatan_detail']) ?></p>
+                                <?php if (!empty($detail['keterangan'])): ?>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1"><?= esc($detail['keterangan']) ?></p>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="text-sm text-gray-600"><?= esc($detail['satuan']) ?></span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="badge badge-info"><?= esc($detail['periode']) ?></span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="text-sm font-medium text-gray-900"><?= esc($detail['tahun']) ?></span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <a href="<?= base_url('superadmin/master-kegiatan-detail/show/' . $detail['id_kegiatan_detail']) ?>" 
+                                       class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                                       title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="<?= base_url('superadmin/master-kegiatan-detail/' . $detail['id_kegiatan_detail'] . '/edit') ?>" 
+                                       class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button onclick="confirmDelete(<?= $detail['id_kegiatan_detail'] ?>, '<?= esc($detail['nama_kegiatan_detail'], 'js') ?>')"
+                                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                            title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
     
-    <!-- Pagination -->
-    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <!-- Pagination Info -->
+    <?php if (!empty($details)): ?>
+    <div class="mt-6 flex items-center justify-between">
         <p class="text-sm text-gray-600">
-            Menampilkan <span class="font-medium">6</span> data
+            Menampilkan <span class="font-medium"><?= count($details) ?></span> data
         </p>
-        
-        <div class="flex items-center space-x-2">
-            <button class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">1</button>
-            <button class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">2</button>
-            <button class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">3</button>
-            <button class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- SweetAlert2 Script -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Search functionality
+// ====================================================================
+// Show SweetAlert on Page Load
+// ====================================================================
+<?php if (session()->getFlashdata('success')): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: '<?= session()->getFlashdata('success') ?>',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        customClass: {
+            popup: 'rounded-xl'
+        }
+    });
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: '<?= session()->getFlashdata('error') ?>',
+        confirmButtonColor: '#3b82f6',
+        customClass: {
+            popup: 'rounded-xl',
+            confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+        }
+    });
+<?php endif; ?>
+
+// ====================================================================
+// Search Table
+// ====================================================================
 function searchTable() {
     const input = document.getElementById('searchInput');
     const filter = input.value.toLowerCase();
     const table = document.getElementById('kegiatanDetailTable');
-    const rows = table.getElementsByTagName('tr');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     
-    for (let i = 1; i < rows.length; i++) {
+    for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const cells = row.getElementsByTagName('td');
         let found = false;
+        
+        if (cells.length === 1 && cells[0].getAttribute('colspan')) {
+            continue;
+        }
         
         for (let j = 1; j < cells.length - 1; j++) {
             const cell = cells[j];
@@ -348,7 +226,22 @@ function searchTable() {
     }
 }
 
-// Delete confirmation dengan SweetAlert2
+// ====================================================================
+// Filter by Master Kegiatan
+// ====================================================================
+function filterByKegiatan(kegiatanId) {
+    const url = new URL(window.location.href);
+    if (kegiatanId === 'all') {
+        url.searchParams.delete('kegiatan');
+    } else {
+        url.searchParams.set('kegiatan', kegiatanId);
+    }
+    window.location.href = url.toString();
+}
+
+// ====================================================================
+// Delete Confirmation
+// ====================================================================
 function confirmDelete(id, name) {
     Swal.fire({
         title: 'Hapus Data Kegiatan Detail?',
@@ -364,8 +257,7 @@ function confirmDelete(id, name) {
             popup: 'rounded-xl',
             confirmButton: 'px-6 py-2.5 rounded-lg font-medium',
             cancelButton: 'px-6 py-2.5 rounded-lg font-medium'
-        },
-        buttonsStyling: true
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             deleteData(id, name);
@@ -373,7 +265,9 @@ function confirmDelete(id, name) {
     });
 }
 
-// Fungsi untuk proses delete (simulasi)
+// ====================================================================
+// Delete Data
+// ====================================================================
 function deleteData(id, name) {
     Swal.fire({
         title: 'Menghapus...',
@@ -386,23 +280,55 @@ function deleteData(id, name) {
         }
     });
 
-    setTimeout(() => {
+    fetch(`<?= base_url('superadmin/master-kegiatan-detail/show/') ?>${id}`, {
+        method: 'DELETE',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil Dihapus!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'rounded-xl'
+                }
+            }).then(() => {
+                window.location.reload();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menghapus',
+                text: data.message,
+                confirmButtonColor: '#3b82f6',
+                customClass: {
+                    popup: 'rounded-xl',
+                    confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
         Swal.fire({
-            icon: 'success',
-            title: 'Berhasil Dihapus!',
-            text: `Data "${name}" telah dihapus.`,
+            icon: 'error',
+            title: 'Terjadi Kesalahan',
+            text: 'Gagal menghapus data. Silakan coba lagi.',
             confirmButtonColor: '#3b82f6',
             customClass: {
                 popup: 'rounded-xl',
                 confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
             }
-        }).then(() => {
-            const row = event.target.closest('tr');
-            if (row) {
-                row.remove();
-            }
         });
-    }, 1000);
+    });
 }
 </script>
 

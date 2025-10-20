@@ -15,7 +15,7 @@ class LoginController extends BaseController
         if ($session->get('isLoggedIn')) {
             switch ($session->get('id_role')) {
                 case 1:
-                    return redirect()->to('/admin');
+                    return redirect()->to('/superadmin');
                 case 2:
                     return redirect()->to('/adminsurvei');
                 case 3:
@@ -70,7 +70,7 @@ class LoginController extends BaseController
         // Redirect berdasarkan role
         switch ($user['id_role']) {
             case 1:
-                return redirect()->to('/admin'); // Super Admin
+                return redirect()->to('/superadmin'); // Super Admin
             case 2:
                 return redirect()->to('/adminsurvei'); // Admin Provinsi
             case 3:

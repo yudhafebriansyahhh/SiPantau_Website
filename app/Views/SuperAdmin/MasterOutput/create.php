@@ -5,7 +5,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('master-output') ?>" class="hover:text-blue-600 transition-colors">
+        <a href="<?= base_url('superadmin/master-output') ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Master Output
         </a>
     </div>
@@ -15,20 +15,24 @@
 
 <!-- Form Card -->
 <div class="card max-w-3xl">
-    <form id="formMasterOutput" method="POST" action="<?= base_url('kegiatan/store') ?>">
+    <form id="formMasterOutput" method="POST" action="<?= base_url('superadmin/master-output') ?>">
         <?= csrf_field() ?>
         
         <!-- Nama Output -->
         <div class="mb-6">
-            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="nama_output" class="block text-sm font-medium text-gray-700 mb-2">
                 Nama Output <span class="text-red-500">*</span>
             </label>
             <input type="text" 
-                   id="nama" 
-                   name="nama" 
-                   class="input-field" 
-                   placeholder="Contoh: SUNSENAS 2025"
+                   id="nama_output" 
+                   name="nama_output" 
+                   class="input-field <?= session('errors.nama_output') ? 'border-red-500' : '' ?>" 
+                   placeholder="Contoh: SUSENAS 2025"
+                   value="<?= old('nama_output') ?>"
                    required>
+            <?php if (session('errors.nama_output')): ?>
+                <p class="mt-1 text-sm text-red-600"><?= session('errors.nama_output') ?></p>
+            <?php endif; ?>
             <p class="mt-1 text-xs text-gray-500">Masukkan nama lengkap kegiatan survei/sensus</p>
         </div>
 
@@ -40,9 +44,12 @@
             <textarea id="fungsi" 
                       name="fungsi" 
                       rows="4" 
-                      class="input-field resize-none" 
+                      class="input-field resize-none <?= session('errors.fungsi') ? 'border-red-500' : '' ?>" 
                       placeholder="Contoh: Survei Sosial Ekonomi Nasional untuk mengumpulkan data kondisi sosial ekonomi masyarakat"
-                      required></textarea>
+                      required><?= old('fungsi') ?></textarea>
+            <?php if (session('errors.fungsi')): ?>
+                <p class="mt-1 text-sm text-red-600"><?= session('errors.fungsi') ?></p>
+            <?php endif; ?>
             <p class="mt-1 text-xs text-gray-500">Jelaskan fungsi atau tujuan dari kegiatan ini</p>
         </div>
 
@@ -54,9 +61,13 @@
             <input type="text" 
                    id="alias" 
                    name="alias" 
-                   class="input-field" 
+                   class="input-field <?= session('errors.alias') ? 'border-red-500' : '' ?>" 
                    placeholder="Contoh: SUSENAS"
+                   value="<?= old('alias') ?>"
                    required>
+            <?php if (session('errors.alias')): ?>
+                <p class="mt-1 text-sm text-red-600"><?= session('errors.alias') ?></p>
+            <?php endif; ?>
             <p class="mt-1 text-xs text-gray-500">Masukkan singkatan atau alias dari kegiatan</p>
         </div>
 
@@ -66,7 +77,7 @@
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-3">
             <button type="button" 
-                    onclick="window.location.href='<?= base_url('master-output') ?>'"
+                    onclick="window.location.href='<?= base_url('superadmin/master-output') ?>'"
                     class="btn-secondary w-full sm:w-auto order-2 sm:order-1">
                 <i class="fas fa-times mr-2"></i>
                 Batal
@@ -90,16 +101,17 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Form validation dan submit
+// ====================================================================
+// Form Submit with Confirmation
+// ====================================================================
 document.getElementById('formMasterOutput').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Validasi form
-    const nama = document.getElementById('nama').value.trim();
+    const namaOutput = document.getElementById('nama_output').value.trim();
     const fungsi = document.getElementById('fungsi').value.trim();
     const alias = document.getElementById('alias').value.trim();
     
-    if (!nama || !fungsi || !alias) {
+    if (!namaOutput || !fungsi || !alias) {
         Swal.fire({
             icon: 'error',
             title: 'Form Tidak Lengkap',
@@ -113,7 +125,6 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
         return;
     }
     
-    // Konfirmasi sebelum menyimpan
     Swal.fire({
         title: 'Simpan Data?',
         text: 'Apakah Anda yakin ingin menyimpan data master output ini?',
@@ -131,7 +142,6 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Tampilkan loading
             Swal.fire({
                 title: 'Menyimpan...',
                 html: 'Mohon tunggu sebentar',
@@ -143,30 +153,14 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
                 }
             });
             
-            // Simulasi proses simpan (untuk static demo)
-            setTimeout(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil Disimpan!',
-                    text: 'Data master output telah ditambahkan.',
-                    confirmButtonColor: '#3b82f6',
-                    customClass: {
-                        popup: 'rounded-xl',
-                        confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-                    }
-                }).then(() => {
-                    // Redirect ke halaman master output
-                    window.location.href = '<?= base_url('master-output') ?>';
-                });
-            }, 1000);
-            
-            // Untuk implementasi real, uncomment ini:
-            // this.submit();
+            this.submit();
         }
     });
 });
 
-// Reset form
+// ====================================================================
+// Reset Form Function
+// ====================================================================
 function resetForm() {
     Swal.fire({
         title: 'Reset Form?',
@@ -190,8 +184,9 @@ function resetForm() {
                 icon: 'success',
                 title: 'Form Direset',
                 text: 'Form telah dikosongkan',
-                timer: 1500,
                 showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true,
                 customClass: {
                     popup: 'rounded-xl'
                 }
@@ -200,7 +195,9 @@ function resetForm() {
     });
 }
 
-// Auto-capitalize input
+// ====================================================================
+// Auto Uppercase Alias
+// ====================================================================
 document.getElementById('alias').addEventListener('input', function(e) {
     this.value = this.value.toUpperCase();
 });

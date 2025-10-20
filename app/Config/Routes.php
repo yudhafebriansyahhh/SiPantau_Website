@@ -1,5 +1,6 @@
 <?php
 
+use CodeIgniter\Controller;
 use CodeIgniter\Router\RouteCollection;
 
 /**
@@ -16,31 +17,44 @@ $routes->get('logout', 'Auth\LoginController::logout');
 $routes->get('unauthorized', 'ErrorController::unauthorized');
 
 // ================== SUPER ADMIN (id_role = 1) ==================
-$routes->group('admin', ['filter' => 'role:1'], static function ($routes) {
-    $routes->get('/', 'Admin::index');
+$routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
+    $routes->get('/', 'SuperAdmin\DashboardController::index');
 
-    // Master Output
-    $routes->get('master-output', 'Admin::master_output');
-    $routes->get('master-output/create', 'Admin::tambah_master_output');
-    $routes->get('master-output/edit', 'Admin::edit_master_output');
+    // Master Output Routes
+    $routes->get('master-output', 'SuperAdmin\MasterOutputController::index');
+    $routes->get('master-output/create', 'SuperAdmin\MasterOutputController::create');
+    $routes->post('master-output', 'SuperAdmin\MasterOutputController::store');
+    $routes->get('master-output/(:num)/edit', 'SuperAdmin\MasterOutputController::edit/$1');
+    $routes->put('master-output/(:num)', 'SuperAdmin\MasterOutputController::update/$1');
+    $routes->delete('master-output/(:num)', 'SuperAdmin\MasterOutputController::delete/$1');
+    $routes->get('master-output/data', 'SuperAdmin\MasterOutputController::getData');
 
-    // Master Kegiatan
-    $routes->get('master-kegiatan', 'Admin::master_kegiatan');
-    $routes->get('master-kegiatan/create', 'Admin::tambah_master_kegiatan');
-    $routes->get('master-kegiatan/edit', 'Admin::edit_master_kegiatan');
-    $routes->get('master-kegiatan/detail', 'Admin::detail_master_kegiatan');
 
-    // Master Kegiatan Detail
-    $routes->get('master-kegiatan-detail', 'Admin::master_kegiatan_detail');
-    $routes->get('master-kegiatan-detail/create', 'Admin::tambah_master_kegiatan_detail');
-    $routes->get('master-kegiatan-detail/edit', 'Admin::edit_master_kegiatan_detail');
-    $routes->get('master-kegiatan-detail/detail', 'Admin::detail_master_kegiatan_detail');
+    // Master Kegiatan Routes
+    $routes->get('master-kegiatan', 'SuperAdmin\MasterKegiatanController::index');
+    $routes->get('master-kegiatan/create', 'SuperAdmin\MasterKegiatanController::create');
+    $routes->post('master-kegiatan', 'SuperAdmin\MasterKegiatanController::store');
+    $routes->get('master-kegiatan/show/(:num)', 'SuperAdmin\MasterKegiatanController::show/$1');
+    $routes->get('master-kegiatan/edit/(:num)', 'SuperAdmin\MasterKegiatanController::edit/$1');
+    $routes->put('master-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanController::update/$1');
+    $routes->delete('master-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanController::delete/$1');
+
+    // Master Kegiatan Detail Routes
+    $routes->get('master-kegiatan-detail', 'SuperAdmin\MasterKegiatanDetailController::index');
+    $routes->get('master-kegiatan-detail/create', 'SuperAdmin\MasterKegiatanDetailController::create');
+    $routes->post('master-kegiatan-detail', 'SuperAdmin\MasterKegiatanDetailController::store');
+    $routes->get('master-kegiatan-detail/show/(:num)', 'SuperAdmin\MasterKegiatanDetailController::show/$1');
+    $routes->get('master-kegiatan-detail/(:num)/edit', 'SuperAdmin\MasterKegiatanDetailController::edit/$1');
+    $routes->put('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::update/$1');
+    $routes->delete('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::delete/$1');
+    $routes->get('master-kegiatan-detail/by-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getByKegiatan/$1');
 
     // Kelola Pengguna
-    $routes->get('kelola-pengguna', 'Admin::kelola_pengguna');
-    $routes->get('kelola-pengguna/create', 'Admin::tambah_kelola_pengguna');
-    $routes->get('kelola-pengguna/edit', 'Admin::edit_kelola_pengguna');
-    $routes->get('kelola-admin-surveyprov', 'Admin::kelola_admin_prov');
+    $routes->get('kelola-pengguna', 'SuperAdmin\DashboardController::kelola_pengguna');
+    $routes->get('kelola-pengguna/create', 'SuperAdmin\DashboardController::tambah_kelola_pengguna');
+    $routes->get('kelola-pengguna/edit', 'SuperAdmin\DashboardController::edit_kelola_pengguna');
+    $routes->get('kelola-SuperAdmin\DashboardController-surveyprov', 'SuperAdmin\DashboardController::kelola_admin_prov');
+    $routes->get('comingsoon', 'Comingsoon::index');
 });
 
 // ================== ADMIN SURVEI PROVINSI (id_role = 2) ==================

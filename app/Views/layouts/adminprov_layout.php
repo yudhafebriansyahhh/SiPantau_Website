@@ -130,12 +130,16 @@
                                     <p class="text-sm font-medium text-gray-900">Admin</p>
                                     <p class="text-xs text-gray-500">Admin Survei Provinsi</p>
                                 </div>
-                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                             </button>
 
                             <!-- Dropdown -->
+<<<<<<< HEAD
+                            <!-- <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                                <a href="<?= base_url('profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+=======
                             <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                                 <a href="<?= base_url('adminsurvei/profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+>>>>>>> e59eaee4f47e4706f7644244a06dd0881ec1eddb
                                     <i class="far fa-user w-5"></i>
                                     <span class="ml-2">Profile</span>
                                 </a>
@@ -148,7 +152,7 @@
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>

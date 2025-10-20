@@ -5,7 +5,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('kegiatan-wilayah') ?>" class="hover:text-blue-600 transition-colors">
+        <a href="<?= base_url('superadmin/master-kegiatan-detail') ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Master Kegiatan Detail
         </a>
     </div>
@@ -15,7 +15,7 @@
 
 <!-- Form Card -->
 <div class="card max-w-3xl">
-    <form id="formKegiatanDetail" method="POST" action="<?= base_url('kegiatan-wilayah/update/1') ?>">
+    <form id="formKegiatanDetail" method="POST" action="<?= base_url('superadmin/master-kegiatan-detail/' . $detail['id_kegiatan_detail']) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="_method" value="PUT">
         
@@ -27,34 +27,44 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-blue-700">
-                        Anda sedang mengedit data: <strong>Pencacahan Lahan Sawah</strong>
+                        Anda sedang mengedit data: <strong><?= esc($detail['nama_kegiatan_detail']) ?></strong>
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Master Kegiatan (Dropdown) -->
+        <!-- Master Kegiatan -->
         <div class="mb-6">
-            <label for="master_kegiatan" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="id_kegiatan" class="block text-sm font-medium text-gray-700 mb-2">
                 Master Kegiatan <span class="text-red-500">*</span>
             </label>
             <div class="relative">
-                <select id="master_kegiatan" 
-                        name="master_kegiatan" 
-                        class="input-field w-full pr-10"
+                <select id="id_kegiatan" 
+                        name="id_kegiatan" 
+                        class="input-field appearance-none pr-10 <?= session('errors.id_kegiatan') ? 'border-red-500' : '' ?>"
                         required>
                     <option value="">-- Pilih Master Kegiatan --</option>
-                    <option value="1" selected>Pendataan Lahan Pertanian</option>
-                    <option value="2">Survey Konsumsi Rumah Tangga</option>
-                    <option value="3">Sensus Penduduk Daerah Terpencil</option>
-                    <option value="4">Pendataan Usaha Mikro Kecil Menengah</option>
-                    <option value="5">Survey Indeks Harga Konsumen</option>
+                    <?php if (!empty($masterKegiatans)): ?>
+                        <?php foreach ($masterKegiatans as $kegiatan): ?>
+                            <option value="<?= $kegiatan['id_kegiatan'] ?>" 
+                                    <?= (old('id_kegiatan', $detail['id_kegiatan']) == $kegiatan['id_kegiatan']) ? 'selected' : '' ?>>
+                                <?= esc($kegiatan['nama_kegiatan']) ?>
+                                <?php if (!empty($kegiatan['nama_output'])): ?>
+                                    (<?= esc($kegiatan['nama_output']) ?>)
+                                <?php endif; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
-                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                     <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
                 </div>
             </div>
-            <p class="mt-1 text-xs text-gray-500">Pilih master kegiatan yang sesuai</p>
+            <?php if (session('errors.id_kegiatan')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.id_kegiatan') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Pilih master kegiatan yang sesuai</p>
+            <?php endif; ?>
         </div>
 
         <!-- Nama Kegiatan Detail -->
@@ -65,11 +75,15 @@
             <input type="text" 
                    id="nama_kegiatan_detail" 
                    name="nama_kegiatan_detail" 
-                   class="input-field" 
-                   value="Pencacahan Lahan Sawah"
+                   class="input-field <?= session('errors.nama_kegiatan_detail') ? 'border-red-500' : '' ?>"
+                   value="<?= old('nama_kegiatan_detail', $detail['nama_kegiatan_detail']) ?>"
                    placeholder="Contoh: Pencacahan Lahan Sawah"
                    required>
-            <p class="mt-1 text-xs text-gray-500">Masukkan nama detail kegiatan yang akan dilaksanakan</p>
+            <?php if (session('errors.nama_kegiatan_detail')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.nama_kegiatan_detail') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Masukkan nama detail kegiatan yang akan dilaksanakan</p>
+            <?php endif; ?>
         </div>
 
         <!-- Satuan -->
@@ -80,42 +94,111 @@
             <input type="text" 
                    id="satuan" 
                    name="satuan" 
-                   class="input-field" 
-                   value="Hektar"
+                   class="input-field <?= session('errors.satuan') ? 'border-red-500' : '' ?>"
+                   value="<?= old('satuan', $detail['satuan']) ?>"
                    placeholder="Contoh: Hektar, Responden, Jiwa"
                    required>
-            <p class="mt-1 text-xs text-gray-500">Masukkan satuan pengukuran kegiatan</p>
+            <?php if (session('errors.satuan')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.satuan') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Masukkan satuan pengukuran kegiatan</p>
+            <?php endif; ?>
         </div>
 
-        <!-- Periode -->
-        <div class="mb-6">
-            <label for="periode" class="block text-sm font-medium text-gray-700 mb-2">
-                Periode <span class="text-red-500">*</span>
-            </label>
-            <input type="text" 
-                   id="periode" 
-                   name="periode" 
-                   class="input-field" 
-                   value="Q1"
-                   placeholder="Contoh: Q1, Q2, Semester 1, Triwulan II"
-                   required>
-            <p class="mt-1 text-xs text-gray-500">Masukkan periode pelaksanaan</p>
+        <!-- Grid for Periode and Tahun -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Periode -->
+            <div>
+                <label for="periode" class="block text-sm font-medium text-gray-700 mb-2">
+                    Periode <span class="text-red-500">*</span>
+                </label>
+                <input type="text" 
+                       id="periode" 
+                       name="periode" 
+                       class="input-field <?= session('errors.periode') ? 'border-red-500' : '' ?>"
+                       value="<?= old('periode', $detail['periode']) ?>"
+                       placeholder="Contoh: Q1, Semester 1"
+                       required>
+                <?php if (session('errors.periode')): ?>
+                    <p class="mt-1 text-xs text-red-500"><?= session('errors.periode') ?></p>
+                <?php else: ?>
+                    <p class="mt-1 text-xs text-gray-500">Periode pelaksanaan</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Tahun -->
+            <div>
+                <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tahun <span class="text-red-500">*</span>
+                </label>
+                <input type="number" 
+                       id="tahun" 
+                       name="tahun" 
+                       class="input-field <?= session('errors.tahun') ? 'border-red-500' : '' ?>"
+                       value="<?= old('tahun', $detail['tahun']) ?>"
+                       min="2020"
+                       max="2030"
+                       required>
+                <?php if (session('errors.tahun')): ?>
+                    <p class="mt-1 text-xs text-red-500"><?= session('errors.tahun') ?></p>
+                <?php else: ?>
+                    <p class="mt-1 text-xs text-gray-500">Tahun pelaksanaan</p>
+                <?php endif; ?>
+            </div>
         </div>
 
-        <!-- Tahun -->
+        <!-- Grid for Tanggal Mulai and Tanggal Selesai -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Tanggal Mulai -->
+            <div>
+                <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Mulai
+                </label>
+                <input type="date" 
+                       id="tanggal_mulai" 
+                       name="tanggal_mulai" 
+                       class="input-field <?= session('errors.tanggal_mulai') ? 'border-red-500' : '' ?>"
+                       value="<?= old('tanggal_mulai', $detail['tanggal_mulai']) ?>">
+                <?php if (session('errors.tanggal_mulai')): ?>
+                    <p class="mt-1 text-xs text-red-500"><?= session('errors.tanggal_mulai') ?></p>
+                <?php else: ?>
+                    <p class="mt-1 text-xs text-gray-500">Tanggal mulai kegiatan</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Tanggal Selesai -->
+            <div>
+                <label for="tanggal_selesai" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Selesai
+                </label>
+                <input type="date" 
+                       id="tanggal_selesai" 
+                       name="tanggal_selesai" 
+                       class="input-field <?= session('errors.tanggal_selesai') ? 'border-red-500' : '' ?>"
+                       value="<?= old('tanggal_selesai', $detail['tanggal_selesai']) ?>">
+                <?php if (session('errors.tanggal_selesai')): ?>
+                    <p class="mt-1 text-xs text-red-500"><?= session('errors.tanggal_selesai') ?></p>
+                <?php else: ?>
+                    <p class="mt-1 text-xs text-gray-500">Tanggal selesai kegiatan</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Keterangan -->
         <div class="mb-6">
-            <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">
-                Tahun <span class="text-red-500">*</span>
+            <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-2">
+                Keterangan
             </label>
-            <input type="number" 
-                   id="tahun" 
-                   name="tahun" 
-                   class="input-field" 
-                   value="2025"
-                   min="2020"
-                   max="2030"
-                   required>
-            <p class="mt-1 text-xs text-gray-500">Masukkan tahun pelaksanaan kegiatan</p>
+            <textarea id="keterangan" 
+                      name="keterangan" 
+                      rows="3" 
+                      class="input-field resize-none <?= session('errors.keterangan') ? 'border-red-500' : '' ?>"
+                      placeholder="Tambahkan keterangan atau catatan tambahan (opsional)"><?= old('keterangan', $detail['keterangan']) ?></textarea>
+            <?php if (session('errors.keterangan')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.keterangan') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Keterangan tambahan untuk kegiatan detail ini</p>
+            <?php endif; ?>
         </div>
 
         <!-- Divider -->
@@ -124,7 +207,7 @@
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-3">
             <button type="button" 
-                    onclick="window.location.href='<?= base_url('kegiatan-wilayah') ?>'"
+                    onclick="window.location.href='<?= base_url('superadmin/master-kegiatan-detail') ?>'"
                     class="btn-secondary w-full sm:w-auto order-2 sm:order-1">
                 <i class="fas fa-times mr-2"></i>
                 Batal
@@ -150,39 +233,27 @@
 <script>
 // Store original values
 const originalValues = {
-    master_kegiatan: '1',
-    nama_kegiatan_detail: 'Pencacahan Lahan Sawah',
-    satuan: 'Hektar',
-    periode: 'Q1',
-    tahun: '2025'
+    id_kegiatan: '<?= $detail['id_kegiatan'] ?>',
+    nama_kegiatan_detail: '<?= esc($detail['nama_kegiatan_detail'], 'js') ?>',
+    satuan: '<?= esc($detail['satuan'], 'js') ?>',
+    periode: '<?= esc($detail['periode'], 'js') ?>',
+    tahun: '<?= $detail['tahun'] ?>',
+    tanggal_mulai: '<?= $detail['tanggal_mulai'] ?>',
+    tanggal_selesai: '<?= $detail['tanggal_selesai'] ?>',
+    keterangan: '<?= esc($detail['keterangan'], 'js') ?>'
 };
 
 // Form validation dan submit
 document.getElementById('formKegiatanDetail').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Validasi form
-    const masterKegiatan = document.getElementById('master_kegiatan').value;
+    const idKegiatan = document.getElementById('id_kegiatan').value;
     const namaKegiatanDetail = document.getElementById('nama_kegiatan_detail').value.trim();
     const satuan = document.getElementById('satuan').value.trim();
     const periode = document.getElementById('periode').value.trim();
     const tahun = document.getElementById('tahun').value.trim();
     
-    if (!masterKegiatan) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Master Kegiatan Belum Dipilih',
-            text: 'Harap pilih master kegiatan terlebih dahulu!',
-            confirmButtonColor: '#3b82f6',
-            customClass: {
-                popup: 'rounded-xl',
-                confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-            }
-        });
-        return;
-    }
-    
-    if (!namaKegiatanDetail || !satuan || !periode || !tahun) {
+    if (!idKegiatan || !namaKegiatanDetail || !satuan || !periode || !tahun) {
         Swal.fire({
             icon: 'error',
             title: 'Form Tidak Lengkap',
@@ -196,13 +267,20 @@ document.getElementById('formKegiatanDetail').addEventListener('submit', functio
         return;
     }
     
-    // Cek apakah ada perubahan
+    // Check for changes
+    const tanggalMulai = document.getElementById('tanggal_mulai').value;
+    const tanggalSelesai = document.getElementById('tanggal_selesai').value;
+    const keterangan = document.getElementById('keterangan').value;
+    
     const hasChanges = 
-        masterKegiatan !== originalValues.master_kegiatan || 
-        namaKegiatanDetail !== originalValues.nama_kegiatan_detail || 
+        idKegiatan !== originalValues.id_kegiatan ||
+        namaKegiatanDetail !== originalValues.nama_kegiatan_detail ||
         satuan !== originalValues.satuan ||
         periode !== originalValues.periode ||
-        tahun !== originalValues.tahun;
+        tahun !== originalValues.tahun ||
+        tanggalMulai !== originalValues.tanggal_mulai ||
+        tanggalSelesai !== originalValues.tanggal_selesai ||
+        keterangan !== originalValues.keterangan;
     
     if (!hasChanges) {
         Swal.fire({
@@ -218,38 +296,6 @@ document.getElementById('formKegiatanDetail').addEventListener('submit', functio
         return;
     }
     
-    // Validasi minimal panjang input
-    if (namaKegiatanDetail.length < 5) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Nama Kegiatan Detail Terlalu Pendek',
-            text: 'Nama kegiatan detail minimal 5 karakter',
-            confirmButtonColor: '#3b82f6',
-            customClass: {
-                popup: 'rounded-xl',
-                confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-            }
-        });
-        return;
-    }
-    
-    // Validasi tahun
-    const tahunInt = parseInt(tahun);
-    if (tahunInt < 2020 || tahunInt > 2030) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Tahun Tidak Valid',
-            text: 'Tahun harus antara 2020 dan 2030',
-            confirmButtonColor: '#3b82f6',
-            customClass: {
-                popup: 'rounded-xl',
-                confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-            }
-        });
-        return;
-    }
-    
-    // Konfirmasi sebelum menyimpan
     Swal.fire({
         title: 'Simpan Perubahan?',
         text: 'Apakah Anda yakin ingin menyimpan perubahan data ini?',
@@ -267,7 +313,6 @@ document.getElementById('formKegiatanDetail').addEventListener('submit', functio
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Tampilkan loading
             Swal.fire({
                 title: 'Menyimpan Perubahan...',
                 html: 'Mohon tunggu sebentar',
@@ -279,25 +324,8 @@ document.getElementById('formKegiatanDetail').addEventListener('submit', functio
                 }
             });
             
-            // Simulasi proses simpan (untuk static demo)
-            setTimeout(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil Diperbarui!',
-                    text: 'Data kegiatan detail telah diperbarui.',
-                    confirmButtonColor: '#3b82f6',
-                    customClass: {
-                        popup: 'rounded-xl',
-                        confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-                    }
-                }).then(() => {
-                    // Redirect ke halaman kegiatan detail
-                    window.location.href = '<?= base_url('kegiatan-wilayah') ?>';
-                });
-            }, 1000);
-            
-            // Untuk implementasi real, uncomment ini:
-            // this.submit();
+            // Submit form
+            this.submit();
         }
     });
 });
@@ -321,18 +349,14 @@ function resetToOriginal() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            document.getElementById('master_kegiatan').value = originalValues.master_kegiatan;
+            document.getElementById('id_kegiatan').value = originalValues.id_kegiatan;
             document.getElementById('nama_kegiatan_detail').value = originalValues.nama_kegiatan_detail;
             document.getElementById('satuan').value = originalValues.satuan;
             document.getElementById('periode').value = originalValues.periode;
             document.getElementById('tahun').value = originalValues.tahun;
-            
-            // Reset highlight
-            const formInputs = ['master_kegiatan', 'nama_kegiatan_detail', 'satuan', 'periode', 'tahun'];
-            formInputs.forEach(inputId => {
-                const input = document.getElementById(inputId);
-                input.classList.remove('border-blue-500', 'bg-blue-50');
-            });
+            document.getElementById('tanggal_mulai').value = originalValues.tanggal_mulai;
+            document.getElementById('tanggal_selesai').value = originalValues.tanggal_selesai;
+            document.getElementById('keterangan').value = originalValues.keterangan;
             
             Swal.fire({
                 icon: 'success',
@@ -348,43 +372,19 @@ function resetToOriginal() {
     });
 }
 
-// Track changes untuk highlight
-const formInputs = ['master_kegiatan', 'nama_kegiatan_detail', 'satuan', 'periode', 'tahun'];
-formInputs.forEach(inputId => {
-    const input = document.getElementById(inputId);
-    input.addEventListener('input', function() {
-        const originalValue = originalValues[inputId];
-        if (this.value !== originalValue) {
-            this.classList.add('border-blue-500', 'bg-blue-50');
-        } else {
-            this.classList.remove('border-blue-500', 'bg-blue-50');
+// Show validation errors from session
+<?php if (session('errors')): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Validasi Gagal',
+        html: '<?= implode("<br>", array_map('esc', session('errors'))) ?>',
+        confirmButtonColor: '#3b82f6',
+        customClass: {
+            popup: 'rounded-xl',
+            confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
         }
     });
-});
-
-// For select element, use 'change' event
-document.getElementById('master_kegiatan').addEventListener('change', function() {
-    const originalValue = originalValues.master_kegiatan;
-    if (this.value !== originalValue) {
-        this.classList.add('border-blue-500', 'bg-blue-50');
-    } else {
-        this.classList.remove('border-blue-500', 'bg-blue-50');
-    }
-});
-
-// Auto-capitalize first letter untuk nama kegiatan detail
-document.getElementById('nama_kegiatan_detail').addEventListener('blur', function() {
-    if (this.value) {
-        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
-    }
-});
-
-// Auto-capitalize satuan
-document.getElementById('satuan').addEventListener('blur', function() {
-    if (this.value) {
-        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
-    }
-});
+<?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

@@ -43,7 +43,7 @@
             <nav class="flex-1 overflow-y-auto scrollbar-thin py-4 px-3 pb-20">
                 <div class="space-y-1">
                     <!-- Dashboard -->
-                    <a href="<?= base_url('admin') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
+                    <a href="<?= base_url('superadmin') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
                         <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
@@ -63,15 +63,15 @@
                             <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="task-icon"></i>
                         </button>
                         <div id="task-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('admin/master-output') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-output' ? 'active' : '' ?>">
+                            <a href="<?= base_url('superadmin/master-output') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-output' ? 'active' : '' ?>">
                                 <i class="fas fa-bullseye w-4 mr-2"></i>    
                                 <span>Master Output</span>
                             </a>
-                            <a href="<?= base_url('admin/master-kegiatan') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan' ? 'active' : '' ?>">
+                            <a href="<?= base_url('superadmin/master-kegiatan') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan' ? 'active' : '' ?>">
                                 <i class="fas fa-clipboard-list w-4 mr-2"></i>
                                 <span>Master Kegiatan</span>
                             </a>
-                            <a href="<?= base_url('admin/master-kegiatan-detail') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail' ? 'active' : '' ?>">
+                            <a href="<?= base_url('superadmin/master-kegiatan-detail') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail' ? 'active' : '' ?>">
                                 <i class="fas fa-list-check w-4 mr-2"></i>
                                 <span>Master Kegiatan Detail</span>
                             </a>
@@ -79,13 +79,13 @@
                     </div>
 
                     <!-- Kelola Pengguna -->
-                    <a href="<?= base_url('admin/kelola-pengguna') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-pengguna' ? 'active' : '' ?>">
+                    <a href="<?= base_url('superadmin/kelola-pengguna') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-pengguna' ? 'active' : '' ?>">
                         <i class="fas fa-users w-5"></i>
                         <span class="ml-3">Kelola Pengguna</span>
                     </a>
                     
                     <!-- Kelola Admin Survey Provinsi -->
-                    <a href="<?= base_url('admin/kelola-admin-surveyprov') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-admin-surveyprov' ? 'active' : '' ?>">
+                    <a href="<?= base_url('superadmin/kelola-admin-surveyprov') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kelola-admin-surveyprov' ? 'active' : '' ?>">
                         <i class="fas fa-user-shield w-5"></i>
                         <span class="ml-3">Kelola Admin Survey Provinsi</span>
                     </a>
@@ -132,7 +132,6 @@
                                     <p class="text-sm font-medium text-gray-900">Admin</p>
                                     <p class="text-xs text-gray-500">Super Admin</p>
                                 </div>
-                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                             </button>
                             <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                                 <a href="<?= base_url('admin/profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
@@ -148,7 +147,7 @@
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
-                            </div>
+                            </div> 
                         </div>
                     </div>
                 </div>

@@ -97,13 +97,6 @@
                     
                     <!-- Right Section -->
                     <div class="flex items-center space-x-4 ml-auto">
-                        
-                        <!-- Notifications -->
-                        <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i class="far fa-bell text-xl"></i>
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
-                        
                         <!-- User Menu -->
                         <div class="relative">
                             <button onclick="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
@@ -114,7 +107,7 @@
                                     <p class="text-sm font-medium text-gray-900">Admin</p>
                                     <p class="text-xs text-gray-500">Admin Survei Kab</p>
                                 </div>
-                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                                <!-- <i class="fas fa-chevron-down text-xs text-gray-400"></i> -->
                             </button>
                             
                             <!-- Dropdown -->
@@ -132,7 +125,7 @@
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
