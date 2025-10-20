@@ -5,25 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SiPantau - <?= $title ?? 'Dashboard' ?></title>
     <link rel="shortcut icon" type="image/png" href="<?= base_url('assets/gambar/LOGO_BPS.png') ?>">
-    
+
     <!-- Google Fonts - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <link href="<?= base_url('assets/css/output.css') ?>" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    
-
 </head>
 <body class="bg-gray-50">
-    
+
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0">
         <div class="h-full flex flex-col bg-white border-r border-gray-200">
@@ -50,21 +48,20 @@
                         <span class="ml-3">Dashboard</span>
                     </a>
                     
-                    <!-- Calendar -->
+                    <!-- Calendar (tidak ditambahkan prefix) -->
                     <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
                         <i class="far fa-calendar-alt w-5"></i>
                         <span class="ml-3">Calendar</span>
                     </a>
 
                     <!-- Kelola Pengguna -->
-                    <a href="<?= base_url('assign-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
+                    <a href="<?= base_url('adminsurvei-kab/assign-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
                         <i class="fas fa-users w-5"></i>
                         <span class="ml-3">Assign Petugas Survei</span>
                     </a>
                     
-                    
-                    <!-- Feedback -->
-                    <a href="<?= base_url('approval-laporan') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                    <!-- Feedback / Approval Laporan -->
+                    <a href="<?= base_url('adminsurvei-kab/approval-laporan') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
                         <span class="ml-3">Approval Laporan</span>
                     </a>
@@ -74,7 +71,7 @@
                 
             <!-- Logout Button - Fixed at Bottom -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-                <a href="<?= base_url('/') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200 hover:text-red-700">
+                <a href="<?= base_url('logout') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200">
                     <i class="fas fa-sign-out-alt w-5"></i>
                     <span class="ml-3">Log Out</span>
                 </a>
@@ -114,17 +111,17 @@
                             </button>
                             
                             <!-- Dropdown -->
-                            <!-- <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                                <a href="<?= base_url('profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                                <a href="<?= base_url('adminsurvei-kab/profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="far fa-user w-5"></i>
                                     <span class="ml-2">Profile</span>
                                 </a>
-                                <a href="<?= base_url('settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <a href="<?= base_url('adminsurvei-kab/settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="fas fa-cog w-5"></i>
                                     <span class="ml-2">Settings</span>
                                 </a>
                                 <div class="border-t border-gray-200 my-1"></div>
-                                <a href="<?= base_url('/') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <a href="<?= base_url('logout') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>

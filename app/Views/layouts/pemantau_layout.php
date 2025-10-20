@@ -5,25 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SiPantau - <?= $title ?? 'Dashboard' ?></title>
     <link rel="shortcut icon" type="image/png" href="<?= base_url('assets/gambar/LOGO_BPS.png') ?>">
-    
+
     <!-- Google Fonts - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <link href="<?= base_url('assets/css/output.css') ?>" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    
-
 </head>
 <body class="bg-gray-50">
-    
+
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0">
         <div class="h-full flex flex-col bg-white border-r border-gray-200">
@@ -50,41 +48,41 @@
                         <span class="ml-3">Dashboard</span>
                     </a>
                     
-                    <!-- Calendar -->
+                    <!-- Calendar (tidak diarahkan ke pemantau/) -->
                     <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
                         <i class="far fa-calendar-alt w-5"></i>
                         <span class="ml-3">Calendar</span>
                     </a>
 
                     <!-- Kegiatan Detail Proses -->
-        <a href="<?= base_url('detail-proses') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'detail-proses' ? 'active' : '' ?>">
-            <i class="fas fa-list-check w-5"></i>
-            <span class="ml-3">Kegiatan Detail Proses</span>
-        </a>
+                    <a href="<?= base_url('pemantau/detail-proses') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'detail-proses' ? 'active' : '' ?>">
+                        <i class="fas fa-list-check w-5"></i>
+                        <span class="ml-3">Kegiatan Detail Proses</span>
+                    </a>
 
-        <!-- Kegiatan Wilayah -->
-        <a href="<?= base_url('kegiatan-wilayah-pemantau') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kegiatan-wilayah-pemantau' ? 'active' : '' ?>">
-            <i class="fas fa-map-location-dot w-5"></i>
-            <span class="ml-3">Kegiatan Wilayah</span>
-        </a>
+                    <!-- Kegiatan Wilayah -->
+                    <a href="<?= base_url('pemantau/kegiatan-wilayah-pemantau') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kegiatan-wilayah-pemantau' ? 'active' : '' ?>">
+                        <i class="fas fa-map-location-dot w-5"></i>
+                        <span class="ml-3">Kegiatan Wilayah</span>
+                    </a>
 
-        <!-- Data Petugas -->
-        <a href="<?= base_url('data-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'data-petugas' ? 'active' : '' ?>">
-            <i class="fas fa-id-card w-5"></i>
-            <span class="ml-3">Data Petugas</span>
-        </a>
+                    <!-- Data Petugas -->
+                    <a href="<?= base_url('pemantau/data-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'data-petugas' ? 'active' : '' ?>">
+                        <i class="fas fa-id-card w-5"></i>
+                        <span class="ml-3">Data Petugas</span>
+                    </a>
 
-        <!-- Laporan Petugas -->
-        <a href="<?= base_url('laporan-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'laporan-petugas' ? 'active' : '' ?>">
-            <i class="fas fa-file-lines w-5"></i>
-            <span class="ml-3">Laporan Petugas</span>
-        </a>
+                    <!-- Laporan Petugas -->
+                    <a href="<?= base_url('pemantau/laporan-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'laporan-petugas' ? 'active' : '' ?>">
+                        <i class="fas fa-file-lines w-5"></i>
+                        <span class="ml-3">Laporan Petugas</span>
+                    </a>
                 </div>
             </nav>
                 
             <!-- Logout Button - Fixed at Bottom -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-                <a href="<?= base_url('/') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200 hover:text-red-700">
+                <a href="<?= base_url('logout') ?>" class="sidebar-link text-red-600 hover:bg-red-50 border border-red-200">
                     <i class="fas fa-sign-out-alt w-5"></i>
                     <span class="ml-3">Log Out</span>
                 </a>
@@ -123,17 +121,22 @@
                             </button>
                             
                             <!-- Dropdown -->
+<<<<<<< HEAD
                             <!-- <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                                 <a href="<?= base_url('profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+=======
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                                <a href="<?= base_url('pemantau/profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+>>>>>>> e59eaee4f47e4706f7644244a06dd0881ec1eddb
                                     <i class="far fa-user w-5"></i>
                                     <span class="ml-2">Profile</span>
                                 </a>
-                                <a href="<?= base_url('settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <a href="<?= base_url('pemantau/settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="fas fa-cog w-5"></i>
                                     <span class="ml-2">Settings</span>
                                 </a>
                                 <div class="border-t border-gray-200 my-1"></div>
-                                <a href="<?= base_url('/') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <a href="<?= base_url('logout') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>

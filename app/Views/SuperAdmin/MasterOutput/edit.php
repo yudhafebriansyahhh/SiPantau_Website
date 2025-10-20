@@ -5,7 +5,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('master-output') ?>" class="hover:text-blue-600 transition-colors">
+        <a href="<?= base_url('superadmin/master-output') ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Master Output
         </a>
     </div>
@@ -15,7 +15,7 @@
 
 <!-- Form Card -->
 <div class="card max-w-3xl">
-    <form id="formMasterOutput" method="POST" action="<?= base_url('kegiatan/update/1') ?>">
+    <form id="formMasterOutput" method="POST" action="<?= base_url('superadmin/master-output/' . $output['id_output']) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="_method" value="PUT">
         
@@ -27,7 +27,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-blue-700">
-                        Anda sedang mengedit data: <strong>SUNSENAS 2025</strong>
+                        Anda sedang mengedit data: <strong><?= esc($output['nama_output']) ?></strong>
                     </p>
                 </div>
             </div>
@@ -35,16 +35,19 @@
 
         <!-- Nama Output -->
         <div class="mb-6">
-            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="nama_output" class="block text-sm font-medium text-gray-700 mb-2">
                 Nama Output <span class="text-red-500">*</span>
             </label>
             <input type="text" 
-                   id="nama" 
-                   name="nama" 
-                   class="input-field" 
-                   value="SUNSENAS 2025"
-                   placeholder="Contoh: SUNSENAS 2025"
+                   id="nama_output" 
+                   name="nama_output" 
+                   class="input-field <?= session('errors.nama_output') ? 'border-red-500' : '' ?>" 
+                   value="<?= old('nama_output', $output['nama_output']) ?>"
+                   placeholder="Contoh: SUSENAS 2025"
                    required>
+            <?php if (session('errors.nama_output')): ?>
+                <p class="mt-1 text-sm text-red-600"><?= session('errors.nama_output') ?></p>
+            <?php endif; ?>
             <p class="mt-1 text-xs text-gray-500">Masukkan nama lengkap kegiatan survei/sensus</p>
         </div>
 
@@ -56,48 +59,40 @@
             <textarea id="fungsi" 
                       name="fungsi" 
                       rows="4" 
-                      class="input-field resize-none" 
+                      class="input-field resize-none <?= session('errors.fungsi') ? 'border-red-500' : '' ?>" 
                       placeholder="Contoh: Survei Sosial Ekonomi Nasional untuk mengumpulkan data kondisi sosial ekonomi masyarakat"
-                      required>Survei Sosial Ekonomi Nasional untuk mengumpulkan data kondisi sosial ekonomi masyarakat Indonesia</textarea>
+                      required><?= old('fungsi', $output['fungsi']) ?></textarea>
+            <?php if (session('errors.fungsi')): ?>
+                <p class="mt-1 text-sm text-red-600"><?= session('errors.fungsi') ?></p>
+            <?php endif; ?>
             <p class="mt-1 text-xs text-gray-500">Jelaskan fungsi atau tujuan dari kegiatan ini</p>
         </div>
 
         <!-- Alias -->
         <div class="mb-6">
-            <label for="alias" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="alias" class="block text sm font-medium text-gray-700 mb-2">
                 Alias/Singkatan <span class="text-red-500">*</span>
             </label>
             <input type="text" 
                    id="alias" 
                    name="alias" 
-                   class="input-field" 
-                   value="SUSENAS"
+                   class="input-field <?= session('errors.alias') ? 'border-red-500' : '' ?>" 
+                   value="<?= old('alias', $output['alias']) ?>"
                    placeholder="Contoh: SUSENAS"
                    required>
+            <?php if (session('errors.alias')): ?>
+                <p class="mt-1 text-sm text-red-600"><?= session('errors.alias') ?></p>
+            <?php endif; ?>
             <p class="mt-1 text-xs text-gray-500">Masukkan singkatan atau alias dari kegiatan</p>
         </div>
 
         <!-- Divider -->
         <div class="border-t border-gray-200 my-6"></div>
 
-        <!-- Metadata Info -->
-        <!-- <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="bg-gray-50 rounded-lg p-3">
-                <p class="text-xs text-gray-600 mb-1">Dibuat Oleh</p>
-                <p class="text-sm font-medium text-gray-900">Admin Provinsi</p>
-                <p class="text-xs text-gray-500 mt-1">15 Januari 2025, 10:30</p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-3">
-                <p class="text-xs text-gray-600 mb-1">Terakhir Diubah</p>
-                <p class="text-sm font-medium text-gray-900">Admin Provinsi</p>
-                <p class="text-xs text-gray-500 mt-1">20 Januari 2025, 14:15</p>
-            </div>
-        </div> -->
-
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-3">
             <button type="button" 
-                    onclick="window.location.href='<?= base_url('master-output') ?>'"
+                    onclick="window.location.href='<?= base_url('superadmin/master-output') ?>'"
                     class="btn-secondary w-full sm:w-auto order-2 sm:order-1">
                 <i class="fas fa-times mr-2"></i>
                 Batal
@@ -121,23 +116,26 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Store original values
+// ====================================================================
+// Store Original Values
+// ====================================================================
 const originalValues = {
-    nama: 'SUNSENAS 2025',
-    fungsi: 'Survei Sosial Ekonomi Nasional untuk mengumpulkan data kondisi sosial ekonomi masyarakat Indonesia',
-    alias: 'SUSENAS'
+    nama_output: '<?= esc($output['nama_output']) ?>',
+    fungsi: '<?= esc($output['fungsi']) ?>',
+    alias: '<?= esc($output['alias']) ?>'
 };
 
-// Form validation dan submit
+// ====================================================================
+// Form Submit with Confirmation
+// ====================================================================
 document.getElementById('formMasterOutput').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Validasi form
-    const nama = document.getElementById('nama').value.trim();
+    const namaOutput = document.getElementById('nama_output').value.trim();
     const fungsi = document.getElementById('fungsi').value.trim();
     const alias = document.getElementById('alias').value.trim();
     
-    if (!nama || !fungsi || !alias) {
+    if (!namaOutput || !fungsi || !alias) {
         Swal.fire({
             icon: 'error',
             title: 'Form Tidak Lengkap',
@@ -151,9 +149,9 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
         return;
     }
     
-    // Cek apakah ada perubahan
+    // Check for changes
     const hasChanges = 
-        nama !== originalValues.nama || 
+        namaOutput !== originalValues.nama_output || 
         fungsi !== originalValues.fungsi || 
         alias !== originalValues.alias;
     
@@ -171,7 +169,6 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
         return;
     }
     
-    // Konfirmasi sebelum menyimpan
     Swal.fire({
         title: 'Simpan Perubahan?',
         text: 'Apakah Anda yakin ingin menyimpan perubahan data ini?',
@@ -189,7 +186,6 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Tampilkan loading
             Swal.fire({
                 title: 'Menyimpan Perubahan...',
                 html: 'Mohon tunggu sebentar',
@@ -201,30 +197,14 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
                 }
             });
             
-            // Simulasi proses simpan (untuk static demo)
-            setTimeout(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil Diperbarui!',
-                    text: 'Data master output telah diperbarui.',
-                    confirmButtonColor: '#3b82f6',
-                    customClass: {
-                        popup: 'rounded-xl',
-                        confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-                    }
-                }).then(() => {
-                    // Redirect ke halaman master output
-                    window.location.href = '<?= base_url('master-output') ?>';
-                });
-            }, 1000);
-            
-            // Untuk implementasi real, uncomment ini:
-            // this.submit();
+            this.submit();
         }
     });
 });
 
-// Reset to original values
+// ====================================================================
+// Reset to Original Values
+// ====================================================================
 function resetToOriginal() {
     Swal.fire({
         title: 'Kembalikan Data?',
@@ -243,16 +223,22 @@ function resetToOriginal() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            document.getElementById('nama').value = originalValues.nama;
+            document.getElementById('nama_output').value = originalValues.nama_output;
             document.getElementById('fungsi').value = originalValues.fungsi;
             document.getElementById('alias').value = originalValues.alias;
+            
+            // Remove highlight
+            document.querySelectorAll('.border-blue-500, .bg-blue-50').forEach(el => {
+                el.classList.remove('border-blue-500', 'bg-blue-50');
+            });
             
             Swal.fire({
                 icon: 'success',
                 title: 'Data Dikembalikan',
                 text: 'Data telah dikembalikan ke nilai awal',
-                timer: 1500,
                 showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true,
                 customClass: {
                     popup: 'rounded-xl'
                 }
@@ -261,13 +247,17 @@ function resetToOriginal() {
     });
 }
 
-// Auto-capitalize input
+// ====================================================================
+// Auto Uppercase Alias
+// ====================================================================
 document.getElementById('alias').addEventListener('input', function(e) {
     this.value = this.value.toUpperCase();
 });
 
-// Track changes untuk highlight
-const formInputs = ['nama', 'fungsi', 'alias'];
+// ====================================================================
+// Track Changes for Highlight
+// ====================================================================
+const formInputs = ['nama_output', 'fungsi', 'alias'];
 formInputs.forEach(inputId => {
     const input = document.getElementById(inputId);
     input.addEventListener('input', function() {

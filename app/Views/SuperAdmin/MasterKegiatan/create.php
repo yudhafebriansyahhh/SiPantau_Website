@@ -5,7 +5,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('master-kegiatan') ?>" class="hover:text-blue-600 transition-colors">
+        <a href="<?= base_url('superadmin/master-kegiatan') ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Master Kegiatan
         </a>
     </div>
@@ -15,7 +15,7 @@
 
 <!-- Form Card -->
 <div class="card max-w-3xl">
-    <form id="formMasterKegiatan" method="POST" action="<?= base_url('master-kegiatan/store') ?>">
+    <form id="formMasterKegiatan" method="POST" action="<?= base_url('superadmin/master-kegiatan') ?>">
         <?= csrf_field() ?>
         
         <!-- Info Alert -->
@@ -32,6 +32,43 @@
             </div>
         </div>
 
+        <!-- Master Output -->
+        <div class="mb-6">
+            <label for="id_output" class="block text-sm font-medium text-gray-700 mb-2">
+                Master Output <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+                <select id="id_output" 
+                        name="id_output" 
+                        class="input-field appearance-none pr-10 <?= session('errors.id_output') ? 'border-red-500' : '' ?>" 
+                        required>
+                    <option value="">-- Pilih Master Output --</option>
+                    <?php if (isset($masterOutputs) && !empty($masterOutputs)): ?>
+                        <?php foreach ($masterOutputs as $output): ?>
+                            <option value="<?= $output['id_output'] ?>" <?= old('id_output') == $output['id_output'] ? 'selected' : '' ?>>
+                                <?= esc($output['nama_output']) ?> (<?= esc($output['alias']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <option value="" disabled>Belum ada data master output</option>
+                    <?php endif; ?>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                </div>
+            </div>
+            <?php if (session('errors.id_output')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.id_output') ?></p>
+            <?php elseif (!isset($masterOutputs) || empty($masterOutputs)): ?>
+                <p class="mt-1 text-xs text-red-500">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    Belum ada data master output. <a href="<?= base_url('superadmin/master-output/create') ?>" class="text-blue-600 hover:underline">Tambah Master Output</a> terlebih dahulu.
+                </p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Pilih master output untuk kegiatan ini</p>
+            <?php endif; ?>
+        </div>
+
         <!-- Nama Kegiatan -->
         <div class="mb-6">
             <label for="nama_kegiatan" class="block text-sm font-medium text-gray-700 mb-2">
@@ -40,10 +77,15 @@
             <input type="text" 
                    id="nama_kegiatan" 
                    name="nama_kegiatan" 
-                   class="input-field" 
+                   class="input-field <?= session('errors.nama_kegiatan') ? 'border-red-500' : '' ?>" 
+                   value="<?= old('nama_kegiatan') ?>"
                    placeholder="Contoh: Pendataan Lahan Pertanian"
                    required>
-            <p class="mt-1 text-xs text-gray-500">Masukkan nama lengkap kegiatan survei/sensus</p>
+            <?php if (session('errors.nama_kegiatan')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.nama_kegiatan') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Masukkan nama lengkap kegiatan survei/sensus</p>
+            <?php endif; ?>
         </div>
 
         <!-- Fungsi -->
@@ -54,24 +96,45 @@
             <textarea id="fungsi" 
                       name="fungsi" 
                       rows="4" 
-                      class="input-field resize-none" 
+                      class="input-field resize-none <?= session('errors.fungsi') ? 'border-red-500' : '' ?>" 
                       placeholder="Contoh: Pendataan luas lahan dan jenis tanaman pertanian untuk mendukung program ketahanan pangan"
-                      required></textarea>
-            <p class="mt-1 text-xs text-gray-500">Jelaskan fungsi atau tujuan dari kegiatan ini</p>
+                      required><?= old('fungsi') ?></textarea>
+            <?php if (session('errors.fungsi')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.fungsi') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Jelaskan fungsi atau tujuan dari kegiatan ini</p>
+            <?php endif; ?>
         </div>
 
         <!-- Keterangan -->
         <div class="mb-6">
             <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-2">
-                Keterangan <span class="text-red-500">*</span>
+                Keterangan
             </label>
             <textarea id="keterangan" 
                       name="keterangan" 
                       rows="3" 
                       class="input-field resize-none" 
-                      placeholder="Contoh: Mencakup seluruh kabupaten di Provinsi Riau dengan fokus pada sektor pertanian pangan"
-                      required></textarea>
-            <p class="mt-1 text-xs text-gray-500">Tambahkan keterangan atau detail tambahan kegiatan</p>
+                      placeholder="Contoh: Mencakup seluruh kabupaten di Provinsi Riau dengan fokus pada sektor pertanian pangan"><?= old('keterangan') ?></textarea>
+            <p class="mt-1 text-xs text-gray-500">Tambahkan keterangan atau detail tambahan kegiatan (opsional)</p>
+        </div>
+
+        <!-- Pelaksana -->
+        <div class="mb-6">
+            <label for="pelaksana" class="block text-sm font-medium text-gray-700 mb-2">
+                Pelaksana
+            </label>
+            <input type="text" 
+                   id="pelaksana" 
+                   name="pelaksana" 
+                   class="input-field <?= session('errors.pelaksana') ? 'border-red-500' : '' ?>" 
+                   value="<?= old('pelaksana') ?>"
+                   placeholder="Contoh: BPS Provinsi Riau">
+            <?php if (session('errors.pelaksana')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.pelaksana') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Nama instansi atau tim pelaksana kegiatan (opsional)</p>
+            <?php endif; ?>
         </div>
 
         <!-- Periode -->
@@ -82,10 +145,15 @@
             <input type="text" 
                    id="periode" 
                    name="periode" 
-                   class="input-field" 
+                   class="input-field <?= session('errors.periode') ? 'border-red-500' : '' ?>" 
+                   value="<?= old('periode') ?>"
                    placeholder="Contoh: 2025, Q1 2025, Semester 1 2025, atau Januari-Juni 2025"
                    required>
-            <p class="mt-1 text-xs text-gray-500">Masukkan periode pelaksanaan kegiatan (tahun, triwulan, semester, atau bulan)</p>
+            <?php if (session('errors.periode')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.periode') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Masukkan periode pelaksanaan kegiatan (tahun, triwulan, semester, atau bulan)</p>
+            <?php endif; ?>
         </div>
 
         <!-- Divider -->
@@ -94,7 +162,7 @@
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-3">
             <button type="button" 
-                    onclick="window.location.href='<?= base_url('master-kegiatan') ?>'"
+                    onclick="window.location.href='<?= base_url('superadmin/master-kegiatan') ?>'"
                     class="btn-secondary w-full sm:w-auto order-2 sm:order-1">
                 <i class="fas fa-times mr-2"></i>
                 Batal
@@ -123,12 +191,26 @@ document.getElementById('formMasterKegiatan').addEventListener('submit', functio
     e.preventDefault();
     
     // Validasi form
+    const idOutput = document.getElementById('id_output').value.trim();
     const namaKegiatan = document.getElementById('nama_kegiatan').value.trim();
     const fungsi = document.getElementById('fungsi').value.trim();
-    const keterangan = document.getElementById('keterangan').value.trim();
     const periode = document.getElementById('periode').value.trim();
     
-    if (!namaKegiatan || !fungsi || !keterangan || !periode) {
+    if (!idOutput) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Master Output Belum Dipilih',
+            text: 'Harap pilih master output terlebih dahulu!',
+            confirmButtonColor: '#3b82f6',
+            customClass: {
+                popup: 'rounded-xl',
+                confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+            }
+        });
+        return;
+    }
+    
+    if (!namaKegiatan || !fungsi || !periode) {
         Swal.fire({
             icon: 'error',
             title: 'Form Tidak Lengkap',
@@ -201,25 +283,8 @@ document.getElementById('formMasterKegiatan').addEventListener('submit', functio
                 }
             });
             
-            // Simulasi proses simpan (untuk static demo)
-            setTimeout(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil Disimpan!',
-                    text: 'Data master kegiatan telah ditambahkan.',
-                    confirmButtonColor: '#3b82f6',
-                    customClass: {
-                        popup: 'rounded-xl',
-                        confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-                    }
-                }).then(() => {
-                    // Redirect ke halaman master kegiatan
-                    window.location.href = '<?= base_url('master-kegiatan') ?>';
-                });
-            }, 1000);
-            
-            // Untuk implementasi real, uncomment ini:
-            // this.submit();
+            // Submit form
+            this.submit();
         }
     });
 });
@@ -259,7 +324,7 @@ function resetForm() {
     });
 }
 
-// Real-time character counter untuk textarea (optional enhancement)
+// Real-time character counter untuk textarea
 const textareas = ['fungsi', 'keterangan'];
 textareas.forEach(id => {
     const textarea = document.getElementById(id);
@@ -267,7 +332,7 @@ textareas.forEach(id => {
         const length = this.value.length;
         const hint = this.nextElementSibling;
         
-        if (id === 'fungsi' && length < 10) {
+        if (id === 'fungsi' && length < 10 && length > 0) {
             hint.classList.add('text-red-500');
             hint.classList.remove('text-gray-500');
         } else {
@@ -283,6 +348,20 @@ document.getElementById('nama_kegiatan').addEventListener('blur', function() {
         this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
     }
 });
+
+// Show validation errors from session
+<?php if (session('errors')): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Validasi Gagal',
+        html: '<?= implode("<br>", array_map('esc', session('errors'))) ?>',
+        confirmButtonColor: '#3b82f6',
+        customClass: {
+            popup: 'rounded-xl',
+            confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+        }
+    });
+<?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>
