@@ -4,26 +4,18 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('adminprov/master-kegiatan-detail-proses') ?>" class="hover:text-blue-600 transition-colors">
+        <a href="<?= base_url('adminsurvei/master-kegiatan-detail-proses') ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Master Kegiatan Detail Proses
         </a>
     </div>
-    <h1 class="text-2xl font-bold text-gray-900">Tambah Master Kegiatan Detail Proses</h1>
-    <p class="text-gray-600 mt-1">Buat data master kegiatan detail proses baru</p>
+    <h1 class="text-2xl font-bold text-gray-900">Edit Master Kegiatan Detail Proses</h1>
+    <p class="text-gray-600 mt-1">Ubah data master kegiatan detail proses</p>
 </div>
 
 <!-- Form Card -->
 <div class="card max-w-5xl">
-    <form id="formMasterKegiatan" method="POST" action="<?= base_url('adminsurvei/master-kegiatan-detail-proses/store') ?>">
+    <form id="formMasterKegiatan" method="POST" action="<?= base_url('adminsurvei/master-kegiatan-detail-proses/update/' . $detailProses['id_kegiatan_detail_proses']) ?>">
         <?= csrf_field() ?>
-
-        <!-- Info -->
-        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p class="text-sm text-blue-700">
-                Lengkapi semua informasi kegiatan dengan benar. Field bertanda
-                <span class="text-red-500 font-semibold">*</span> wajib diisi.
-            </p>
-        </div>
 
         <!-- Pilih Kegiatan Detail -->
         <div class="mb-6">
@@ -31,7 +23,8 @@
             <select name="kegiatan_detail" class="input-field" required>
                 <option value="">-- Pilih Kegiatan Detail --</option>
                 <?php foreach ($kegiatanDetailList as $item): ?>
-                    <option value="<?= esc($item['id_kegiatan_detail']) ?>" <?= old('kegiatan_detail') == $item['id_kegiatan_detail'] ? 'selected' : '' ?>>
+                    <option value="<?= esc($item['id_kegiatan_detail']) ?>"
+                        <?= $detailProses['id_kegiatan_detail'] == $item['id_kegiatan_detail'] ? 'selected' : '' ?>>
                         <?= esc($item['nama_kegiatan_detail']) ?>
                     </option>
                 <?php endforeach; ?>
@@ -41,18 +34,18 @@
         <!-- Nama Kegiatan Detail Proses -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kegiatan Detail Proses <span class="text-red-500">*</span></label>
-            <input type="text" name="nama_proses" value="<?= old('nama_proses') ?>" class="input-field" required>
+            <input type="text" name="nama_proses" value="<?= esc($detailProses['nama_kegiatan_detail_proses']) ?>" class="input-field" required>
         </div>
 
         <!-- Tanggal -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai<span class="text-red-500">*</span></label>
-                <input type="date" id="tanggal_mulai" name="tanggal_mulai" value="<?= old('tanggal_mulai') ?>" class="input-field" required>
+                <input type="date" id="tanggal_mulai" name="tanggal_mulai" value="<?= esc($detailProses['tanggal_mulai']) ?>" class="input-field" required>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai<span class="text-red-500">*</span></label>
-                <input type="date" id="tanggal_selesai" name="tanggal_selesai" value="<?= old('tanggal_selesai') ?>" class="input-field" required>
+                <input type="date" id="tanggal_selesai" name="tanggal_selesai" value="<?= esc($detailProses['tanggal_selesai']) ?>" class="input-field" required>
             </div>
         </div>
 
@@ -61,46 +54,47 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Satuan<span class="text-red-500">*</span></label>
             <select name="satuan" class="input-field" required>
                 <option value="">-- Pilih Satuan --</option>
-                <option value="unit" <?= old('satuan') == 'unit' ? 'selected' : '' ?>>Unit</option>
-                <option value="orang" <?= old('satuan') == 'orang' ? 'selected' : '' ?>>Orang</option>
-                <option value="dokumen" <?= old('satuan') == 'dokumen' ? 'selected' : '' ?>>Dokumen</option>
-                <option value="paket" <?= old('satuan') == 'paket' ? 'selected' : '' ?>>Paket</option>
-                <option value="kegiatan" <?= old('satuan') == 'kegiatan' ? 'selected' : '' ?>>Kegiatan</option>
+                <?php 
+                    $satuanList = ['unit', 'orang', 'dokumen', 'paket', 'kegiatan'];
+                    foreach ($satuanList as $satuan):
+                ?>
+                    <option value="<?= $satuan ?>" <?= $detailProses['satuan'] == $satuan ? 'selected' : '' ?>><?= ucfirst($satuan) ?></option>
+                <?php endforeach; ?>
             </select>
         </div>
 
         <!-- Keterangan -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan<span class="text-red-500">*</span></label>
-            <textarea name="keterangan" rows="3" class="input-field resize-none" required><?= old('keterangan') ?></textarea>
+            <textarea name="keterangan" rows="3" class="input-field resize-none" required><?= esc($detailProses['ket']) ?></textarea>
         </div>
 
         <!-- Periode -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Periode<span class="text-red-500">*</span></label>
-            <input type="text" name="periode" value="<?= old('periode') ?>" class="input-field" required>
+            <input type="text" name="periode" value="<?= esc($detailProses['periode']) ?>" class="input-field" required>
         </div>
 
         <!-- Target -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Target<span class="text-red-500">*</span></label>
-            <input type="number" name="target" value="<?= old('target') ?>" class="input-field" min="0" required>
+            <input type="number" name="target" value="<?= esc($detailProses['target']) ?>" class="input-field" min="0" required>
         </div>
 
         <!-- Target Hari Pertama & Selesai -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Target Hari Pertama<span class="text-red-500">*</span></label>
-                <input type="number" name="target_hari_pertama" value="<?= old('target_hari_pertama') ?>" class="input-field" min="0" required>
+                <input type="number" name="target_hari_pertama" value="<?= esc($detailProses['persentase_hari_pertama']) ?>" class="input-field" min="0" required>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Target Tanggal Selesai<span class="text-red-500">*</span></label>
-                <input type="date" name="target_tanggal_selesai" value="<?= old('target_tanggal_selesai') ?>" class="input-field" required>
+                <input type="date" name="target_tanggal_selesai" value="<?= esc($detailProses['target_100_persen']) ?>" class="input-field" required>
             </div>
         </div>
 
         <div class="flex justify-center mt-8">
-            <button type="submit" class="btn-primary px-24 py-3 text-base">Simpan</button>
+            <button type="submit" class="btn-primary px-24 py-3 text-base">Perbarui</button>
         </div>
     </form>
 </div>
@@ -124,11 +118,11 @@ document.getElementById('formMasterKegiatan').addEventListener('submit', functio
     }
 
     Swal.fire({
-        title: 'Konfirmasi Simpan',
-        text: 'Apakah data yang diisi sudah benar?',
+        title: 'Konfirmasi Perubahan',
+        text: 'Apakah data yang diubah sudah benar?',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Ya, Simpan',
+        confirmButtonText: 'Ya, Simpan Perubahan',
         cancelButtonText: 'Batal',
         confirmButtonColor: '#3b82f6',
         cancelButtonColor: '#6b7280',

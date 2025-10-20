@@ -60,6 +60,18 @@ class CreateMasterKegiatanDetailProsesTable extends Migration
                 'constraint' => '5,2',
                 'null'       => true,
             ],
+
+            'persentase_hari_pertama' => [
+                'type'       => 'DECIMAL',
+                'constraint' => '5,2',
+                'null'       => true,
+            ],
+
+            'target_100_persen' => [
+                'type'       => 'DATE',
+                'null'       => true,
+            ],
+
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
