@@ -42,6 +42,11 @@ class CreateMasterKegiatanTable extends Migration
                 'constraint' => 50,
                 'null'       => true,
             ],
+            'pelaksana' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'null'       => true,
+            ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
