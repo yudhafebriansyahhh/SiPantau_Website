@@ -98,7 +98,4 @@ class MasterKegiatanDetailProsesModel extends Model
         ->orderBy('master_kegiatan_detail_proses.id_kegiatan_detail_proses', 'DESC')
         ->findAll();
     }
-
-    
-    
 }

@@ -70,6 +70,8 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
     $routes->get('master-kegiatan-wilayah/create', 'AdminSurveiProvController::tambah_master_kegiatan_wilayah');
     $routes->get('assign-admin-kab', 'AdminSurveiProvController::AssignAdminSurveiKab');
     $routes->get('assign-admin-kab/create', 'AdminSurveiProvController::tambah_AssignAdminSurveiKab');
+    $routes->get('kurva-provinsi', 'AdminSurveiProvController::getKurvaProvinsi');
+
 });
 
 // ================== ADMIN SURVEI KABUPATEN (id_role = 3) ==================
