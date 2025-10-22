@@ -63,7 +63,6 @@ class LoginController extends BaseController
             'nama_user' => $user['nama_user'],
             'email'     => $user['email'],
             'id_role'   => $user['id_role'],
-            'is_admin'  => $user['is_admin'],
             'isLoggedIn'=> true
         ]);
 

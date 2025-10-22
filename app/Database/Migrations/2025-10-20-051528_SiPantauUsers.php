@@ -10,44 +10,44 @@ class CreateSipantauUserTable extends Migration
     {
         $this->forge->addField([
             'sobat_id' => [
-                'type'           => 'INT',
-                'constraint'     => 11,
-                'unsigned'       => true,
-                'auto_increment' => true,
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
             ],
             'password' => [
-                'type'       => 'VARCHAR',
+                'type' => 'VARCHAR',
                 'constraint' => '255',
             ],
             'nama_user' => [
-                'type'       => 'VARCHAR',
+                'type' => 'VARCHAR',
                 'constraint' => '100',
             ],
+            'id_kabupaten' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'null' => true
+            ],
             'email' => [
-                'type'       => 'VARCHAR',
+                'type' => 'VARCHAR',
                 'constraint' => '150',
-                'unique'     => true,
+                'unique' => true,
             ],
             'hp' => [
-                'type'       => 'VARCHAR',
+                'type' => 'VARCHAR',
                 'constraint' => '20',
-                'null'       => true,
+                'null' => true,
             ],
             'id_role' => [
-                'type'       => 'INT',
+                'type' => 'INT',
                 'constraint' => 11,
-                'unsigned'   => true,
-                'null'       => true,
+                'unsigned' => true,
+                'null' => true,
             ],
             'is_active' => [
-                'type'       => 'TINYINT',
+                'type' => 'TINYINT',
                 'constraint' => 1,
-                'default'    => 1,
-            ],
-            'is_admin' => [
-                'type'       => 'TINYINT',
-                'constraint' => 1,
-                'default'    => 0,
+                'default' => 1,
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -61,8 +61,8 @@ class CreateSipantauUserTable extends Migration
 
         $this->forge->addKey('sobat_id', true);
 
-        // ✅ Tambahkan relasi foreign key ke tabel sipantau_role
         $this->forge->addForeignKey('id_role', 'sipantau_role', 'id_roleuser', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('id_kabupaten', 'master_kabupaten', 'id_kabupaten', 'CASCADE', 'CASCADE');
 
         $this->forge->createTable('sipantau_user');
     }

@@ -10,38 +10,30 @@ class CreateMasterKecTable extends Migration
     public function up()
     {
         $this->forge->addField([
-            'id_kec' => [
+            'id_kecamatan' => [
                 'type'           => 'INT',
                 'constraint'     => 11,
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'id_kab' => [
+            'id_kabupaten' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
             ],
-            'nama_kec' => [
+            'nama_kecamatan' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
-            'created_at' => [
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
-            'updated_at' => [
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
         ]);
 
-        $this->forge->addKey('id_kec', true);
-        $this->forge->addForeignKey('id_kab', 'master_kab', 'id_kab', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('master_kec');
+        $this->forge->addKey('id_kecamatan', true);
+        $this->forge->addForeignKey('id_kabupaten', 'master_kabupaten', 'id_kabupaten', 'CASCADE', 'CASCADE');
+        $this->forge->createTable('master_kecamatan');
     }
 
     public function down()
     {
-        $this->forge->dropTable('master_kec');
+        $this->forge->dropTable('master_kecamatan');
     }
 }

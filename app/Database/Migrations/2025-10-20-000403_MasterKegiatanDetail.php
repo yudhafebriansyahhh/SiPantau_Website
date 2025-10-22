@@ -33,6 +33,14 @@ class CreateMasterKegiatanDetailTable extends Migration
                 'constraint' => 50,
                 'null'       => true,
             ],
+            'tanggal_mulai' => [
+                'type' => 'DATE',
+                'null' => true,
+            ],
+            'tanggal_selesai' => [
+                'type' => 'DATE',
+                'null' => true,
+            ],
             'periode' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 50,
@@ -43,14 +51,7 @@ class CreateMasterKegiatanDetailTable extends Migration
                 'constraint' => 4,
                 'null'       => true,
             ],
-            'tanggal_mulai' => [
-                'type' => 'DATE',
-                'null' => true,
-            ],
-            'tanggal_selesai' => [
-                'type' => 'DATE',
-                'null' => true,
-            ],
+        
             'keterangan' => [
                 'type' => 'TEXT',
                 'null' => true,
