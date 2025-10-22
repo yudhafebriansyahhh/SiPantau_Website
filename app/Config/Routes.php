@@ -60,12 +60,18 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
 // ================== ADMIN SURVEI PROVINSI (id_role = 2) ==================
 $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) {
     $routes->get('/', 'AdminSurveiProvController::index');
-    $routes->get('master-kegiatan-detail-proses', 'AdminSurveiProvController::master_detail_proses');
-    $routes->get('master-kegiatan-detail-proses/create', 'AdminSurveiProvController::tambah_detail_proses');
+    $routes->get('master-kegiatan-detail-proses', 'AdminProv\MasterKegiatanDetailProsesController::index');
+    $routes->get('master-kegiatan-detail-proses/create', 'AdminProv\MasterKegiatanDetailProsesController::create');
+    $routes->post('master-kegiatan-detail-proses/store','AdminProv\MasterKegiatanDetailProsesController::store');
+    $routes->delete('master-kegiatan-detail-proses/delete/(:num)', 'AdminProv\MasterKegiatanDetailProsesController::delete/$1');
+    $routes->get('master-kegiatan-detail-proses/edit/(:num)','AdminProv\MasterKegiatanDetailProsesController::edit/$1');
+    $routes->post('master-kegiatan-detail-proses/update/(:num)', 'AdminProv\MasterKegiatanDetailProsesController::update/$1');
     $routes->get('master-kegiatan-wilayah', 'AdminSurveiProvController::master_kegiatan_wilayah');
     $routes->get('master-kegiatan-wilayah/create', 'AdminSurveiProvController::tambah_master_kegiatan_wilayah');
     $routes->get('assign-admin-kab', 'AdminSurveiProvController::AssignAdminSurveiKab');
     $routes->get('assign-admin-kab/create', 'AdminSurveiProvController::tambah_AssignAdminSurveiKab');
+    $routes->get('kurva-provinsi', 'AdminSurveiProvController::getKurvaProvinsi');
+
 });
 
 // ================== ADMIN SURVEI KABUPATEN (id_role = 3) ==================
