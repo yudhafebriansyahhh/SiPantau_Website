@@ -89,7 +89,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Target Tanggal Selesai<span class="text-red-500">*</span></label>
-                <input type="date" name="target_tanggal_selesai" value="<?= esc($detailProses['target_100_persen']) ?>" class="input-field" required>
+                <input type="date" id="target_tanggal_selesai" name="target_tanggal_selesai" value="<?= esc($detailProses['target_100_persen']) ?>" class="input-field" required>
             </div>
         </div>
 
@@ -104,10 +104,13 @@
 <script>
 document.getElementById('formMasterKegiatan').addEventListener('submit', function(e) {
     e.preventDefault();
-    const tanggalMulai = document.getElementById('tanggal_mulai').value;
-    const tanggalSelesai = document.getElementById('tanggal_selesai').value;
 
-    if (new Date(tanggalSelesai) < new Date(tanggalMulai)) {
+    const tanggalMulai = new Date(document.getElementById('tanggal_mulai').value);
+    const tanggalSelesai = new Date(document.getElementById('tanggal_selesai').value);
+    const tanggal100 = new Date(document.getElementById('target_tanggal_selesai').value);
+
+    // === Validasi tanggal selesai tidak boleh < tanggal mulai ===
+    if (tanggalSelesai < tanggalMulai) {
         Swal.fire({
             icon: 'error',
             title: 'Tanggal Tidak Valid',
@@ -117,6 +120,29 @@ document.getElementById('formMasterKegiatan').addEventListener('submit', functio
         return;
     }
 
+    // === Validasi target 100% tidak boleh < tanggal mulai ===
+    if (tanggal100 < tanggalMulai) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Target 100% Tidak Valid',
+            text: 'Tanggal target 100% tidak boleh lebih awal dari tanggal mulai!',
+            confirmButtonColor: '#3b82f6',
+        });
+        return;
+    }
+
+    // === Validasi target 100% tidak boleh > tanggal selesai ===
+    if (tanggal100 > tanggalSelesai) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Target 100% Tidak Valid',
+            text: 'Tanggal target 100% tidak boleh melebihi tanggal selesai!',
+            confirmButtonColor: '#3b82f6',
+        });
+        return;
+    }
+
+    // === Konfirmasi jika semua valid ===
     Swal.fire({
         title: 'Konfirmasi Perubahan',
         text: 'Apakah data yang diubah sudah benar?',

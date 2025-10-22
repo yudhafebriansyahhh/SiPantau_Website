@@ -1,45 +1,104 @@
 <?php
 namespace App\Controllers;
-use App\Models\KurvaSProvinsiModel;
 
-class AdminSurveiProvController extends BaseController
+use App\Models\KurvaSProvinsiModel;
+use App\Models\MasterKegiatanDetailProsesModel;
+use CodeIgniter\Controller;
+use DateTime;
+use DateInterval;
+use DatePeriod;
+
+class AdminSurveiProvController extends Controller
 {
     public function index()
     {
+        $prosesModel = new MasterKegiatanDetailProsesModel();
+
+        // Ambil semua kegiatan untuk dropdown
+        $kegiatanList = $prosesModel
+            ->select('id_kegiatan_detail_proses, nama_kegiatan_detail_proses')
+            ->orderBy('id_kegiatan_detail_proses', 'DESC')
+            ->findAll();
+
+        // Ambil kegiatan detail terbaru untuk default chart
+        $latest = $prosesModel
+            ->orderBy('id_kegiatan_detail_proses', 'DESC')
+            ->first();
+        $latestKegiatanId = $latest ? $latest['id_kegiatan_detail_proses'] : '';
+
         $data = [
             'title' => 'Dashboard',
-            'active_menu' => 'dashboard'
+            'active_menu' => 'dashboard',
+            'kegiatanList' => $kegiatanList,
+            'latestKegiatanId' => $latestKegiatanId
         ];
-        
+
         return view('AdminSurveiProv/dashboard', $data);
     }
 
     public function getKurvaProvinsi()
     {
+        $idProses = $this->request->getGet('id_kegiatan_detail_proses');
         $model = new KurvaSProvinsiModel();
 
-        // Ambil seluruh data dari database
-        $records = $model
-            ->select('tanggal_target, target_persen_kumulatif, target_kumulatif_absolut')
-            ->orderBy('tanggal_target', 'ASC')
-            ->findAll();
+        $builder = $model
+            ->select('id_kegiatan_detail_proses, tanggal_target, target_persen_kumulatif, target_kumulatif_absolut, target_harian_absolut')
+            ->orderBy('tanggal_target', 'ASC');
+
+        if ($idProses) {
+            $builder->where('id_kegiatan_detail_proses', $idProses);
+        } else {
+            // Jika tidak ada filter, gunakan kegiatan terbaru
+            $latest = (new MasterKegiatanDetailProsesModel())
+                ->orderBy('id_kegiatan_detail_proses', 'DESC')
+                ->first();
+
+            if ($latest) {
+                $builder->where('id_kegiatan_detail_proses', $latest['id_kegiatan_detail_proses']);
+            }
+        }
+
+        $records = $builder->findAll();
+
+        if (empty($records)) {
+            return $this->response->setJSON([
+                'labels' => [],
+                'targetPersen' => [],
+                'targetAbsolut' => [],
+                'targetHarian' => []
+            ]);
+        }
 
         $labels = [];
         $targetPersen = [];
         $targetAbsolut = [];
+        $targetHarian = [];
 
         foreach ($records as $row) {
             $labels[] = date('d M', strtotime($row['tanggal_target']));
             $targetPersen[] = (float) $row['target_persen_kumulatif'];
             $targetAbsolut[] = (int) $row['target_kumulatif_absolut'];
+            $targetHarian[] = (int) $row['target_harian_absolut'];
+        }
+
+        // Pastikan nilai kumulatif tidak menurun
+        for ($i = 1; $i < count($targetAbsolut); $i++) {
+            if ($targetAbsolut[$i] < $targetAbsolut[$i - 1]) {
+                $targetAbsolut[$i] = $targetAbsolut[$i - 1];
+            }
         }
 
         return $this->response->setJSON([
             'labels' => $labels,
             'targetPersen' => $targetPersen,
             'targetAbsolut' => $targetAbsolut,
+            'targetHarian' => $targetHarian
         ]);
     }
+
+
+
+
 
     public function master_detail_proses()
     {
