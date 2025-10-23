@@ -16,7 +16,6 @@
 <div class="card max-w-5xl">
     <form id="formMasterKegiatan" method="POST" action="<?= base_url('adminsurvei/master-kegiatan-detail-proses/store') ?>">
         <?= csrf_field() ?>
-
         <!-- Info -->
         <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p class="text-sm text-blue-700">
