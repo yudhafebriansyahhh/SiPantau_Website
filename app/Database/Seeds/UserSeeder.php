@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
                 'email'     => 'superadmin@sipantau.com',
                 'password'  => $defaultPassword,
                 'hp'        => '081234567890',
-                'id_role'   => 1, // Role: Super Admin
+                'role'   => json_encode(['1']), // Role: Super Admin
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
             ],
@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
                 'email'     => 'adminprov@sipantau.com',
                 'password'  => $defaultPassword,
                 'hp'        => '081234567891',
-                'id_role'   => 2, // Role: Admin Provinsi
+                'role'   => json_encode(['2']), // Role: Admin Provinsi
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
             ],
@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
                 'email'     => 'adminkab@sipantau.com',
                 'password'  => $defaultPassword,
                 'hp'        => '081234567892',
-                'id_role'   => 3, // Role: Admin Kabupaten
+                'role'   => json_encode(['3']), // Role: Admin Kabupaten
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
             ],
@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
                 'email'     => 'pemantau@sipantau.com',
                 'password'  => $defaultPassword,
                 'hp'        => '081234567893',
-                'id_role'   => 4, // Role: Pemantau
+                'role'   => json_encode(['4']), // Role: Pemantau
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
             ],

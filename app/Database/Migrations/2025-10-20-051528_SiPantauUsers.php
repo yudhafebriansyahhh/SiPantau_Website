@@ -38,11 +38,10 @@ class CreateSipantauUserTable extends Migration
                 'constraint' => '20',
                 'null' => true,
             ],
-            'id_role' => [
-                'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
+            'role' => [
+                'type' => 'JSON',
                 'null' => true,
+                'after' => 'hp'
             ],
             'is_active' => [
                 'type' => 'TINYINT',
@@ -61,7 +60,6 @@ class CreateSipantauUserTable extends Migration
 
         $this->forge->addKey('sobat_id', true);
 
-        $this->forge->addForeignKey('id_role', 'sipantau_role', 'id_roleuser', 'CASCADE', 'SET NULL');
         $this->forge->addForeignKey('id_kabupaten', 'master_kabupaten', 'id_kabupaten', 'CASCADE', 'CASCADE');
 
         $this->forge->createTable('sipantau_user');
