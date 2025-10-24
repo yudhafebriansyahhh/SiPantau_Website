@@ -19,7 +19,7 @@ class CreateMasterDesaTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'id_kec' => [
+            'id_kecamatan' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
@@ -28,18 +28,10 @@ class CreateMasterDesaTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
-            'created_at' => [
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
-            'updated_at' => [
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
         ]);
 
         $this->forge->addKey('id_desa', true);
-        $this->forge->addForeignKey('id_kec', 'master_kec', 'id_kec', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('id_kecamatan', 'master_kecamatan', 'id_kecamatan', 'CASCADE', 'CASCADE');
         $this->forge->createTable('master_desa');
     }
 

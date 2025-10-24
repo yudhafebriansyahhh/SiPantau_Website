@@ -35,13 +35,11 @@ class CreateMasterKegiatanDetailProsesTable extends Migration
             ],
             'tanggal_mulai' => [
                 'type' => 'DATE',
-                'null' => true,
             ],
             'tanggal_selesai' => [
                 'type' => 'DATE',
-                'null' => true,
             ],
-            'ket' => [
+            'keterangan' => [
                 'type' => 'TEXT',
                 'null' => true,
             ],
@@ -52,13 +50,14 @@ class CreateMasterKegiatanDetailProsesTable extends Migration
             ],
             'target' => [
                 'type'       => 'INT',
-                'constraint' => 11,
-                'null'       => true,
+                'constraint' => 20,
             ],
-            'persentase' => [
+            'persentase_target_awal' => [
                 'type'       => 'DECIMAL',
                 'constraint' => '5,2',
-                'null'       => true,
+            ],
+            'tanggal_selesai_target' => [
+                'type' => 'DATE',
             ],
 
             'persentase_hari_pertama' => [

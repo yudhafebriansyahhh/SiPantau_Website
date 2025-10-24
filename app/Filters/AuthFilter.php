@@ -18,7 +18,7 @@ class AuthFilter implements FilterInterface
         }
 
         // Jika filter punya argumen (misal role)
-        if ($arguments && !in_array($session->get('id_role'), $arguments)) {
+        if ($arguments && !in_array($session->get('role'), $arguments)) {
             return redirect()->to('/comingsoon')->with('error', 'Akses ditolak.');
         }
     }

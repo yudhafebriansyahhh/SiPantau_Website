@@ -37,6 +37,11 @@ class CreateMasterKegiatanTable extends Migration
                 'type' => 'TEXT',
                 'null' => true,
             ],
+            'alias' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
             'periode' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 50,

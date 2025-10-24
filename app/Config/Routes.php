@@ -13,6 +13,10 @@ $routes->get('login', 'Auth\LoginController::index');
 $routes->post('auth/login', 'Auth\LoginController::process');
 $routes->get('logout', 'Auth\LoginController::logout');
 
+// Multi-Role Routes
+$routes->get('login/select-role', 'Auth\LoginController::selectRole');
+$routes->post('login/process-role-selection', 'Auth\LoginController::processRoleSelection');
+
 // ================== HALAMAN TIDAK BERIZIN ==================
 $routes->get('unauthorized', 'ErrorController::unauthorized');
 
@@ -49,12 +53,21 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     $routes->delete('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::delete/$1');
     $routes->get('master-kegiatan-detail/by-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getByKegiatan/$1');
 
-    // Kelola Pengguna
-    $routes->get('kelola-pengguna', 'SuperAdmin\DashboardController::kelola_pengguna');
-    $routes->get('kelola-pengguna/create', 'SuperAdmin\DashboardController::tambah_kelola_pengguna');
-    $routes->get('kelola-pengguna/edit', 'SuperAdmin\DashboardController::edit_kelola_pengguna');
-    $routes->get('kelola-SuperAdmin\DashboardController-surveyprov', 'SuperAdmin\DashboardController::kelola_admin_prov');
-    $routes->get('comingsoon', 'Comingsoon::index');
+     // Kelola Pengguna Routes
+    $routes->group('kelola-pengguna', static function ($routes) {
+        $routes->get('/', 'SuperAdmin\KelolaPenggunaController::index');
+        $routes->get('create', 'SuperAdmin\KelolaPenggunaController::create');
+        $routes->post('store', 'SuperAdmin\KelolaPenggunaController::store');
+        $routes->get('edit/(:num)', 'SuperAdmin\KelolaPenggunaController::edit/$1');
+        $routes->post('update/(:num)', 'SuperAdmin\KelolaPenggunaController::update/$1');
+        $routes->put('update/(:num)', 'SuperAdmin\KelolaPenggunaController::update/$1');
+        $routes->delete('delete/(:num)', 'SuperAdmin\KelolaPenggunaController::delete/$1');
+        $routes->post('toggle-status/(:num)', 'SuperAdmin\KelolaPenggunaController::toggleStatus/$1');
+        $routes->get('download-template', 'SuperAdmin\KelolaPenggunaController::downloadTemplate');
+        $routes->post('import', 'SuperAdmin\KelolaPenggunaController::import');
+        $routes->get('export', 'SuperAdmin\KelolaPenggunaController::export');
+    });
+
 });
 
 // ================== ADMIN SURVEI PROVINSI (id_role = 2) ==================
