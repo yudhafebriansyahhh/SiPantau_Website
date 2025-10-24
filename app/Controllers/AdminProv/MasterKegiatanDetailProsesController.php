@@ -31,6 +31,8 @@ class MasterKegiatanDetailProsesController extends BaseController
             'title'           => 'Kelola Master Kegiatan Detail Proses',
             'active_menu'     => 'master-kegiatan-detail-proses',
             'kegiatanDetails' => $kegiatanDetails,
+            
+            
         ];
 
         return view('AdminSurveiProv/MasterKegiatanDetailProses/index', $data);
@@ -174,17 +176,11 @@ class MasterKegiatanDetailProsesController extends BaseController
         $tanggalSelesai = $this->request->getPost('tanggal_selesai');
         $tanggal100Persen = $this->request->getPost('target_tanggal_selesai');
 
-        // ✅ Validasi hubungan antar tanggal
-        if (strtotime($tanggalSelesai) < strtotime($tanggalMulai)) {
-            return redirect()->back()->withInput()->with('error', '❌ Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
-        }
-
-        if (strtotime($tanggal100Persen) < strtotime($tanggalMulai)) {
-            return redirect()->back()->withInput()->with('error', '❌ Target tanggal selesai (100%) tidak boleh lebih awal dari tanggal mulai.');
-        }
-
-        if (strtotime($tanggal100Persen) > strtotime($tanggalSelesai)) {
-            return redirect()->back()->withInput()->with('error', '❌ Target tanggal selesai (100%) tidak boleh melebihi tanggal selesai kegiatan.');
+        // Validasi hubungan antar tanggal
+        if (strtotime($tanggalSelesai) < strtotime($tanggalMulai) ||
+            strtotime($tanggal100Persen) < strtotime($tanggalMulai) ||
+            strtotime($tanggal100Persen) > strtotime($tanggalSelesai)) {
+            return redirect()->back()->withInput()->with('error', '❌ Tanggal tidak valid.');
         }
 
         $input = [
@@ -231,59 +227,103 @@ class MasterKegiatanDetailProsesController extends BaseController
     }
 
     // ============================================================
-    // GENERATE KURVA S
+    // GENERATE KURVA S (dengan skip hari libur)
     // ============================================================
-    private function generateKurvaS($idProses, $target, $persenAwal, $tanggalMulai, $tanggal100, $tanggalSelesai)
-    {
-        $kurvaModel = new KurvaSProvinsiModel();
+ private function generateKurvaS($idProses, $target, $persenAwal, $tanggalMulai, $tanggal100, $tanggalSelesai)
+{
+    $kurvaModel = new KurvaSProvinsiModel();
 
-        $totalTarget = (int) $target;
-        $persenAwal  = (float) $persenAwal;
+    $totalTarget = (int) $target;
+    $persenAwal  = (float) $persenAwal;
 
-        $start = new DateTime($tanggalMulai);
-        $tgl100 = new DateTime($tanggal100);
-        $end   = new DateTime($tanggalSelesai);
-        $end->modify('+1 day');
+    $start   = new DateTime($tanggalMulai);
+    $tgl100  = new DateTime($tanggal100);
+    $end     = new DateTime($tanggalSelesai);
+    $end->modify('+1 day');
 
-        $interval = new DateInterval('P1D');
-        $periodTotal = iterator_to_array(new DatePeriod($start, $interval, $end));
-        $daysTotal = count($periodTotal);
+    $interval = new DateInterval('P1D');
+    $periodTotal = iterator_to_array(new DatePeriod($start, $interval, $end));
 
-        $periodSigmoid = iterator_to_array(new DatePeriod($start, $interval, (clone $tgl100)->modify('+1 day')));
-        $daysSigmoid = max(count($periodSigmoid), 2);
+    // Ambil hanya hari kerja (Senin–Jumat)
+    $workdays = array_filter($periodTotal, fn($d) => $d->format('N') <= 5);
+    $workdays = array_values($workdays);
 
-        $k = 8;
-        $x0 = 0.5;
-        $kumulatifAbsolut = 0;
+    // Filter hanya sampai tanggal 100%
+    $workdaysUntil100 = array_filter($workdays, fn($d) => $d <= $tgl100);
+    $workdaysUntil100 = array_values($workdaysUntil100);
 
-        foreach ($periodTotal as $i => $date) {
-            $currentDate = $date->format('Y-m-d');
+    $daysSigmoid = max(count($workdaysUntil100), 2);
+    $k = 8;   // kelengkungan
+    $x0 = 0.5; // titik tengah
 
-            if ($currentDate <= $tgl100->format('Y-m-d')) {
-                $progress = $i / ($daysSigmoid - 1);
-                $sigmoid = 1 / (1 + exp(-$k * ($progress - $x0)));
-                $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $sigmoid;
-                if ($kumulatifPersen > 100) $kumulatifPersen = 100;
-            } else {
-                $kumulatifPersen = 100;
-            }
-
-            $harianAbsolut = round(($totalTarget * ($kumulatifPersen / 100)) - $kumulatifAbsolut);
-            $kumulatifAbsolut += $harianAbsolut;
-
-            $kurvaModel->insert([
-                'id_kegiatan_detail_proses' => $idProses,
-                'tanggal_target'            => $currentDate,
-                'target_persen_kumulatif'   => round($kumulatifPersen, 2),
-                'target_harian_absolut'     => $harianAbsolut,
-                'target_kumulatif_absolut'  => $kumulatifAbsolut,
-                'is_hari_kerja'             => ($date->format('N') <= 5),
-                'created_at'                => date('Y-m-d H:i:s'),
-            ]);
-        }
-
-        log_message('info', "Kurva S berhasil dibuat untuk id_proses=$idProses dengan total hari=$daysTotal");
+    $workdayData = [];
+    foreach ($workdaysUntil100 as $i => $date) {
+        $progress = $i / ($daysSigmoid - 1);
+        $sigmoid = 1 / (1 + exp(-$k * ($progress - $x0)));
+        $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $sigmoid;
+        if ($kumulatifPersen > 100) $kumulatifPersen = 100;
+        $workdayData[$date->format('Y-m-d')] = $kumulatifPersen;
     }
+
+    $kumulatifAbsolut = 0;
+    $insertData = [];
+
+    // Tahap 1: hitung dulu semua agar bisa dikoreksi sebelum insert
+    foreach ($workdaysUntil100 as $date) {
+        $currentDate = $date->format('Y-m-d');
+        $kumulatifPersen = $workdayData[$currentDate];
+        $harianAbsolut = round(($totalTarget * ($kumulatifPersen / 100)) - $kumulatifAbsolut);
+        $kumulatifAbsolut += $harianAbsolut;
+
+        $insertData[] = [
+            'tanggal' => $currentDate,
+            'persen' => round($kumulatifPersen, 2),
+            'harian' => $harianAbsolut,
+            'kumulatif' => $kumulatifAbsolut
+        ];
+    }
+
+    // 🟢 Koreksi hari terakhir agar total tepat = totalTarget
+    $selisih = $totalTarget - $kumulatifAbsolut;
+    if (!empty($insertData) && $selisih !== 0) {
+        $insertData[count($insertData) - 1]['harian'] += $selisih;
+        $insertData[count($insertData) - 1]['kumulatif'] += $selisih;
+        $kumulatifAbsolut = $totalTarget;
+    }
+
+    // Simpan ke DB
+    foreach ($insertData as $row) {
+        $kurvaModel->insert([
+            'id_kegiatan_detail_proses' => $idProses,
+            'tanggal_target'            => $row['tanggal'],
+            'target_persen_kumulatif'   => $row['persen'],
+            'target_harian_absolut'     => $row['harian'],
+            'target_kumulatif_absolut'  => $row['kumulatif'],
+            'is_hari_kerja'             => 1,
+            'created_at'                => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    // Tahap 2: setelah tanggal100 → mendatar
+    $workdaysAfter100 = array_filter($workdays, fn($d) => $d > $tgl100);
+    $workdaysAfter100 = array_values($workdaysAfter100);
+
+    foreach ($workdaysAfter100 as $date) {
+        $currentDate = $date->format('Y-m-d');
+        $kurvaModel->insert([
+            'id_kegiatan_detail_proses' => $idProses,
+            'tanggal_target'            => $currentDate,
+            'target_persen_kumulatif'   => 100,
+            'target_harian_absolut'     => 0,
+            'target_kumulatif_absolut'  => $totalTarget, // 🟢 pastikan mendatar di total target
+            'is_hari_kerja'             => 1,
+            'created_at'                => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    log_message('info', "Kurva S dibuat untuk id_proses=$idProses (total=$totalTarget, 100% di $tanggal100, mendatar sampai $tanggalSelesai)");
+}
+
 
     // ============================================================
     // DELETE

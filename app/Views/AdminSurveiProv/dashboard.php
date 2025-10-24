@@ -227,16 +227,24 @@ const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
 async function loadAndRenderKurvaS(idProses = "") {
   try {
     const baseUrl = "<?= base_url('adminsurvei/kurva-provinsi') ?>";
-    const url = idProses ? `${baseUrl}?id_kegiatan_detail_proses=${idProses}` : baseUrl;
+    // 🟢 tambahkan parameter acak untuk mencegah cache
+    const randomParam = `nocache=${Date.now()}`;
+    const url = idProses 
+      ? `${baseUrl}?id_kegiatan_detail_proses=${idProses}&${randomParam}`
+      : `${baseUrl}?${randomParam}`;
 
+    // tampilkan loading state
     document.getElementById('chartLoadingState').style.display = 'flex';
     document.getElementById('kurvaSProvChart').style.display = 'none';
     document.getElementById('chartErrorState').style.display = 'none';
 
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: "no-store" });
     const data = await response.json();
 
     if (!data.labels.length) throw new Error('Empty data');
+
+    // sedikit delay agar loading terasa halus
+    await new Promise(res => setTimeout(res, 200));
 
     document.getElementById('chartLoadingState').style.display = 'none';
     document.getElementById('kurvaSProvChart').style.display = 'block';
@@ -250,23 +258,33 @@ async function loadAndRenderKurvaS(idProses = "") {
 }
 
 function renderChart(data) {
+  // 🟢 hancurkan chart lama sebelum render baru
+  if (chartInstance) {
+    chartInstance.destroy();
+    chartInstance = null;
+  }
+
   const options = {
     chart: {
       type: 'area',
       height: 420,
-      animations: { enabled: true, speed: 700 },
+      animations: { enabled: true, speed: 600 },
       toolbar: { show: false },
     },
-    series: [{ name: 'Target Kumulatif Absolut', data: data.targetAbsolut }],
+    series: [
+      { name: 'Target Kumulatif Absolut', data: data.targetAbsolut }
+    ],
     xaxis: {
       categories: data.labels,
       title: { text: 'Tanggal' },
       labels: { rotate: -45 }
     },
-    yaxis: { title: { text: 'Target Kumulatif Absolut' } },
+    yaxis: {
+      title: { text: 'Target Kumulatif Absolut' }
+    },
     tooltip: {
       shared: true,
-      custom: function({series, seriesIndex, dataPointIndex, w}) {
+      custom: function({series, dataPointIndex}) {
         const tanggal = data.labels[dataPointIndex];
         const kumulatif = data.targetAbsolut[dataPointIndex].toLocaleString('id-ID');
         const harian = data.targetHarian[dataPointIndex].toLocaleString('id-ID');
@@ -283,24 +301,32 @@ function renderChart(data) {
     },
     colors: ['#1e88e5'],
     stroke: { curve: 'smooth', width: 3 },
-    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.05 } },
-    dataLabels: { enabled: false } // 🚫 hilangkan angka di atas titik
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.5,
+        opacityTo: 0.05
+      }
+    },
+    dataLabels: { enabled: false }
   };
 
-  if (chartInstance) chartInstance.destroy();
   chartInstance = new ApexCharts(document.querySelector("#kurvaSProvChart"), options);
   chartInstance.render();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  // render default kegiatan
   loadAndRenderKurvaS(defaultKegiatan);
 
+  // filter kegiatan berubah
   document.getElementById('filterKegiatanProses').addEventListener('change', function() {
     const id = this.value || defaultKegiatan;
     loadAndRenderKurvaS(id);
   });
 
-  // animasi progress bar
+  // animasi progres bar dummy
   setTimeout(() => {
     document.querySelectorAll('[data-width]').forEach(bar => {
       bar.style.width = bar.dataset.width + '%';
@@ -308,5 +334,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }, 400);
 });
 </script>
+
 
 <?= $this->endSection() ?>
