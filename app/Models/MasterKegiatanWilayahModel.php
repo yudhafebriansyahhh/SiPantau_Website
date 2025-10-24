@@ -15,7 +15,7 @@ class MasterKegiatanWilayahModel extends Model
     protected $allowedFields    = [
         'id_kegiatan_wilayah ',
         'id_kegiatan_detail_proses ',
-        'id_kab',
+        'id_kabupaten',
         'target_wilayah',
         'keterangan',
         'status'
@@ -58,10 +58,10 @@ class MasterKegiatanWilayahModel extends Model
            master_kegiatan_detail_proses.nama_kegiatan_detail_proses,
            master_kegiatan_detail_proses.tanggal_mulai,
            master_kegiatan_detail_proses.tanggal_selesai,
-           master_kab.nmkab
+           master_kabupaten.nama_kabupaten
         ')
         ->join('master_kegiatan_detail_proses', 'master_kegiatan_detail_proses.id_kegiatan_detail_proses = kegiatan_wilayah.id_kegiatan_detail_proses ')
-        ->join('master_kab', 'master_kab.idkab = kegiatan_wilayah.id_kab')
+        ->join('master_kabupaten', 'master_kabupaten.id_kabupaten = kegiatan_wilayah.id_kabupaten')
         ->orderBy('kegiatan_wilayah.id_kegiatan_wilayah ', 'DESC')
         ->findAll();
     }

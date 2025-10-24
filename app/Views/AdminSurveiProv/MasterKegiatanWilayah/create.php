@@ -48,9 +48,9 @@
             <select id="kab" name="kab" class="input-field" required>
                 <option value="">-- Pilih Kab/Kota --</option>
                 <?php foreach ($Kab as $item): ?>
-                    <option value="<?= esc($item['idkab']) ?>" 
-                        <?= old('kab') == $item['idkab'] ? 'selected' : '' ?>>
-                        <?= esc($item['nmkab']) ?>
+                    <option value="<?= esc($item['id_kabupaten']) ?>" 
+                        <?= old('kab') == $item['id_kabupaten'] ? 'selected' : '' ?>>
+                        <?= esc($item['nama_kabupaten']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>

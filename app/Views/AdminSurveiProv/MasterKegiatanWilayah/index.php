@@ -59,7 +59,7 @@
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-4 py-4 text-sm text-gray-900"><?= $index +1 ?></td>
                             <td class="px-4 py-4 text-sm text-gray-900"><?= esc($kg['nama_kegiatan_detail_proses']) ?></td>
-                            <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['nmkab']) ?></td>
+                            <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['nama_kabupaten']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['tanggal_mulai']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['tanggal_selesai']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['keterangan'])?></td>

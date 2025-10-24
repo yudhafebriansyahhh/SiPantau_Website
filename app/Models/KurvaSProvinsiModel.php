@@ -6,8 +6,8 @@ use CodeIgniter\Model;
 
 class KurvaSProvinsiModel extends Model
 {
-    protected $table            = 'kurva_s_provinsi';
-    protected $primaryKey       = 'id_kurva_s_prov';
+    protected $table            = 'kurva_provinsi';
+    protected $primaryKey       = 'id_kurva_provinsi';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
@@ -19,8 +19,6 @@ class KurvaSProvinsiModel extends Model
         'target_harian_absolut',
         'target_kumulatif_absolut',
         'is_hari_kerja',
-        'created_at',
-        'updated_at',
     ];
 
     protected bool $allowEmptyInserts = false;

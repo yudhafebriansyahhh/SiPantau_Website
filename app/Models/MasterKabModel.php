@@ -6,15 +6,15 @@ use CodeIgniter\Model;
 
 class MasterKabModel extends Model
 {
-    protected $table            = 'master_kab';
-    protected $primaryKey       = 'id_kab';
+    protected $table            = 'master_kabupaten';
+    protected $primaryKey       = 'id_kabupaten';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'idkab',
-        'nmkab'
+        'id_kabupaten',
+        'nama_kabupaten'
     ];
 
     protected bool $allowEmptyInserts = false;
