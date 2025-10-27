@@ -18,12 +18,11 @@ class MasterKegiatanDetailProsesModel extends Model
         'satuan',
         'tanggal_mulai',
         'tanggal_selesai',
-        'ket',
+        'keterangan',
         'periode',
         'target',
-        'persentase',
-        'persentase_hari_pertama',
-        'target_100_persen',
+        'persentase_target_awal',
+        'tanggal_selesai_target',
     ];
 
     protected $useTimestamps = true;
@@ -39,8 +38,8 @@ class MasterKegiatanDetailProsesModel extends Model
         'periode'                       => 'permit_empty|max_length[50]',
         'target'                        => 'permit_empty|numeric',
         'persentase'                    => 'permit_empty|decimal',
-        'persentase_hari_pertama'       => 'permit_empty|decimal',
-        'target_100_persen'             => 'permit_empty|valid_date'
+        'persentase_target_awal'       => 'permit_empty|decimal',
+        'tanggal_selesai_target'             => 'permit_empty|valid_date'
     ];
 
     protected $validationMessages = [
@@ -64,10 +63,10 @@ class MasterKegiatanDetailProsesModel extends Model
         'persentase' => [
             'decimal' => 'Persentase harus berupa angka desimal'
         ],
-        'persentase_hari_pertama' => [
+        'persentase_target_awal' => [
             'decimal' => 'Persentase hari pertama harus berupa angka desimal'
         ],
-        'target_100_persen' => [
+        'tanggal_selesai_target' => [
             'valid_date' => 'Target 100 persen harus berupa tanggal yang valid'
         ]
     ];

@@ -64,7 +64,7 @@
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($detail['satuan']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($detail['tanggal_mulai']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($detail['tanggal_selesai']) ?></td>
-                            <td class="px-4 py-4 text-sm text-center text-gray-600"><?= esc($detail['ket']) ?></td>
+                            <td class="px-4 py-4 text-sm text-center text-gray-600"><?= esc($detail['keterangan']) ?></td>
                             <td class="px-4 py-4 text-center"><span class="badge badge-info"><?= esc($detail['periode']) ?></span></td>
                             <td class="px-4 py-4 text-center text-gray-900 font-medium"><?= esc($detail['target']) ?></td>
                             <td class="px-4 py-4 text-center">

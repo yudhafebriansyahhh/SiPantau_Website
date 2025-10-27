@@ -14,16 +14,6 @@
         <!-- Left Side - Form -->
         <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
             <div class="mx-auto w-full max-w-sm lg:w-96 login-form">
-                <!-- Back Button -->
-                <div class="mb-8">
-                    <a href="#" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                        Back 
-                    </a>
-                </div>
-
                 <!-- Header -->
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Login Mitra</h1>
