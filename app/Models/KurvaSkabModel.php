@@ -6,14 +6,15 @@ use CodeIgniter\Model;
 
 class KurvaSkabModel extends Model
 {
-    protected $table            = 'kurva_s_kab';
-    protected $primaryKey       = 'id_kurva_s_kab';
+    protected $table            = 'kurva_kabupaten';
+    protected $primaryKey       = 'id_kurva_kabupaten';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [
-        'id_kurva_s_kab',
+    protected $allowedFields    = [ 
+        'id_kurva_kabupaten',
+        'id_kegiatan_wilayah',
         'tanggal_target',
         'target_persen_kumulatif',
         'target_harian_absolut',

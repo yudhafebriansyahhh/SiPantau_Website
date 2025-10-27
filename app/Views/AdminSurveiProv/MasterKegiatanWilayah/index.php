@@ -54,41 +54,35 @@
             <tbody class="divide-y divide-gray-100">
                 <?php if (!empty($kegiatanWilayah)) : ?>
                     <?php foreach ($kegiatanWilayah as $index => $kg) : ?>
-
-                        <!-- Data Dummy -->
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-4 py-4 text-sm text-gray-900"><?= $index +1 ?></td>
+                            <td class="px-4 py-4 text-sm text-gray-900"><?= $index + 1 ?></td>
                             <td class="px-4 py-4 text-sm text-gray-900"><?= esc($kg['nama_kegiatan_detail_proses']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['nama_kabupaten']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['tanggal_mulai']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['tanggal_selesai']) ?></td>
-                            <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['keterangan'])?></td>
-                            <td class="px-4 py-4 text-center text-gray-900 font-medium"><?= esc($kg['target_wilayah']);?></td>
+                            <td class="px-4 py-4 text-sm text-gray-600"><?= esc($kg['keterangan']) ?></td>
+                            <td class="px-4 py-4 text-center text-gray-900 font-medium"><?= esc($kg['target_wilayah']); ?></td>
                             <td class="px-4 py-4 text-center">
-                                <a href="<?= base_url('kegiatan-wilayah/edit/1') ?>" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i class="fas fa-edit"></i></a>
-                                <button onclick="confirmDelete(1, 'Pencacahan Lahan Sawah')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg"><i class="fas fa-trash"></i></button>
+                                <a href="<?= base_url('adminsurvei/master-kegiatan-wilayah/edit/' . $kg['id_kegiatan_wilayah']) ?>"
+                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="confirmDelete(<?= $kg['id_kegiatan_wilayah'] ?>, '<?= esc($kg['keterangan']) ?>')"
+                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="10" class="px-4 py-6 text-center text-gray-500">Belum ada data kegiatan detail proses.</td>
+                        <td colspan="10" class="px-4 py-6 text-center text-gray-500">
+                            Belum ada data kegiatan detail proses.
+                        </td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
-    </div>
-
-    <!-- Footer -->
-    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p class="text-sm text-gray-600">
-            Menampilkan <span class="font-medium">5</span> data kegiatan detail proses.
-        </p>
-        <div class="flex items-center space-x-2">
-            <button class="px-3 py-2 text-sm border border-gray-300 rounded-lg" disabled><i class="fas fa-chevron-left"></i></button>
-            <button class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">1</button>
-            <button class="px-3 py-2 text-sm border border-gray-300 rounded-lg"><i class="fas fa-chevron-right"></i></button>
-        </div>
     </div>
 </div>
 
@@ -96,6 +90,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    // 🔍 Fitur pencarian tabel
     function searchTable() {
         const input = document.getElementById('searchInput');
         const filter = input.value.toLowerCase();
@@ -116,6 +111,7 @@
         }
     }
 
+    // 🗑️ Konfirmasi hapus
     function confirmDelete(id, name) {
         Swal.fire({
             title: 'Hapus Data?',
@@ -128,10 +124,44 @@
             cancelButtonText: 'Batal',
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire('Terhapus!', `Data "${name}" telah dihapus.`, 'success');
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `<?= base_url('adminsurvei/master-kegiatan-wilayah/delete/') ?>${id}`;
+                const hiddenMethod = document.createElement('input');
+                hiddenMethod.type = 'hidden';
+                hiddenMethod.name = '_method';
+                hiddenMethod.value = 'DELETE';
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '<?= csrf_token() ?>';
+                csrf.value = '<?= csrf_hash() ?>';
+                form.appendChild(hiddenMethod);
+                form.appendChild(csrf);
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     }
+
+    // ✅ Alert sukses dari session flashdata
+    <?php if (session()->getFlashdata('success')) : ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "<?= session()->getFlashdata('success') ?>",
+            confirmButtonColor: '#3b82f6'
+        });
+    <?php endif; ?>
+
+    // ⚠️ Alert error dari session flashdata
+    <?php if (session()->getFlashdata('error')) : ?>
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: "<?= session()->getFlashdata('error') ?>",
+            confirmButtonColor: '#ef4444'
+        });
+    <?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

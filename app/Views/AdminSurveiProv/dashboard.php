@@ -35,11 +35,12 @@
   <div class="lg:col-span-2 card">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
       <div>
-        <h3 class="text-lg font-semibold text-gray-900">Kurva S – Target Kumulatif Provinsi</h3>
-        <p class="text-sm text-gray-600">Progres realisasi target provinsi</p>
+        <h3 class="text-lg font-semibold text-gray-900">Kurva S – Target Kumulatif</h3>
+        <p class="text-sm text-gray-600">Pilih kegiatan dan kabupaten untuk melihat grafik</p>
       </div>
 
-      <div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <!-- Dropdown Kegiatan -->
         <select id="filterKegiatanProses" class="input-field text-sm w-full sm:w-64">
           <option value="">-- Semua Kegiatan --</option>
           <?php foreach ($kegiatanList as $item): ?>
@@ -47,6 +48,11 @@
               <?= esc($item['nama_kegiatan_detail_proses']) ?>
             </option>
           <?php endforeach; ?>
+        </select>
+
+        <!-- Dropdown Kabupaten -->
+        <select id="filterKabupaten" class="input-field text-sm w-full sm:w-64" disabled>
+          <option value="">-- Pilih Kabupaten (opsional) --</option>
         </select>
       </div>
     </div>
@@ -223,32 +229,45 @@
 <script>
 let chartInstance = null;
 const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
+const baseProv = "<?= base_url('adminsurvei/kurva-provinsi') ?>";
+const baseKab = "<?= base_url('adminsurvei/kurva-kabupaten') ?>";
+const baseWilayah = "<?= base_url('adminsurvei/kegiatan-wilayah') ?>";
 
-async function loadAndRenderKurvaS(idProses = "") {
+async function loadKabupatenDropdown(idProses) {
+  const kabSelect = document.getElementById("filterKabupaten");
+  kabSelect.innerHTML = `<option value="">-- Pilih Kabupaten (opsional) --</option>`;
+  kabSelect.disabled = true;
+  if (!idProses) return;
+  const res = await fetch(`${baseWilayah}?id_kegiatan_detail_proses=${idProses}`);
+  const data = await res.json();
+  if (data.length) {
+    data.forEach(item => {
+      const opt = document.createElement("option");
+      opt.value = item.id_kegiatan_wilayah;
+      opt.textContent = item.nama_kabupaten;
+      kabSelect.appendChild(opt);
+    });
+    kabSelect.disabled = false;
+  }
+}
+
+async function loadAndRenderKurvaS(idProses = "", idWilayah = "") {
   try {
-    const baseUrl = "<?= base_url('adminsurvei/kurva-provinsi') ?>";
-    // 🟢 tambahkan parameter acak untuk mencegah cache
-    const randomParam = `nocache=${Date.now()}`;
-    const url = idProses 
-      ? `${baseUrl}?id_kegiatan_detail_proses=${idProses}&${randomParam}`
-      : `${baseUrl}?${randomParam}`;
+    const url = idWilayah
+      ? `${baseKab}?id_kegiatan_wilayah=${idWilayah}&nocache=${Date.now()}`
+      : `${baseProv}?id_kegiatan_detail_proses=${idProses}&nocache=${Date.now()}`;
 
-    // tampilkan loading state
     document.getElementById('chartLoadingState').style.display = 'flex';
     document.getElementById('kurvaSProvChart').style.display = 'none';
     document.getElementById('chartErrorState').style.display = 'none';
 
     const response = await fetch(url, { cache: "no-store" });
     const data = await response.json();
-
     if (!data.labels.length) throw new Error('Empty data');
 
-    // sedikit delay agar loading terasa halus
     await new Promise(res => setTimeout(res, 200));
-
     document.getElementById('chartLoadingState').style.display = 'none';
     document.getElementById('kurvaSProvChart').style.display = 'block';
-
     renderChart(data);
   } catch (e) {
     console.error(e);
@@ -258,75 +277,46 @@ async function loadAndRenderKurvaS(idProses = "") {
 }
 
 function renderChart(data) {
-  // 🟢 hancurkan chart lama sebelum render baru
-  if (chartInstance) {
-    chartInstance.destroy();
-    chartInstance = null;
-  }
-
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
   const options = {
-    chart: {
-      type: 'area',
-      height: 420,
-      animations: { enabled: true, speed: 600 },
-      toolbar: { show: false },
-    },
-    series: [
-      { name: 'Target Kumulatif Absolut', data: data.targetAbsolut }
-    ],
-    xaxis: {
-      categories: data.labels,
-      title: { text: 'Tanggal' },
-      labels: { rotate: -45 }
-    },
-    yaxis: {
-      title: { text: 'Target Kumulatif Absolut' }
-    },
+    chart: { type: 'area', height: 420, animations: { enabled: true, speed: 600 }, toolbar: { show: false } },
+    series: [{ name: 'Target Kumulatif Absolut', data: data.targetAbsolut }],
+    xaxis: { categories: data.labels, title: { text: 'Tanggal' }, labels: { rotate: -45 } },
+    yaxis: { title: { text: 'Target Kumulatif Absolut' } },
     tooltip: {
       shared: true,
-      custom: function({series, dataPointIndex}) {
-        const tanggal = data.labels[dataPointIndex];
-        const kumulatif = data.targetAbsolut[dataPointIndex].toLocaleString('id-ID');
-        const harian = data.targetHarian[dataPointIndex].toLocaleString('id-ID');
-        const persen = data.targetPersen[dataPointIndex].toFixed(2);
-        return `
-          <div class="p-2">
-            <strong>${tanggal}</strong><br>
-            Target Kumulatif: <b>${kumulatif}</b><br>
-            Target Harian: <b>${harian}</b><br>
-            Persen Kumulatif: <b>${persen}%</b>
-          </div>
-        `;
-      }
+      custom: ({ dataPointIndex }) => `
+        <div class="p-2">
+          <strong>${data.labels[dataPointIndex]}</strong><br>
+          Target Kumulatif: <b>${data.targetAbsolut[dataPointIndex].toLocaleString('id-ID')}</b><br>
+          Target Harian: <b>${data.targetHarian[dataPointIndex].toLocaleString('id-ID')}</b><br>
+          Persen Kumulatif: <b>${data.targetPersen[dataPointIndex].toFixed(2)}%</b>
+        </div>`
     },
     colors: ['#1e88e5'],
     stroke: { curve: 'smooth', width: 3 },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.5,
-        opacityTo: 0.05
-      }
-    },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.5, opacityTo: 0.05 } },
     dataLabels: { enabled: false }
   };
-
   chartInstance = new ApexCharts(document.querySelector("#kurvaSProvChart"), options);
   chartInstance.render();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  // render default kegiatan
   loadAndRenderKurvaS(defaultKegiatan);
 
-  // filter kegiatan berubah
   document.getElementById('filterKegiatanProses').addEventListener('change', function() {
-    const id = this.value || defaultKegiatan;
-    loadAndRenderKurvaS(id);
+    const idProses = this.value || defaultKegiatan;
+    loadKabupatenDropdown(idProses);
+    loadAndRenderKurvaS(idProses);
   });
 
-  // animasi progres bar dummy
+  document.getElementById('filterKabupaten').addEventListener('change', function() {
+    const idKab = this.value;
+    const idProses = document.getElementById('filterKegiatanProses').value || defaultKegiatan;
+    loadAndRenderKurvaS(idProses, idKab);
+  });
+
   setTimeout(() => {
     document.querySelectorAll('[data-width]').forEach(bar => {
       bar.style.width = bar.dataset.width + '%';
@@ -334,6 +324,5 @@ document.addEventListener("DOMContentLoaded", function() {
   }, 400);
 });
 </script>
-
 
 <?= $this->endSection() ?>

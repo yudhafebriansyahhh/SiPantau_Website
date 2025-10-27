@@ -2,11 +2,10 @@
 namespace App\Controllers;
 
 use App\Models\KurvaSProvinsiModel;
+use App\Models\KurvaSkabModel;
 use App\Models\MasterKegiatanDetailProsesModel;
+use App\Models\MasterKegiatanWilayahModel;
 use CodeIgniter\Controller;
-use DateTime;
-use DateInterval;
-use DatePeriod;
 
 class AdminSurveiProvController extends Controller
 {
@@ -14,16 +13,13 @@ class AdminSurveiProvController extends Controller
     {
         $prosesModel = new MasterKegiatanDetailProsesModel();
 
-        // Ambil semua kegiatan untuk dropdown
+        // Dropdown kegiatan proses
         $kegiatanList = $prosesModel
             ->select('id_kegiatan_detail_proses, nama_kegiatan_detail_proses')
             ->orderBy('id_kegiatan_detail_proses', 'DESC')
             ->findAll();
 
-        // Ambil kegiatan detail terbaru untuk default chart
-        $latest = $prosesModel
-            ->orderBy('id_kegiatan_detail_proses', 'DESC')
-            ->first();
+        $latest = $prosesModel->orderBy('id_kegiatan_detail_proses', 'DESC')->first();
         $latestKegiatanId = $latest ? $latest['id_kegiatan_detail_proses'] : '';
 
         $data = [
@@ -36,65 +32,112 @@ class AdminSurveiProvController extends Controller
         return view('AdminSurveiProv/dashboard', $data);
     }
 
+    // ======================================================
+    // KURVA S PROVINSI
+    // ======================================================
     public function getKurvaProvinsi()
     {
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
         $model = new KurvaSProvinsiModel();
 
         $builder = $model
-            ->select('id_kegiatan_detail_proses, tanggal_target, target_persen_kumulatif, target_kumulatif_absolut, target_harian_absolut')
+            ->select('tanggal_target, target_persen_kumulatif, target_kumulatif_absolut, target_harian_absolut')
             ->orderBy('tanggal_target', 'ASC');
 
         if ($idProses) {
             $builder->where('id_kegiatan_detail_proses', $idProses);
         } else {
-            // Jika tidak ada filter, gunakan kegiatan terbaru
-            $latest = (new MasterKegiatanDetailProsesModel())
-                ->orderBy('id_kegiatan_detail_proses', 'DESC')
-                ->first();
-
-            if ($latest) {
-                $builder->where('id_kegiatan_detail_proses', $latest['id_kegiatan_detail_proses']);
-            }
+            $latest = (new MasterKegiatanDetailProsesModel())->orderBy('id_kegiatan_detail_proses', 'DESC')->first();
+            if ($latest) $builder->where('id_kegiatan_detail_proses', $latest['id_kegiatan_detail_proses']);
         }
 
         $records = $builder->findAll();
-
-        if (empty($records)) {
-            return $this->response->setJSON([
-                'labels' => [],
-                'targetPersen' => [],
-                'targetAbsolut' => [],
-                'targetHarian' => []
-            ]);
-        }
-
-        $labels = [];
-        $targetPersen = [];
-        $targetAbsolut = [];
-        $targetHarian = [];
-
-        foreach ($records as $row) {
-            $labels[] = date('d M', strtotime($row['tanggal_target']));
-            $targetPersen[] = (float) $row['target_persen_kumulatif'];
-            $targetAbsolut[] = (int) $row['target_kumulatif_absolut'];
-            $targetHarian[] = (int) $row['target_harian_absolut'];
-        }
-
-        // Pastikan nilai kumulatif tidak menurun
-        for ($i = 1; $i < count($targetAbsolut); $i++) {
-            if ($targetAbsolut[$i] < $targetAbsolut[$i - 1]) {
-                $targetAbsolut[$i] = $targetAbsolut[$i - 1];
-            }
-        }
-
-        return $this->response->setJSON([
-            'labels' => $labels,
-            'targetPersen' => $targetPersen,
-            'targetAbsolut' => $targetAbsolut,
-            'targetHarian' => $targetHarian
-        ]);
+        return $this->response->setJSON($this->formatKurvaData($records));
     }
+
+    // ======================================================
+    // 🔹 Kegiatan Wilayah Dropdown (kabupaten)
+    // ======================================================
+    public function getKegiatanWilayah()
+    {
+        $idProses = $this->request->getGet('id_kegiatan_detail_proses');
+        $wilayahModel = new MasterKegiatanWilayahModel();
+
+        $records = $wilayahModel
+            ->select('kegiatan_wilayah.id_kegiatan_wilayah, master_kabupaten.nama_kabupaten')
+            ->join('master_kabupaten', 'master_kabupaten.id_kabupaten = kegiatan_wilayah.id_kabupaten', 'left')
+            ->where('kegiatan_wilayah.id_kegiatan_detail_proses', $idProses)
+            ->findAll();
+
+        return $this->response->setJSON($records);
+    }
+
+    // ======================================================
+    // 🔹 Kurva S Kabupaten (berdasarkan kegiatan_wilayah)
+    // ======================================================
+    public function getKurvaKabupaten()
+    {
+        $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
+        $model = new KurvaSkabModel();
+
+        $records = $model
+            ->where('id_kegiatan_wilayah', $idWilayah)
+            ->orderBy('tanggal_target', 'ASC')
+            ->findAll();
+
+        return $this->response->setJSON($this->formatKurvaData($records));
+    }
+
+    // ======================================================
+    // 🔹 Helper: format JSON kurva
+    // ======================================================
+    private function formatKurvaData($records)
+{
+    if (empty($records)) {
+        return [
+            'labels' => [],
+            'targetPersen' => [],
+            'targetAbsolut' => [],
+            'targetHarian' => []
+        ];
+    }
+
+    // 🔹 filter duplikat berdasarkan tanggal_target
+    $unique = [];
+    foreach ($records as $row) {
+        $tgl = $row['tanggal_target'];
+        if (!isset($unique[$tgl])) {
+            $unique[$tgl] = $row;
+        }
+    }
+
+    // urutkan berdasarkan tanggal (pastikan rapi)
+    ksort($unique);
+
+    $labels = $targetPersen = $targetAbsolut = $targetHarian = [];
+    foreach ($unique as $row) {
+        $labels[] = date('d M', strtotime($row['tanggal_target']));
+        $targetPersen[] = (float) $row['target_persen_kumulatif'];
+        $targetAbsolut[] = (int) $row['target_kumulatif_absolut'];
+        $targetHarian[] = (int) $row['target_harian_absolut'];
+    }
+
+    // 🔸 pastikan target kumulatif tidak menurun
+    for ($i = 1; $i < count($targetAbsolut); $i++) {
+        if ($targetAbsolut[$i] < $targetAbsolut[$i - 1]) {
+            $targetAbsolut[$i] = $targetAbsolut[$i - 1];
+        }
+    }
+
+    return [
+        'labels' => array_values($labels),
+        'targetPersen' => array_values($targetPersen),
+        'targetAbsolut' => array_values($targetAbsolut),
+        'targetHarian' => array_values($targetHarian)
+    ];
+}
+
+
 
 
 
