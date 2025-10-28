@@ -1,5 +1,5 @@
 <?php
-namespace App\Controllers;
+namespace App\Controllers\AdminProv;
 
 use App\Models\KurvaSProvinsiModel;
 use App\Models\KurvaSkabModel;
@@ -7,7 +7,7 @@ use App\Models\MasterKegiatanDetailProsesModel;
 use App\Models\MasterKegiatanWilayahModel;
 use CodeIgniter\Controller;
 
-class AdminSurveiProvController extends Controller
+class DashboardController extends Controller
 {
     public function index()
     {

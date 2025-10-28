@@ -26,19 +26,20 @@
 <!-- Form Card -->
 <div class="card max-w-4xl">
     <!-- Admin Info -->
-    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <div class="flex items-center">
-            <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
+    <div class="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <span class="text-white text-lg font-medium">
                     <?= strtoupper(substr($admin['nama_user'], 0, 2)) ?>
                 </span>
             </div>
-            <div>
-                <p class="text-sm font-semibold text-gray-900"><?= esc($admin['nama_user']) ?></p>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900"><?= esc($admin['nama_user']) ?></p>
                 <p class="text-xs text-gray-600"><?= esc($admin['email']) ?></p>
                 <p class="text-xs text-gray-500 mt-1">
-                    <span class="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
-                        Sobat ID: <?= esc($admin['sobat_id']) ?>
+                    <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded">
+                        <i class="fas fa-id-card mr-1"></i>
+                        <?= esc($admin['sobat_id']) ?>
                     </span>
                 </p>
             </div>
@@ -96,8 +97,8 @@
                             </div>
                             <?php endif; ?>
                             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 sticky top-0 z-10">
-                                <p class="text-sm font-semibold text-gray-700">
-                                    <i class="fas fa-folder-open text-blue-600 mr-2"></i>
+                                <p class="text-sm font-medium text-gray-700">
+                                    <i class="fas fa-folder-open text-gray-400 mr-2"></i>
                                     <?= esc($detail['nama_kegiatan']) ?>
                                 </p>
                             </div>
@@ -106,34 +107,32 @@
                             $currentKegiatan = $detail['nama_kegiatan'];
                         endif; 
                     ?>
-                    <label class="flex items-start p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 kegiatan-item <?= $isChecked ? 'bg-blue-50' : '' ?>">
+                    <label class="flex items-start p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 kegiatan-item transition-colors <?= $isChecked ? 'bg-blue-50' : '' ?>">
                         <input type="checkbox" 
                                name="kegiatan_details[]" 
                                value="<?= $detail['id_kegiatan_detail'] ?>" 
                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1 kegiatan-checkbox"
                                <?= $isChecked ? 'checked' : '' ?>>
-                        <div class="ml-3 flex-1">
+                        <div class="ml-3 flex-1 min-w-0">
                             <p class="text-sm font-medium text-gray-900 kegiatan-name">
                                 <?= esc($detail['nama_kegiatan_detail']) ?>
                                 <?php if ($isChecked): ?>
-                                    <span class="ml-2 text-xs text-blue-600">✓ Sudah di-assign</span>
+                                    <span class="ml-2 inline-flex items-center px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">
+                                        <i class="fas fa-check mr-1"></i>Assigned
+                                    </span>
                                 <?php endif; ?>
                             </p>
-                            <div class="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
-                                <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                            <div class="mt-1.5 flex flex-wrap gap-1.5">
+                                <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
                                     <i class="fas fa-ruler mr-1"></i>
                                     <?= esc($detail['satuan']) ?>
                                 </span>
-                                <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded">
-                                    <i class="fas fa-calendar-alt mr-1"></i>
-                                    <?= esc($detail['periode']) ?>
-                                </span>
-                                <span class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 rounded">
-                                    <i class="fas fa-clock mr-1"></i>
-                                    <?= esc($detail['tahun']) ?>
+                                <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    <?= esc($detail['periode']) ?> (<?= esc($detail['tahun']) ?>)
                                 </span>
                                 <?php if (!empty($detail['tanggal_mulai']) && !empty($detail['tanggal_selesai'])): ?>
-                                <span class="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-700 rounded">
+                                <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
                                     <i class="fas fa-calendar-check mr-1"></i>
                                     <?= date('d M Y', strtotime($detail['tanggal_mulai'])) ?> - <?= date('d M Y', strtotime($detail['tanggal_selesai'])) ?>
                                 </span>
