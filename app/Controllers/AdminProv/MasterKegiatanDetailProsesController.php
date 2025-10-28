@@ -64,7 +64,7 @@ class MasterKegiatanDetailProsesController extends BaseController
             'keterangan'             => 'required|max_length[255]',
             'periode'                => 'required|max_length[50]',
             'target'                 => 'required|numeric',
-            'target_hari_pertama'    => 'required|numeric',
+            'persentase_target_awal'    => 'required|numeric',
             'target_tanggal_selesai' => 'required|valid_date',
         ];
 
@@ -99,7 +99,7 @@ class MasterKegiatanDetailProsesController extends BaseController
             'keterangan'                         => $this->request->getPost('keterangan'),
             'periode'                     => $this->request->getPost('periode'),
             'target'                      => $this->request->getPost('target'),
-            'persentase_target_awal'     => $this->request->getPost('target_hari_pertama'),
+            'persentase_target_awal'     => $this->request->getPost('persentase_target_awal'),
             'tanggal_selesai_target'           => $tanggal100Persen,
             'created_at'                  => date('Y-m-d H:i:s'),
         ]);
@@ -110,7 +110,7 @@ class MasterKegiatanDetailProsesController extends BaseController
         $this->generateKurvaS(
             $idProses,
             $this->request->getPost('target'),
-            $this->request->getPost('target_hari_pertama'),
+            $this->request->getPost('persentase_target_awal'),
             $tanggalMulai,
             $tanggal100Persen,
             $tanggalSelesai
@@ -159,7 +159,7 @@ class MasterKegiatanDetailProsesController extends BaseController
         'keterangan'              => 'required|max_length[255]',
         'periode'                 => 'required|max_length[50]',
         'target'                  => 'required|numeric',
-        'target_hari_pertama'     => 'required|numeric',
+        'persentase_target_awal'     => 'required|numeric',
         'target_tanggal_selesai'  => 'required|valid_date',
     ];
 
@@ -194,7 +194,7 @@ class MasterKegiatanDetailProsesController extends BaseController
         'keterangan'                  => $this->request->getPost('keterangan'),
         'periode'                     => $this->request->getPost('periode'),
         'target'                      => $this->request->getPost('target'),
-        'persentase_target_awal'      => $this->request->getPost('target_hari_pertama'),
+        'persentase_target_awal'      => $this->request->getPost('persentase_target_awal'),
         'tanggal_selesai_target'      => $tanggal100Persen,
         'updated_at'                  => date('Y-m-d H:i:s'),
     ];

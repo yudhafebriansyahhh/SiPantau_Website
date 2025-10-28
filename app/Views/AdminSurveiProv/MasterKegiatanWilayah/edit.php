@@ -12,7 +12,8 @@
 </div>
 
 <div class="card max-w-5xl">
-    <form id="formMasterKegiatan" method="POST" action="<?= base_url('adminsurvei/master-kegiatan-wilayah/update/' . $wilayah['id_kegiatan_wilayah']) ?>">
+    <form id="formMasterKegiatan" method="POST"
+        action="<?= base_url('adminsurvei/master-kegiatan-wilayah/update/' . $wilayah['id_kegiatan_wilayah']) ?>">
         <?= csrf_field() ?>
 
         <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -65,6 +66,7 @@
             <input type="number" id="target" name="target" class="input-field"
                 placeholder="Masukkan target wilayah" min="1"
                 value="<?= esc($wilayah['target_wilayah']) ?>" required>
+            <p id="sisaInfo" class="text-sm text-gray-500 mt-1"></p>
         </div>
 
         <!-- Keterangan -->
@@ -72,8 +74,7 @@
             <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-2">
                 Keterangan <span class="text-red-500">*</span>
             </label>
-            <textarea id="keterangan" name="keterangan" rows="3" class="input-field resize-none"
-                required><?= esc($wilayah['keterangan']) ?></textarea>
+            <textarea id="keterangan" name="keterangan" rows="3" class="input-field resize-none" required><?= esc($wilayah['keterangan']) ?></textarea>
         </div>
 
         <div class="border-t border-gray-200 my-6"></div>
@@ -84,21 +85,79 @@
     </form>
 </div>
 
+<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-document.getElementById('formMasterKegiatan').addEventListener('submit', function(e) {
-    e.preventDefault();
-    Swal.fire({
-        title: 'Update Data?',
-        text: 'Apakah Anda yakin ingin memperbarui data kegiatan wilayah ini?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3b82f6',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Ya, Update',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) e.target.submit();
+document.addEventListener('DOMContentLoaded', () => {
+    const kegiatanSelect = document.getElementById('kegiatan_detail');
+    const targetInput = document.getElementById('target');
+    const sisaInfo = document.getElementById('sisaInfo');
+
+    // 🔹 Fungsi untuk ambil dan tampilkan info target
+    const loadTargetInfo = (idKegiatan) => {
+        if (!idKegiatan) {
+            sisaInfo.textContent = '';
+            return;
+        }
+
+        fetch(`<?= base_url('adminsurvei/master-kegiatan-wilayah/sisa-target/') ?>${idKegiatan}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    sisaInfo.textContent = data.error;
+                    return;
+                }
+
+                sisaInfo.innerHTML = `
+                    🎯 <strong>Target Provinsi:</strong> ${data.target_prov} |
+                    <strong>Terpakai:</strong> ${data.terpakai} |
+                    <strong>Sisa:</strong> ${data.sisa}
+                `;
+
+                targetInput.max = data.sisa + parseInt("<?= $wilayah['target_wilayah'] ?>");
+            })
+            .catch(() => {
+                sisaInfo.textContent = "⚠️ Gagal memuat data sisa target.";
+            });
+    };
+
+    // Jalankan saat pertama kali halaman dimuat (untuk kegiatan yang sudah terpilih)
+    loadTargetInfo(kegiatanSelect.value);
+
+    // Jalankan setiap kali dropdown berubah
+    kegiatanSelect.addEventListener('change', () => {
+        loadTargetInfo(kegiatanSelect.value);
+    });
+
+    // 🔹 Validasi sebelum submit
+    document.getElementById('formMasterKegiatan').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const target = parseInt(targetInput.value);
+        const max = parseInt(targetInput.max || 0);
+
+        if (max > 0 && target > max) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Target Melebihi Batas',
+                text: `Target yang dimasukkan melebihi batas maksimal (${max}).`,
+                confirmButtonColor: '#ef4444'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Update Data?',
+            text: 'Apakah Anda yakin ingin memperbarui data kegiatan wilayah ini?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Update',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) e.target.submit();
+        });
     });
 });
 </script>
