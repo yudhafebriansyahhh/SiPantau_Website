@@ -152,7 +152,7 @@ function renderTable() {
         let cells = `
             <td class="px-4 py-3 text-gray-900">${start + index + 1}</td>
             <td class="px-4 py-3">
-                <a href="<?= base_url('laporan-petugas/detail/') ?>${petugas.id}" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+                <a href="<?= base_url('pemantau/laporan-petugas/detail/') ?>${petugas.id}" class="text-blue-600 hover:text-blue-800 hover:underline font-medium">
                     ${petugas.nama}
                 </a>
             </td>

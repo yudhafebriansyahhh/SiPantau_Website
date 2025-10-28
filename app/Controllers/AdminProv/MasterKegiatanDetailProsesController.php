@@ -65,7 +65,7 @@ class MasterKegiatanDetailProsesController extends BaseController
             'periode'                => 'required|max_length[50]',
             'target'                 => 'required|numeric',
             'persentase_target_awal'    => 'required|numeric',
-            'tanggal_selesai_target' => 'required|valid_date',
+            'target_tanggal_selesai' => 'required|valid_date',
         ];
 
         if (! $this->validate($rules)) {

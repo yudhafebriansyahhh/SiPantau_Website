@@ -101,6 +101,8 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
    $routes->get('master-kegiatan-wilayah/edit/(:num)', 'AdminProv\MasterKegiatanWilayahController::edit/$1');
     $routes->post('master-kegiatan-wilayah/update/(:num)', 'AdminProv\MasterKegiatanWilayahController::update/$1');
     $routes->delete('master-kegiatan-wilayah/delete/(:num)', 'AdminProv\MasterKegiatanWilayahController::delete/$1');
+$routes->get('master-kegiatan-wilayah/sisa-target/(:num)', 'AdminProv\MasterKegiatanWilayahController::getSisaTarget/$1');
+
 
     $routes->get('kurva-kabupaten', 'AdminSurveiProvController::getKurvaKabupaten');
     $routes->get('assign-admin-kab', 'AdminSurveiProvController::AssignAdminSurveiKab');

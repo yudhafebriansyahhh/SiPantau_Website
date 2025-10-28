@@ -280,4 +280,37 @@ class MasterKegiatanWilayahController extends BaseController
 
         $kurvaModel->insertBatch($insertData);
     }
+
+// ============================================================
+// GET SISA TARGET UNTUK AJAX
+// ============================================================
+public function getSisaTarget($idKegiatanDetailProses)
+{
+    $detail = $this->masterDetailProsesModel->find($idKegiatanDetailProses);
+    if (!$detail) {
+        return $this->response->setJSON(['error' => 'Data kegiatan detail proses tidak ditemukan.']);
+    }
+
+    // Ambil target provinsi dari master_detail_proses
+    $targetProv = (int) $detail['target'];
+
+    // Hitung total target wilayah yang sudah dipakai
+    $terpakai = (int) $this->masterKegiatanWilayahModel
+        ->where('id_kegiatan_detail_proses', $idKegiatanDetailProses)
+        ->selectSum('target_wilayah')
+        ->get()
+        ->getRow()
+        ->target_wilayah ?? 0;
+
+    // Hitung sisa
+    $sisa = max($targetProv - $terpakai, 0);
+
+    return $this->response->setJSON([
+        'target_prov' => $targetProv,
+        'terpakai'    => $terpakai,
+        'sisa'        => $sisa
+    ]);
+}
+
+
 }

@@ -5,7 +5,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center mb-2">
-        <a href="<?= base_url('assign-petugas') ?>" class="text-gray-600 hover:text-gray-900 mr-2">
+        <a href="<?= base_url('adminsurvei-kab/assign-petugas') ?>" class="text-gray-600 hover:text-gray-900 mr-2">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
@@ -61,7 +61,7 @@
                     </td>
                     <td class="px-4 py-3 text-center">
                         <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('assign-petugas/pcl-detail/1') ?>" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
+                            <a href="<?= base_url('adminsurvei-kab/assign-petugas/pcl-detail/1') ?>" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
                                 Detail
                             </a>
                             <button class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded transition-colors">

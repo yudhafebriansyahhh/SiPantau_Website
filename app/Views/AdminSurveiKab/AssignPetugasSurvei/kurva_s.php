@@ -5,7 +5,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center mb-2">
-        <a href="<?= base_url('assign-petugas/detail/1') ?>" class="text-gray-600 hover:text-gray-900 mr-2">
+        <a href="<?= base_url('adminsurvei-kab/assign-petugas/detail/1') ?>" class="text-gray-600 hover:text-gray-900 mr-2">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>

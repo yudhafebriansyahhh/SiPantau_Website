@@ -64,6 +64,7 @@
             </label>
             <input type="number" id="target" name="target" class="input-field"
                 placeholder="Masukkan target wilayah" min="1" value="<?= old('target') ?>" required>
+            <p id="sisaInfo" class="text-sm text-gray-500 mt-1"></p>
         </div>
 
         <!-- Keterangan -->
@@ -83,37 +84,61 @@
     </form>
 </div>
 
+<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-document.getElementById('formMasterKegiatan').addEventListener('submit', function(e) {
-    e.preventDefault();
+document.addEventListener('DOMContentLoaded', () => {
+    const kegiatanSelect = document.getElementById('kegiatan_detail');
+    const targetInput = document.getElementById('target');
+    const sisaInfo = document.getElementById('sisaInfo');
 
-    const kegiatanDetail = document.getElementById('kegiatan_detail').value;
-    const kabupaten = document.getElementById('kabupaten').value;
-    const target = document.getElementById('target').value;
-    const keterangan = document.getElementById('keterangan').value.trim();
+    kegiatanSelect.addEventListener('change', () => {
+        const idKegiatan = kegiatanSelect.value;
+        if (!idKegiatan) {
+            targetInput.value = '';
+            targetInput.placeholder = 'Masukkan target wilayah';
+            sisaInfo.textContent = '';
+            return;
+        }
 
-    if (!kegiatanDetail || !kabupaten || !target || !keterangan) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Form Tidak Lengkap',
-            text: 'Harap lengkapi semua field yang wajib diisi!',
-            confirmButtonColor: '#3b82f6'
-        });
-        return;
-    }
+        fetch(`<?= base_url('adminsurvei/master-kegiatan-wilayah/sisa-target/') ?>${idKegiatan}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    sisaInfo.textContent = data.error;
+                    targetInput.value = '';
+                    targetInput.placeholder = 'Masukkan target wilayah';
+                } else {
+                    sisaInfo.innerHTML = `
+                        🎯 <strong>Target Provinsi:</strong> ${data.target_prov} |
+                        <strong>Terpakai:</strong> ${data.terpakai} |
+                        <strong>Sisa:</strong> ${data.sisa}
+                    `;
+                    targetInput.value = data.sisa; // otomatis isi dengan sisa target
+                    targetInput.max = data.sisa;   // batasi input maksimal sisa
+                    targetInput.placeholder = `Sisa target: ${data.sisa}`;
+                }
+            })
+            .catch(() => {
+                sisaInfo.textContent = "⚠️ Gagal memuat data sisa target.";
+            });
+    });
 
-    Swal.fire({
-        title: 'Simpan Data?',
-        text: 'Apakah Anda yakin ingin menambahkan kegiatan wilayah ini?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3b82f6',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Ya, Simpan',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) e.target.submit();
+    // Validasi sebelum submit
+    document.getElementById('formMasterKegiatan').addEventListener('submit', function(e) {
+        const target = parseInt(targetInput.value);
+        const max = parseInt(targetInput.max || 0);
+
+        if (max > 0 && target > max) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Target Melebihi Batas',
+                text: `Target yang dimasukkan melebihi sisa target (${max}).`,
+                confirmButtonColor: '#ef4444'
+            });
+        }
     });
 });
 </script>
