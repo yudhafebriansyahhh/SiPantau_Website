@@ -4,21 +4,24 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class KurvaSProvinsiModel extends Model
+class KurvaSkabModel extends Model
 {
-    protected $table            = 'kurva_provinsi';
-    protected $primaryKey       = 'id_kurva_provinsi';
+    protected $table            = 'kurva_kabupaten';
+    protected $primaryKey       = 'id_kurva_kabupaten';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [
-        'id_kegiatan_detail_proses',
+    protected $allowedFields    = [ 
+        'id_kurva_kabupaten',
+        'id_kegiatan_wilayah',
         'tanggal_target',
         'target_persen_kumulatif',
         'target_harian_absolut',
         'target_kumulatif_absolut',
         'is_hari_kerja',
+        'created_at',
+        'updated_at',
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -23,7 +23,7 @@
                 <span class="text-red-500 font-semibold">*</span> wajib diisi.
             </p>
         </div>
-
+        
         <!-- Pilih Kegiatan Detail -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kegiatan Detail<span class="text-red-500">*</span></label>
@@ -66,7 +66,7 @@
                 <option value="paket" <?= old('satuan') == 'paket' ? 'selected' : '' ?>>Paket</option>
                 <option value="kegiatan" <?= old('satuan') == 'kegiatan' ? 'selected' : '' ?>>Kegiatan</option>
             </select>
-        </div>
+        </div>  
 
         <!-- Keterangan -->
         <div class="mb-6">

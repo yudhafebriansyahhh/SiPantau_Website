@@ -149,82 +149,86 @@ class MasterKegiatanDetailProsesController extends BaseController
     // UPDATE
     // ============================================================
     public function update($id)
-    {
-        $rules = [
-            'kegiatan_detail'        => 'required|numeric',
-            'nama_proses'            => 'required|min_length[3]|max_length[255]',
-            'tanggal_mulai'          => 'required|valid_date',
-            'tanggal_selesai'        => 'required|valid_date',
-            'satuan'                 => 'required|max_length[50]',
-            'keterangan'             => 'required|max_length[255]',
-            'periode'                => 'required|max_length[50]',
-            'target'                 => 'required|numeric',
-            'persentase_target_awal'    => 'required|numeric',
-            'tanggal_selesai_target' => 'required|valid_date',
-        ];
+{
+    $rules = [
+        'kegiatan_detail'         => 'required|numeric',
+        'nama_proses'             => 'required|min_length[3]|max_length[255]',
+        'tanggal_mulai'           => 'required|valid_date',
+        'tanggal_selesai'         => 'required|valid_date',
+        'satuan'                  => 'required|max_length[50]',
+        'keterangan'              => 'required|max_length[255]',
+        'periode'                 => 'required|max_length[50]',
+        'target'                  => 'required|numeric',
+        'persentase_target_awal'     => 'required|numeric',
+        'target_tanggal_selesai'  => 'required|valid_date',
+    ];
 
-        if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        $existingData = $this->masterDetailProsesModel->find($id);
-        if (! $existingData) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan.');
-        }
-
-        $tanggalMulai   = $this->request->getPost('tanggal_mulai');
-        $tanggalSelesai = $this->request->getPost('tanggal_selesai');
-        $tanggal100Persen = $this->request->getPost('tanggal_selesai_target');
-
-        // Validasi hubungan antar tanggal
-        if (strtotime($tanggalSelesai) < strtotime($tanggalMulai) ||
-            strtotime($tanggal100Persen) < strtotime($tanggalMulai) ||
-            strtotime($tanggal100Persen) > strtotime($tanggalSelesai)) {
-            return redirect()->back()->withInput()->with('error', '❌ Tanggal tidak valid.');
-        }
-
-        $input = [
-            'id_kegiatan_detail'          => $this->request->getPost('kegiatan_detail'),
-            'nama_kegiatan_detail_proses' => $this->request->getPost('nama_proses'),
-            'tanggal_mulai'               => $tanggalMulai,
-            'tanggal_selesai'             => $tanggalSelesai,
-            'satuan'                      => $this->request->getPost('satuan'),
-            'keterangan'                         => $this->request->getPost('keterangan'),
-            'periode'                     => $this->request->getPost('periode'),
-            'target'                      => $this->request->getPost('target'),
-            'persentase_target_awal'     => $this->request->getPost('persentase_target_awal'),
-            'tanggal_selesai_target'           => $tanggal100Persen,
-            'updated_at'                  => date('Y-m-d H:i:s'),
-        ];
-
-        $this->masterDetailProsesModel->update($id, $input);
-
-        $isKurvaNeedsUpdate = (
-            $existingData['target'] != $input['target'] ||
-            $existingData['persentase_target_awal'] != $input['persentase_target_awal'] ||
-            $existingData['tanggal_selesai_target'] != $input['tanggal_selesai_target']
-        );
-
-        if ($isKurvaNeedsUpdate) {
-            $kurvaModel = new KurvaSProvinsiModel();
-            $kurvaModel->where('id_kegiatan_detail_proses', $id)->delete();
-
-            $this->generateKurvaS(
-                $id,
-                $input['target'],
-                $input['persentase_target_awal'],
-                $tanggalMulai,
-                $tanggal100Persen,
-                $tanggalSelesai
-            );
-        }
-
-        return redirect()
-            ->to(base_url('adminsurvei/master-kegiatan-detail-proses'))
-            ->with('success', $isKurvaNeedsUpdate
-                ? '✅ Data kegiatan dan Kurva S Provinsi berhasil diperbarui.'
-                : 'Data kegiatan berhasil diperbarui tanpa perubahan Kurva S.');
+    if (! $this->validate($rules)) {
+        return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
     }
+
+    $existingData = $this->masterDetailProsesModel->find($id);
+    if (! $existingData) {
+        return redirect()->back()->with('error', 'Data tidak ditemukan.');
+    }
+
+    $tanggalMulai      = $this->request->getPost('tanggal_mulai');
+    $tanggalSelesai    = $this->request->getPost('tanggal_selesai');
+    $tanggal100Persen  = $this->request->getPost('target_tanggal_selesai');
+
+    // Validasi hubungan antar tanggal
+    if (
+        strtotime($tanggalSelesai) < strtotime($tanggalMulai) ||
+        strtotime($tanggal100Persen) < strtotime($tanggalMulai) ||
+        strtotime($tanggal100Persen) > strtotime($tanggalSelesai)
+    ) {
+        return redirect()->back()->withInput()->with('error', '❌ Tanggal tidak valid.');
+    }
+
+    $input = [
+        'id_kegiatan_detail'          => $this->request->getPost('kegiatan_detail'),
+        'nama_kegiatan_detail_proses' => $this->request->getPost('nama_proses'),
+        'tanggal_mulai'               => $tanggalMulai,
+        'tanggal_selesai'             => $tanggalSelesai,
+        'satuan'                      => $this->request->getPost('satuan'),
+        'keterangan'                  => $this->request->getPost('keterangan'),
+        'periode'                     => $this->request->getPost('periode'),
+        'target'                      => $this->request->getPost('target'),
+        'persentase_target_awal'      => $this->request->getPost('persentase_target_awal'),
+        'tanggal_selesai_target'      => $tanggal100Persen,
+        'updated_at'                  => date('Y-m-d H:i:s'),
+    ];
+
+    $this->masterDetailProsesModel->update($id, $input);
+
+    // Cek apakah Kurva S perlu diupdate
+    $isKurvaNeedsUpdate = (
+        $existingData['target'] != $input['target'] ||
+        $existingData['persentase_target_awal'] != $input['persentase_target_awal'] ||
+        $existingData['tanggal_selesai_target'] != $input['tanggal_selesai_target']
+    );
+
+    if ($isKurvaNeedsUpdate) {
+        $kurvaModel = new KurvaSProvinsiModel();
+        $kurvaModel->where('id_kegiatan_detail_proses', $id)->delete();
+
+        $this->generateKurvaS(
+            $id,
+            $input['target'],
+            $input['persentase_target_awal'],
+            $tanggalMulai,
+            $tanggal100Persen,
+            $tanggalSelesai
+        );
+    }
+
+    return redirect()
+        ->to(base_url('adminsurvei/master-kegiatan-detail-proses'))
+        ->with('success', $isKurvaNeedsUpdate
+            ? '✅ Data kegiatan dan Kurva S Provinsi berhasil diperbarui.'
+            : 'Data kegiatan berhasil diperbarui tanpa perubahan Kurva S.');
+}
+
 
     // ============================================================
     // GENERATE KURVA S (dengan skip hari libur)
@@ -256,12 +260,21 @@ class MasterKegiatanDetailProsesController extends BaseController
     $k = 8;   // kelengkungan
     $x0 = 0.5; // titik tengah
 
+    // 🟢 Hitung batas normalisasi sigmoid (awal = 0, akhir = 1)
+    $sigmoidMin = 1 / (1 + exp(-$k * (0 - $x0)));
+    $sigmoidMax = 1 / (1 + exp(-$k * (1 - $x0)));
+
     $workdayData = [];
     foreach ($workdaysUntil100 as $i => $date) {
         $progress = $i / ($daysSigmoid - 1);
+
+        // Normalisasi sigmoid agar hari pertama = persenAwal dan hari terakhir = 100%
         $sigmoid = 1 / (1 + exp(-$k * ($progress - $x0)));
-        $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $sigmoid;
+        $normalizedSigmoid = ($sigmoid - $sigmoidMin) / ($sigmoidMax - $sigmoidMin);
+
+        $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $normalizedSigmoid;
         if ($kumulatifPersen > 100) $kumulatifPersen = 100;
+
         $workdayData[$date->format('Y-m-d')] = $kumulatifPersen;
     }
 
@@ -315,7 +328,7 @@ class MasterKegiatanDetailProsesController extends BaseController
             'tanggal_target'            => $currentDate,
             'target_persen_kumulatif'   => 100,
             'target_harian_absolut'     => 0,
-            'target_kumulatif_absolut'  => $totalTarget, // 🟢 pastikan mendatar di total target
+            'target_kumulatif_absolut'  => $totalTarget,
             'is_hari_kerja'             => 1,
             'created_at'                => date('Y-m-d H:i:s'),
         ]);

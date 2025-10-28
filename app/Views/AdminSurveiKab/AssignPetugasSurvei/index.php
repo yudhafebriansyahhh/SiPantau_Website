@@ -29,7 +29,7 @@
         </div>
         
         <!-- Add Button -->
-        <a href="<?= base_url('assign-petugas/create') ?>" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors whitespace-nowrap">
+        <a href="<?= base_url('adminsurvei-kab/assign-petugas/create') ?>" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors whitespace-nowrap">
             <i class="fas fa-plus mr-2"></i>
             Tambah Petugas Survei
         </a>
@@ -56,10 +56,10 @@
                     <td class="px-4 py-3 text-sm text-gray-700 border-r border-gray-200">150</td>
                     <td class="px-4 py-3 text-center">
                         <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('assign-petugas/detail/1') ?>" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
+                            <a href="<?= base_url('adminsurvei-kab/assign-petugas/detail/1') ?>" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
                                 Detail
                             </a>
-                            <a href="<?= base_url('assign-petugas/edit/1') ?>" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded transition-colors">
+                            <a href="<?= base_url('adminsurvei-kab/assign-petugas/edit/1') ?>" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded transition-colors">
                                 Edit
                             </a>
                             <button onclick="confirmDelete(1)" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors">
@@ -77,10 +77,10 @@
                     <td class="px-4 py-3 text-sm text-gray-700 border-r border-gray-200">200</td>
                     <td class="px-4 py-3 text-center">
                         <div class="flex items-center justify-center space-x-2">
-                            <a href="<?= base_url('assign-petugas/detail/2') ?>" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
+                            <a href="<?= base_url('adminsurvei-kab/assign-petugas/detail/2') ?>" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
                                 Detail
                             </a>
-                            <a href="<?= base_url('assign-petugas/edit/2') ?>" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded transition-colors">
+                            <a href="<?= base_url('adminsurvei-kab/assign-petugas/edit/2') ?>" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded transition-colors">
                                 Edit
                             </a>
                             <button onclick="confirmDelete(2)" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors">

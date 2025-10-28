@@ -85,11 +85,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Target Hari Pertama<span class="text-red-500">*</span></label>
-                <input type="number" name="persentase_target_awal" value="<?= esc($detailProses['persentase_target_awal']) ?>" class="input-field" min="0" required>
+<input type="number" name="target_hari_pertama" value="<?= esc($detailProses['persentase_target_awal']) ?>" class="input-field" min="0" required>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Target Tanggal Selesai<span class="text-red-500">*</span></label>
-                <input type="date" id="tanggal_selesai_target" name="tanggal_selesai_target" value="<?= esc($detailProses['tanggal_selesai_target']) ?>" class="input-field" required>
+<input type="date" id="target_tanggal_selesai" name="target_tanggal_selesai" value="<?= esc($detailProses['tanggal_selesai_target']) ?>" class="input-field" required>
             </div>
         </div>
 

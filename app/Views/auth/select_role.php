@@ -57,21 +57,33 @@
                         <div class="space-y-3 mb-6">
                             <?php 
                             $roleIcons = [
-                                1 => ['icon' => 'fa-crown', 'color' => 'blue', 'desc' => 'Akses penuh sistem'],
-                                2 => ['icon' => 'fa-user-shield', 'color' => 'indigo', 'desc' => 'Admin tingkat provinsi'],
-                                3 => ['icon' => 'fa-user-tie', 'color' => 'purple', 'desc' => 'Admin kabupaten/kota'],
-                                4 => ['icon' => 'fa-eye', 'color' => 'green', 'desc' => 'Pemantau lapangan']
+                                'default_1' => ['icon' => 'fa-crown', 'color' => 'blue', 'desc' => 'Akses penuh sistem'],
+                                'admin_provinsi' => ['icon' => 'fa-user-shield', 'color' => 'indigo', 'desc' => 'Mengelola survei provinsi'],
+                                'pemantau_provinsi' => ['icon' => 'fa-eye', 'color' => 'cyan', 'desc' => 'Melihat data provinsi'],
+                                'admin_kabupaten' => ['icon' => 'fa-user-tie', 'color' => 'purple', 'desc' => 'Mengelola survei kabupaten'],
+                                'pemantau_kabupaten' => ['icon' => 'fa-eye', 'color' => 'teal', 'desc' => 'Melihat data kabupaten'],
+                                'default_4' => ['icon' => 'fa-eye', 'color' => 'green', 'desc' => 'Pemantau pusat']
                             ];
                             
                             foreach ($roles as $role): 
                                 $roleId = $role['id_roleuser'];
-                                $iconData = $roleIcons[$roleId] ?? ['icon' => 'fa-user', 'color' => 'gray', 'desc' => 'Role user'];
+                                $roleType = $role['role_type'] ?? 'default';
+                                
+                                // Tentukan key untuk icon
+                                if ($roleType === 'default') {
+                                    $iconKey = 'default_' . $roleId;
+                                } else {
+                                    $iconKey = $roleType;
+                                }
+                                
+                                $iconData = $roleIcons[$iconKey] ?? ['icon' => 'fa-user', 'color' => 'gray', 'desc' => 'Role user'];
                             ?>
                             <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-<?= $iconData['color'] ?>-500 hover:bg-<?= $iconData['color'] ?>-50 transition-all duration-200 group">
                                 <input type="radio" 
                                        name="selected_role" 
                                        value="<?= $roleId ?>" 
-                                       class="w-5 h-5 text-<?= $iconData['color'] ?>-600 focus:ring-<?= $iconData['color'] ?>-500"
+                                       data-role-type="<?= $roleType ?>"
+                                       class="w-5 h-5 text-<?= $iconData['color'] ?>-600 focus:ring-<?= $iconData['color'] ?>-500 role-radio"
                                        required>
                                 
                                 <div class="ml-4 flex-1">
@@ -81,15 +93,24 @@
                                         </div>
                                         <div>
                                             <p class="font-semibold text-gray-900"><?= esc($role['roleuser']) ?></p>
-                                            <p class="text-xs text-gray-500"><?= $iconData['desc'] ?></p>
+                                            <p class="text-xs text-gray-500"><?= esc($role['keterangan']) ?></p>
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <?php if ($roleType === 'admin_provinsi' || $roleType === 'admin_kabupaten'): ?>
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full mr-2">
+                                    <i class="fas fa-check-circle mr-1"></i>Admin
+                                </span>
+                                <?php endif; ?>
                                 
                                 <i class="fas fa-chevron-right text-gray-400 group-hover:text-<?= $iconData['color'] ?>-600 transition-colors"></i>
                             </label>
                             <?php endforeach; ?>
                         </div>
+
+                        <!-- Hidden input untuk role type -->
+                        <input type="hidden" name="selected_role_type" id="selected_role_type" value="">
 
                         <!-- Buttons -->
                         <div class="flex gap-3">
@@ -116,6 +137,16 @@
 
         </div>
     </div>
+
+    <script>
+        // Update hidden input saat radio button dipilih
+        document.querySelectorAll('.role-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const roleType = this.getAttribute('data-role-type');
+                document.getElementById('selected_role_type').value = roleType;
+            });
+        });
+    </script>
 
 </body>
 </html>

@@ -70,7 +70,7 @@
                                 <i class="fas fa-bullseye w-4 mr-2"></i>
                                 <span>Master Kegiatan Detail Proses</span>
                             </a>
-                            <a href="<?= base_url('adminsurvei/master-kegiatan-wilayah') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-wilayah' ? 'active' : '' ?>">
+                            <a href="<?= base_url('adminsurvei/master-kegiatan-wilayah/') ?>" class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-wilayah' ? 'active' : '' ?>">
                                 <i class="fas fa-clipboard-list w-4 mr-2"></i>
                                 <span>Master Kegiatan Wilayah</span>
                             </a>
