@@ -2,6 +2,18 @@
 
 <?= $this->section('content') ?>
 
+<style>
+.stat-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+</style>
+
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
@@ -17,7 +29,7 @@
 <div class="card mb-6">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
         <div class="flex items-center mb-4 md:mb-0">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mr-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
                 <span class="text-white text-xl font-bold">
                     <?= strtoupper(substr($admin['nama_user'], 0, 2)) ?>
                 </span>
@@ -26,22 +38,22 @@
                 <h2 class="text-xl font-bold text-gray-900"><?= esc($admin['nama_user']) ?></h2>
                 <p class="text-sm text-gray-600"><?= esc($admin['email']) ?></p>
                 <div class="mt-1 flex items-center gap-2 flex-wrap">
-                    <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                    <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
                         <i class="fas fa-id-card mr-1"></i>
                         Sobat ID: <?= esc($admin['sobat_id']) ?>
                     </span>
-                    <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
+                    <span class="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-medium">
                         <i class="fas fa-shield-alt mr-1"></i>
                         Admin Provinsi
                     </span>
                     <?php if (!empty($admin['hp'])): ?>
-                    <span class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+                    <span class="inline-flex items-center px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-medium">
                         <i class="fas fa-phone mr-1"></i>
                         <?= esc($admin['hp']) ?>
                     </span>
                     <?php endif; ?>
                     <?php if (!empty($admin['nama_kabupaten'])): ?>
-                    <span class="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">
+                    <span class="inline-flex items-center px-2 py-1 bg-orange-50 text-orange-700 rounded text-xs font-medium">
                         <i class="fas fa-map-marker-alt mr-1"></i>
                         <?= esc($admin['nama_kabupaten']) ?>
                     </span>
@@ -62,23 +74,23 @@
 
 <!-- Statistics Cards -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-blue-100 text-sm font-medium">Total Kegiatan</p>
-                <h3 class="text-3xl font-bold mt-2"><?= count($kegiatan) ?></h3>
+                <p class="text-sm text-gray-600 mb-1">Total Kegiatan</p>
+                <h3 class="text-3xl font-bold text-gray-900"><?= count($kegiatan) ?></h3>
             </div>
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <i class="fas fa-tasks text-2xl"></i>
+            <div class="w-14 h-14 bg-blue-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-tasks text-2xl text-[#1e88e5]"></i>
             </div>
         </div>
     </div>
     
-    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-green-100 text-sm font-medium">Kegiatan Aktif</p>
-                <h3 class="text-3xl font-bold mt-2">
+                <p class="text-sm text-gray-600 mb-1">Kegiatan Aktif</p>
+                <h3 class="text-3xl font-bold text-gray-900">
                     <?php 
                     $aktif = 0;
                     $today = date('Y-m-d');
@@ -93,17 +105,17 @@
                     ?>
                 </h3>
             </div>
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <i class="fas fa-check-circle text-2xl"></i>
+            <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-check-circle text-2xl text-[#43a047]"></i>
             </div>
         </div>
     </div>
     
-    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-purple-100 text-sm font-medium">Total Proses</p>
-                <h3 class="text-3xl font-bold mt-2">
+                <p class="text-sm text-gray-600 mb-1">Total Proses</p>
+                <h3 class="text-3xl font-bold text-gray-900">
                     <?php 
                     $totalProses = 0;
                     foreach ($kegiatan as $k) {
@@ -113,17 +125,17 @@
                     ?>
                 </h3>
             </div>
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <i class="fas fa-list-check text-2xl"></i>
+            <div class="w-14 h-14 bg-purple-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-list-check text-2xl text-[#8e24aa]"></i>
             </div>
         </div>
     </div>
     
-    <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-orange-100 text-sm font-medium">Rata-rata Progress</p>
-                <h3 class="text-3xl font-bold mt-2">
+                <p class="text-sm text-gray-600 mb-1">Rata-rata Progress</p>
+                <h3 class="text-3xl font-bold text-gray-900">
                     <?php 
                     $totalProgress = 0;
                     $countKegiatan = count($kegiatan);
@@ -134,8 +146,8 @@
                     ?>%
                 </h3>
             </div>
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <i class="fas fa-chart-line text-2xl"></i>
+            <div class="w-14 h-14 bg-orange-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-chart-line text-2xl text-[#fb8c00]"></i>
             </div>
         </div>
     </div>
@@ -144,7 +156,10 @@
 <!-- Kegiatan List with Progress -->
 <div class="card">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h3 class="text-lg font-bold text-gray-900">Daftar Kegiatan yang Di-assign</h3>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-900">Daftar Kegiatan yang Di-assign</h3>
+            <p class="text-sm text-gray-600 mt-1">Monitoring progres berdasarkan laporan petugas lapangan</p>
+        </div>
         
         <!-- Search Box -->
         <div class="relative w-full sm:w-64">
@@ -178,47 +193,47 @@
                         $statusText = 'Sedang Berlangsung';
                         $statusIcon = 'play-circle';
                     } elseif ($k['tanggal_selesai'] < $today) {
-                        $statusClass = 'red';
+                        $statusClass = 'blue';
                         $statusText = 'Selesai';
                         $statusIcon = 'check-circle';
                     }
                 }
             ?>
-            <div class="kegiatan-card border border-gray-200 rounded-xl overflow-hidden <?= $isActive ? 'border-green-300 shadow-md' : '' ?>">
+            <div class="kegiatan-card border border-gray-200 rounded-xl overflow-hidden <?= $isActive ? 'border-green-200 shadow-sm' : '' ?> hover:shadow-md transition-shadow duration-200">
                 <!-- Kegiatan Header -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-gray-200">
+                <div class="bg-gradient-to-r from-gray-50 to-blue-50 p-4 border-b border-gray-200">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <div class="flex items-center gap-3 mb-2">
-                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <i class="fas fa-clipboard-list text-white"></i>
+                                <div class="w-10 h-10 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clipboard-list text-[#1e88e5]"></i>
                                 </div>
                                 <div class="flex-1">
                                     <h4 class="text-base font-semibold text-gray-900 kegiatan-name">
                                         <?= esc($k['nama_kegiatan_detail']) ?>
                                     </h4>
                                     <p class="text-sm text-gray-600">
-                                        <i class="fas fa-folder text-blue-600 mr-1"></i>
+                                        <i class="fas fa-folder text-[#1e88e5] mr-1"></i>
                                         <?= esc($k['nama_kegiatan']) ?>
                                     </p>
                                 </div>
                             </div>
                             
                             <div class="flex flex-wrap gap-2 mt-3">
-                                <span class="inline-flex items-center px-2.5 py-1 bg-<?= $statusClass ?>-100 text-<?= $statusClass ?>-700 rounded text-xs font-medium">
+                                <span class="inline-flex items-center px-2.5 py-1 bg-<?= $statusClass ?>-50 text-<?= $statusClass ?>-700 border border-<?= $statusClass ?>-200 rounded text-xs font-medium">
                                     <i class="fas fa-<?= $statusIcon ?> mr-1"></i>
                                     <?= $statusText ?>
                                 </span>
-                                <span class="inline-flex items-center px-2.5 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                <span class="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-medium">
                                     <i class="fas fa-ruler mr-1"></i>
                                     <?= esc($k['satuan']) ?>
                                 </span>
-                                <span class="inline-flex items-center px-2.5 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+                                <span class="inline-flex items-center px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded text-xs font-medium">
                                     <i class="fas fa-calendar mr-1"></i>
                                     <?= esc($k['periode']) ?> <?= esc($k['tahun']) ?>
                                 </span>
                                 <?php if (!empty($k['tanggal_mulai']) && !empty($k['tanggal_selesai'])): ?>
-                                <span class="inline-flex items-center px-2.5 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">
+                                <span class="inline-flex items-center px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200 rounded text-xs font-medium">
                                     <i class="fas fa-calendar-check mr-1"></i>
                                     <?= date('d M Y', strtotime($k['tanggal_mulai'])) ?> - <?= date('d M Y', strtotime($k['tanggal_selesai'])) ?>
                                 </span>
@@ -227,7 +242,7 @@
                         </div>
                         
                         <div class="ml-4 text-right">
-                            <div class="text-3xl font-bold text-blue-600"><?= $k['overall_progress'] ?>%</div>
+                            <div class="text-3xl font-bold text-[#1e88e5]"><?= $k['overall_progress'] ?>%</div>
                             <div class="text-xs text-gray-500">Progress Keseluruhan</div>
                         </div>
                     </div>
@@ -235,17 +250,17 @@
                     <!-- Overall Progress Bar -->
                     <div class="mt-4">
                         <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
-                            <span><?= $k['completed_proses'] ?> dari <?= $k['total_proses'] ?> proses selesai</span>
+                            <span><?= $k['total_proses'] ?> proses kegiatan</span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3">
-                            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500" 
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-[#1e88e5] h-2.5 rounded-full transition-all duration-500" 
                                  style="width: <?= $k['overall_progress'] ?>%"></div>
                         </div>
                     </div>
                     
                     <?php if (!empty($k['keterangan'])): ?>
                     <div class="mt-3 p-2 bg-white rounded text-xs text-gray-600 border border-gray-200">
-                        <i class="fas fa-info-circle text-blue-600 mr-1"></i>
+                        <i class="fas fa-info-circle text-[#1e88e5] mr-1"></i>
                         <?= esc($k['keterangan']) ?>
                     </div>
                     <?php endif; ?>
@@ -262,11 +277,11 @@
                         <div class="space-y-3">
                             <div class="flex items-center justify-between mb-3">
                                 <h5 class="text-sm font-semibold text-gray-700">
-                                    <i class="fas fa-list-check text-blue-600 mr-2"></i>
+                                    <i class="fas fa-list-check text-[#1e88e5] mr-2"></i>
                                     Detail Proses (<?= count($k['proses_list']) ?>)
                                 </h5>
                                 <button onclick="toggleProses('proses-<?= $k['id_kegiatan_detail'] ?>')" 
-                                        class="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                                        class="text-xs text-[#1e88e5] hover:text-blue-700 font-medium transition-colors">
                                     <i class="fas fa-chevron-down mr-1" id="icon-proses-<?= $k['id_kegiatan_detail'] ?>"></i>
                                     <span id="text-proses-<?= $k['id_kegiatan_detail'] ?>">Lihat Detail</span>
                                 </button>
@@ -274,57 +289,79 @@
                             
                             <div id="proses-<?= $k['id_kegiatan_detail'] ?>" class="space-y-3 hidden">
                                 <?php foreach ($k['proses_list'] as $prosesIndex => $proses): ?>
-                                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-blue-300 transition-colors">
-                                    <div class="flex items-start justify-between mb-2">
-                                        <div class="flex items-start gap-2 flex-1">
-                                            <div class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold mt-0.5">
+                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-blue-200 transition-colors">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-start gap-3 flex-1">
+                                            <div class="w-8 h-8 bg-blue-50 text-[#1e88e5] border border-blue-200 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-semibold">
                                                 <?= $prosesIndex + 1 ?>
                                             </div>
                                             <div class="flex-1">
-                                                <p class="text-sm font-medium text-gray-900"><?= esc($proses['nama_kegiatan_detail_proses']) ?></p>
-                                                <div class="flex flex-wrap gap-2 mt-1">
+                                                <p class="text-sm font-medium text-gray-900 mb-2"><?= esc($proses['nama_kegiatan_detail_proses']) ?></p>
+                                                
+                                                <!-- Info Grid -->
+                                                <div class="grid grid-cols-2 gap-2 mb-2">
                                                     <?php if (!empty($proses['satuan'])): ?>
-                                                    <span class="text-xs text-gray-500">
-                                                        <i class="fas fa-ruler mr-1"></i><?= esc($proses['satuan']) ?>
-                                                    </span>
+                                                    <div class="text-xs text-gray-600">
+                                                        <i class="fas fa-ruler mr-1 text-gray-400"></i>
+                                                        <span class="font-medium">Satuan:</span> <?= esc($proses['satuan']) ?>
+                                                    </div>
                                                     <?php endif; ?>
+                                                    
                                                     <?php if (!empty($proses['periode'])): ?>
-                                                    <span class="text-xs text-gray-500">
-                                                        <i class="fas fa-calendar-alt mr-1"></i><?= esc($proses['periode']) ?>
-                                                    </span>
+                                                    <div class="text-xs text-gray-600">
+                                                        <i class="fas fa-calendar-alt mr-1 text-gray-400"></i>
+                                                        <span class="font-medium">Periode:</span> <?= esc($proses['periode']) ?>
+                                                    </div>
                                                     <?php endif; ?>
-                                                    <?php if (!empty($proses['target'])): ?>
-                                                    <span class="text-xs text-gray-500">
-                                                        <i class="fas fa-bullseye mr-1"></i>Target: <?= number_format($proses['target']) ?>
-                                                    </span>
-                                                    <?php endif; ?>
-                                                    <?php if (!empty($proses['persentase_target_awal'])): ?>
-                                                    <span class="text-xs text-gray-500">
-                                                        <i class="fas fa-percentage mr-1"></i>Target Awal: <?= $proses['persentase_target_awal'] ?>%
-                                                    </span>
-                                                    <?php endif; ?>
+                                                    
+                                                    <div class="text-xs text-gray-600">
+                                                        <i class="fas fa-bullseye mr-1 text-gray-400"></i>
+                                                        <span class="font-medium">Target:</span> <?= number_format($proses['target']) ?>
+                                                    </div>
+                                                    
+                                                    <div class="text-xs text-gray-600">
+                                                        <i class="fas fa-check-double mr-1 text-gray-400"></i>
+                                                        <span class="font-medium">Realisasi:</span> <?= number_format($proses['realisasi']) ?>
+                                                    </div>
                                                 </div>
+                                                
+                                                <!-- Stats Grid -->
+                                                <div class="grid grid-cols-3 gap-2 mb-2">
+                                                    <div class="bg-white rounded p-2 border border-gray-200">
+                                                        <div class="text-xs text-gray-500 mb-0.5">Wilayah</div>
+                                                        <div class="text-sm font-bold text-gray-900"><?= $proses['jumlah_wilayah'] ?></div>
+                                                    </div>
+                                                    <div class="bg-white rounded p-2 border border-gray-200">
+                                                        <div class="text-xs text-gray-500 mb-0.5">PML</div>
+                                                        <div class="text-sm font-bold text-gray-900"><?= $proses['jumlah_pml'] ?></div>
+                                                    </div>
+                                                    <div class="bg-white rounded p-2 border border-gray-200">
+                                                        <div class="text-xs text-gray-500 mb-0.5">PCL</div>
+                                                        <div class="text-sm font-bold text-gray-900"><?= $proses['jumlah_pcl'] ?></div>
+                                                    </div>
+                                                </div>
+                                                
                                                 <?php if (!empty($proses['tanggal_mulai']) && !empty($proses['tanggal_selesai_target'])): ?>
-                                                <div class="mt-1 text-xs text-gray-500">
+                                                <div class="text-xs text-gray-500 bg-white px-2 py-1 rounded border border-gray-200 inline-block">
                                                     <i class="fas fa-calendar-check mr-1"></i>
                                                     <?= date('d M Y', strtotime($proses['tanggal_mulai'])) ?> - <?= date('d M Y', strtotime($proses['tanggal_selesai_target'])) ?>
                                                 </div>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
-                                        <span class="inline-flex items-center px-2 py-1 bg-<?= $proses['status_class'] ?>-100 text-<?= $proses['status_class'] ?>-700 rounded text-xs font-medium ml-2">
+                                        <span class="inline-flex items-center px-2.5 py-1 bg-<?= $proses['status_class'] ?>-50 text-<?= $proses['status_class'] ?>-700 border border-<?= $proses['status_class'] ?>-200 rounded text-xs font-medium ml-2">
                                             <?= $proses['status'] ?>
                                         </span>
                                     </div>
                                     
                                     <!-- Progress Bar -->
-                                    <div class="mt-2">
+                                    <div class="mt-3">
                                         <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                            <span>Progress</span>
-                                            <span class="font-medium"><?= $proses['progress'] ?>%</span>
+                                            <span class="font-medium">Progress Laporan PCL</span>
+                                            <span class="font-bold text-[#1e88e5]"><?= $proses['progress'] ?>%</span>
                                         </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="bg-<?= $proses['status_class'] ?>-500 h-2 rounded-full transition-all duration-500" 
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="h-2.5 rounded-full transition-all duration-500 <?= $proses['status_class'] == 'green' ? 'bg-[#43a047]' : ($proses['status_class'] == 'red' ? 'bg-[#e53935]' : 'bg-[#1e88e5]') ?>" 
                                                  style="width: <?= $proses['progress'] ?>%"></div>
                                         </div>
                                     </div>

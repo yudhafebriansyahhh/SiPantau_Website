@@ -69,18 +69,20 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     });
 
     // Kelola Admin Survei Provinsi Routes
-$routes->group('kelola-admin-surveyprov', static function ($routes) {
-    $routes->get('/', 'SuperAdmin\KelolaSurveiProvinsiController::index');
-    $routes->get('assign', 'SuperAdmin\KelolaSurveiProvinsiController::assign');
-    $routes->post('store-assign', 'SuperAdmin\KelolaSurveiProvinsiController::storeAssign');
-    $routes->get('assign/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::assign/$1');
-    $routes->post('update/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::update/$1');
-    $routes->post('delete-assignment', 'SuperAdmin\KelolaSurveiProvinsiController::deleteAssignment');
-    $routes->delete('delete/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::delete/$1');
-    
-    // Detail
-    $routes->get('detail/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::detail/$1');
-});
+    $routes->group('kelola-admin-surveyprov', static function ($routes) {
+        $routes->get('/', 'SuperAdmin\KelolaSurveiProvinsiController::index');
+        $routes->get('assign', 'SuperAdmin\KelolaSurveiProvinsiController::assign');
+        $routes->post('store-assign', 'SuperAdmin\KelolaSurveiProvinsiController::storeAssign');
+        $routes->get('assign/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::assign/$1');
+        $routes->post('update/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::update/$1');
+        $routes->post('delete-assignment', 'SuperAdmin\KelolaSurveiProvinsiController::deleteAssignment');
+        $routes->delete('delete/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::delete/$1');
+
+        // Detail
+        $routes->get('detail/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::detail/$1');
+    });
+
+    $routes->get('comingsoon', 'ComingSoon::index');
 
 });
 
@@ -98,10 +100,10 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
     $routes->post('master-kegiatan-wilayah/store', 'AdminProv\MasterKegiatanWilayahController::store');
     // $routes->get('adminsurvei/kurva-provinsi', 'AdminSurveiProvController::getKurvaProvinsi');
     $routes->get('kegiatan-wilayah', 'AdminSurveiProvController::getKegiatanWilayah');
-   $routes->get('master-kegiatan-wilayah/edit/(:num)', 'AdminProv\MasterKegiatanWilayahController::edit/$1');
+    $routes->get('master-kegiatan-wilayah/edit/(:num)', 'AdminProv\MasterKegiatanWilayahController::edit/$1');
     $routes->post('master-kegiatan-wilayah/update/(:num)', 'AdminProv\MasterKegiatanWilayahController::update/$1');
     $routes->delete('master-kegiatan-wilayah/delete/(:num)', 'AdminProv\MasterKegiatanWilayahController::delete/$1');
-$routes->get('master-kegiatan-wilayah/sisa-target/(:num)', 'AdminProv\MasterKegiatanWilayahController::getSisaTarget/$1');
+    $routes->get('master-kegiatan-wilayah/sisa-target/(:num)', 'AdminProv\MasterKegiatanWilayahController::getSisaTarget/$1');
 
 
     $routes->get('kurva-kabupaten', 'AdminSurveiProvController::getKurvaKabupaten');

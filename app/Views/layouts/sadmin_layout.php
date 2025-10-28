@@ -91,7 +91,7 @@
                     </a>
                     
                     <!-- Feedback -->
-                    <a href="<?= base_url('admin/comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                    <a href="<?= base_url('superadmin/comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
                         <span class="ml-3">Feedback</span>
                     </a>
