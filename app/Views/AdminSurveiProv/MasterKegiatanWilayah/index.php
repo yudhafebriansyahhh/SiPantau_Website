@@ -143,7 +143,7 @@
         });
     }
 
-    // ✅ Alert sukses dari session flashdata
+    //Alert sukses dari session flashdata
     <?php if (session()->getFlashdata('success')) : ?>
         Swal.fire({
             icon: 'success',

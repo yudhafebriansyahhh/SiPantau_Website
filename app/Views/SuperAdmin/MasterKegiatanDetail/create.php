@@ -78,7 +78,6 @@
                    name="nama_kegiatan_detail" 
                    class="input-field <?= session('errors.nama_kegiatan_detail') ? 'border-red-500' : '' ?>"
                    value="<?= old('nama_kegiatan_detail') ?>"
-                   placeholder="Contoh: Pencacahan Lahan Sawah"
                    required>
             <?php if (session('errors.nama_kegiatan_detail')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.nama_kegiatan_detail') ?></p>
@@ -97,7 +96,6 @@
                    name="satuan" 
                    class="input-field <?= session('errors.satuan') ? 'border-red-500' : '' ?>"
                    value="<?= old('satuan') ?>"
-                   placeholder="Contoh: Hektar, Responden, Jiwa, Unit Usaha, Komoditas"
                    required>
             <?php if (session('errors.satuan')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.satuan') ?></p>
@@ -118,7 +116,6 @@
                        name="periode" 
                        class="input-field <?= session('errors.periode') ? 'border-red-500' : '' ?>"
                        value="<?= old('periode') ?>"
-                       placeholder="Contoh: Q1, Semester 1, Triwulan II"
                        required>
                 <?php if (session('errors.periode')): ?>
                     <p class="mt-1 text-xs text-red-500"><?= session('errors.periode') ?></p>
@@ -194,7 +191,6 @@
                       name="keterangan" 
                       rows="3" 
                       class="input-field resize-none <?= session('errors.keterangan') ? 'border-red-500' : '' ?>"
-                      placeholder="Tambahkan keterangan atau catatan tambahan (opsional)"><?= old('keterangan') ?></textarea>
             <?php if (session('errors.keterangan')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.keterangan') ?></p>
             <?php else: ?>

@@ -111,7 +111,7 @@ class MasterKegiatanWilayahController extends BaseController
 
         return redirect()
             ->to(base_url('adminsurvei/master-kegiatan-wilayah'))
-            ->with('success', '✅ Data kegiatan wilayah dan Kurva S berhasil dibuat.');
+            ->with('success', 'Data kegiatan wilayah dan Kurva S berhasil dibuat.');
     }
 
     // ============================================================
@@ -182,7 +182,7 @@ class MasterKegiatanWilayahController extends BaseController
 
         return redirect()
             ->to(base_url('adminsurvei/master-kegiatan-wilayah'))
-            ->with('success', '✅ Data kegiatan wilayah dan Kurva S berhasil diperbarui.');
+            ->with('success', 'Data kegiatan wilayah dan Kurva S berhasil diperbarui.');
     }
 
     // ============================================================
@@ -201,7 +201,7 @@ class MasterKegiatanWilayahController extends BaseController
 
         return redirect()
             ->to(base_url('adminsurvei/master-kegiatan-wilayah'))
-            ->with('success', '✅ Data kegiatan wilayah dan kurva S terkait berhasil dihapus.');
+            ->with('success', 'Data kegiatan wilayah dan kurva S terkait berhasil dihapus.');
     }
 
     // ============================================================

@@ -69,67 +69,49 @@ class LoginController extends BaseController
         $isAdminProvinsi = $adminProvinsiModel->isAdminProvinsi($user['sobat_id']);
         $isAdminKabupaten = $adminKabupatenModel->isAdminKabupaten($user['sobat_id']);
         
-        // Build available roles dengan membedakan admin dan pemantau
+        // Build available roles
         $availableRoles = [];
         
+        // 1. Tambahkan role dari tabel user (role asli)
         foreach ($userRoles as $roleId) {
-            // Role 2 (Pemantau Provinsi)
             if ($roleId == 2) {
-                if ($isAdminProvinsi) {
-                    // User terdaftar sebagai admin, berikan 2 pilihan
-                    
-                    // 1. Admin Survei Provinsi (untuk kegiatan yang di-assign)
-                    $availableRoles[] = [
-                        'id' => 2,
-                        'type' => 'admin_provinsi',
-                        'admin_id' => $adminProvinsiModel->getAdminProvinsiId($user['sobat_id'])
-                    ];
-                    
-                    // 2. Pemantau Provinsi (untuk akses view-only umum)
-                    $availableRoles[] = [
-                        'id' => 2,
-                        'type' => 'pemantau_provinsi'
-                    ];
-                } else {
-                    // Tidak terdaftar sebagai admin, hanya bisa sebagai pemantau
-                    $availableRoles[] = [
-                        'id' => 2,
-                        'type' => 'pemantau_provinsi'
-                    ];
-                }
-            }
-            // Role 3 (Pemantau Kabupaten)
-            elseif ($roleId == 3) {
-                if ($isAdminKabupaten) {
-                    // User terdaftar sebagai admin kabupaten, berikan 2 pilihan
-                    
-                    // 1. Admin Survei Kabupaten
-                    $availableRoles[] = [
-                        'id' => 3,
-                        'type' => 'admin_kabupaten',
-                        'admin_id' => $adminKabupatenModel->getAdminKabupatenId($user['sobat_id'])
-                    ];
-                    
-                    // 2. Pemantau Kabupaten
-                    $availableRoles[] = [
-                        'id' => 3,
-                        'type' => 'pemantau_kabupaten'
-                    ];
-                } else {
-                    // Tidak terdaftar sebagai admin, hanya bisa sebagai pemantau
-                    $availableRoles[] = [
-                        'id' => 3,
-                        'type' => 'pemantau_kabupaten'
-                    ];
-                }
-            }
-            // Role lain (Super Admin, Pemantau Pusat, dll)
-            else {
+                // Pemantau Provinsi (role asli)
+                $availableRoles[] = [
+                    'id' => 2,
+                    'type' => 'pemantau_provinsi'
+                ];
+            } elseif ($roleId == 3) {
+                // Pemantau Kabupaten (role asli)
+                $availableRoles[] = [
+                    'id' => 3,
+                    'type' => 'pemantau_kabupaten'
+                ];
+            } else {
+                // Role lain (Super Admin, Pemantau Pusat, dll)
                 $availableRoles[] = [
                     'id' => $roleId,
                     'type' => 'default'
                 ];
             }
+        }
+        
+        // 2. Tambahkan role admin JIKA terdaftar di tabel admin (role tambahan)
+        if ($isAdminProvinsi) {
+            // Tambahkan opsi Admin Survei Provinsi
+            $availableRoles[] = [
+                'id' => 2,
+                'type' => 'admin_provinsi',
+                'admin_id' => $adminProvinsiModel->getAdminProvinsiId($user['sobat_id'])
+            ];
+        }
+        
+        if ($isAdminKabupaten) {
+            // Tambahkan opsi Admin Survei Kabupaten
+            $availableRoles[] = [
+                'id' => 3,
+                'type' => 'admin_kabupaten',
+                'admin_id' => $adminKabupatenModel->getAdminKabupatenId($user['sobat_id'])
+            ];
         }
         
         // Jika tidak ada role yang valid (seharusnya tidak mungkin terjadi)
@@ -327,59 +309,47 @@ class LoginController extends BaseController
         
         // Build available roles
         $availableRoles = [];
+        
+        // 1. Tambahkan role dari tabel user (role asli)
         foreach ($allRoles as $roleId) {
             if ($roleId == 2) {
-                if ($isAdminProvinsi) {
-                    // User terdaftar sebagai admin, berikan 2 pilihan
-                    
-                    // 1. Admin Survei Provinsi
-                    $availableRoles[] = [
-                        'id' => 2,
-                        'type' => 'admin_provinsi',
-                        'admin_id' => $adminProvinsiModel->getAdminProvinsiId($user['sobat_id'])
-                    ];
-                    
-                    // 2. Pemantau Provinsi
-                    $availableRoles[] = [
-                        'id' => 2,
-                        'type' => 'pemantau_provinsi'
-                    ];
-                } else {
-                    // Tidak terdaftar sebagai admin, hanya bisa sebagai pemantau
-                    $availableRoles[] = [
-                        'id' => 2,
-                        'type' => 'pemantau_provinsi'
-                    ];
-                }
+                // Pemantau Provinsi (role asli)
+                $availableRoles[] = [
+                    'id' => 2,
+                    'type' => 'pemantau_provinsi'
+                ];
             } elseif ($roleId == 3) {
-                if ($isAdminKabupaten) {
-                    // User terdaftar sebagai admin kabupaten, berikan 2 pilihan
-                    
-                    // 1. Admin Survei Kabupaten
-                    $availableRoles[] = [
-                        'id' => 3,
-                        'type' => 'admin_kabupaten',
-                        'admin_id' => $adminKabupatenModel->getAdminKabupatenId($user['sobat_id'])
-                    ];
-                    
-                    // 2. Pemantau Kabupaten
-                    $availableRoles[] = [
-                        'id' => 3,
-                        'type' => 'pemantau_kabupaten'
-                    ];
-                } else {
-                    // Tidak terdaftar sebagai admin, hanya bisa sebagai pemantau
-                    $availableRoles[] = [
-                        'id' => 3,
-                        'type' => 'pemantau_kabupaten'
-                    ];
-                }
+                // Pemantau Kabupaten (role asli)
+                $availableRoles[] = [
+                    'id' => 3,
+                    'type' => 'pemantau_kabupaten'
+                ];
             } else {
+                // Role lain (Super Admin, Pemantau Pusat, dll)
                 $availableRoles[] = [
                     'id' => $roleId,
                     'type' => 'default'
                 ];
             }
+        }
+        
+        // 2. Tambahkan role admin JIKA terdaftar di tabel admin (role tambahan)
+        if ($isAdminProvinsi) {
+            // Tambahkan opsi Admin Survei Provinsi
+            $availableRoles[] = [
+                'id' => 2,
+                'type' => 'admin_provinsi',
+                'admin_id' => $adminProvinsiModel->getAdminProvinsiId($user['sobat_id'])
+            ];
+        }
+        
+        if ($isAdminKabupaten) {
+            // Tambahkan opsi Admin Survei Kabupaten
+            $availableRoles[] = [
+                'id' => 3,
+                'type' => 'admin_kabupaten',
+                'admin_id' => $adminKabupatenModel->getAdminKabupatenId($user['sobat_id'])
+            ];
         }
 
         // Get role details dengan label yang sesuai

@@ -72,7 +72,6 @@
                    name="nama_kegiatan" 
                    class="input-field <?= session('errors.nama_kegiatan') ? 'border-red-500' : '' ?>" 
                    value="<?= old('nama_kegiatan', $kegiatan['nama_kegiatan']) ?>"
-                   placeholder="Contoh: Pendataan Lahan Pertanian"
                    required>
             <?php if (session('errors.nama_kegiatan')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.nama_kegiatan') ?></p>
@@ -90,7 +89,6 @@
                       name="fungsi" 
                       rows="4" 
                       class="input-field resize-none <?= session('errors.fungsi') ? 'border-red-500' : '' ?>" 
-                      placeholder="Contoh: Pendataan luas lahan dan jenis tanaman pertanian"
                       required><?= old('fungsi', $kegiatan['fungsi']) ?></textarea>
             <?php if (session('errors.fungsi')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.fungsi') ?></p>
@@ -108,7 +106,6 @@
                       name="keterangan" 
                       rows="3" 
                       class="input-field resize-none" 
-                      placeholder="Contoh: Mencakup seluruh kabupaten di Provinsi Riau"><?= old('keterangan', $kegiatan['keterangan']) ?></textarea>
             <p class="mt-1 text-xs text-gray-500">Tambahkan keterangan atau detail tambahan kegiatan (opsional)</p>
         </div>
 
@@ -122,7 +119,6 @@
                    name="pelaksana" 
                    class="input-field <?= session('errors.pelaksana') ? 'border-red-500' : '' ?>" 
                    value="<?= old('pelaksana', $kegiatan['pelaksana']) ?>"
-                   placeholder="Contoh: BPS Provinsi Riau">
             <?php if (session('errors.pelaksana')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.pelaksana') ?></p>
             <?php else: ?>
@@ -140,7 +136,6 @@
                    name="periode" 
                    class="input-field <?= session('errors.periode') ? 'border-red-500' : '' ?>" 
                    value="<?= old('periode', $kegiatan['periode']) ?>"
-                   placeholder="Contoh: 2025, Q1 2025, Semester 1 2025"
                    required>
             <?php if (session('errors.periode')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.periode') ?></p>

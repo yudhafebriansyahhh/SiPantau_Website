@@ -132,7 +132,7 @@ function confirmDelete(id, name) {
 }
 
 
-// ✅ Alert sukses setelah tambah/edit/hapus
+// Alert sukses setelah tambah/edit/hapus
 <?php if (session()->getFlashdata('success')) : ?>
     Swal.fire({
         icon: 'success',

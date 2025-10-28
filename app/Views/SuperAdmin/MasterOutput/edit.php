@@ -43,7 +43,6 @@
                    name="nama_output" 
                    class="input-field <?= session('errors.nama_output') ? 'border-red-500' : '' ?>" 
                    value="<?= old('nama_output', $output['nama_output']) ?>"
-                   placeholder="Contoh: SUSENAS 2025"
                    required>
             <?php if (session('errors.nama_output')): ?>
                 <p class="mt-1 text-sm text-red-600"><?= session('errors.nama_output') ?></p>
@@ -60,7 +59,6 @@
                       name="fungsi" 
                       rows="4" 
                       class="input-field resize-none <?= session('errors.fungsi') ? 'border-red-500' : '' ?>" 
-                      placeholder="Contoh: Survei Sosial Ekonomi Nasional untuk mengumpulkan data kondisi sosial ekonomi masyarakat"
                       required><?= old('fungsi', $output['fungsi']) ?></textarea>
             <?php if (session('errors.fungsi')): ?>
                 <p class="mt-1 text-sm text-red-600"><?= session('errors.fungsi') ?></p>
@@ -78,7 +76,6 @@
                    name="alias" 
                    class="input-field <?= session('errors.alias') ? 'border-red-500' : '' ?>" 
                    value="<?= old('alias', $output['alias']) ?>"
-                   placeholder="Contoh: SUSENAS"
                    required>
             <?php if (session('errors.alias')): ?>
                 <p class="mt-1 text-sm text-red-600"><?= session('errors.alias') ?></p>

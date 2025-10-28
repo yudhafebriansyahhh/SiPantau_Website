@@ -76,7 +76,7 @@ class MasterKegiatanDetailProsesController extends BaseController
         $tanggalSelesai = $this->request->getPost('tanggal_selesai');
         $tanggal100Persen = $this->request->getPost('tanggal_selesai_target');
 
-        // ✅ Validasi hubungan antar tanggal
+        // Validasi hubungan antar tanggal
         if (strtotime($tanggalSelesai) < strtotime($tanggalMulai)) {
             return redirect()->back()->withInput()->with('error', '❌ Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
         }
@@ -118,7 +118,7 @@ class MasterKegiatanDetailProsesController extends BaseController
 
         return redirect()
             ->to(base_url('adminsurvei/master-kegiatan-detail-proses'))
-            ->with('success', '✅ Data kegiatan detail proses dan Kurva S Provinsi berhasil dibuat.');
+            ->with('success', 'Data kegiatan detail proses dan Kurva S Provinsi berhasil dibuat.');
     }
 
     // ============================================================
@@ -225,7 +225,7 @@ class MasterKegiatanDetailProsesController extends BaseController
     return redirect()
         ->to(base_url('adminsurvei/master-kegiatan-detail-proses'))
         ->with('success', $isKurvaNeedsUpdate
-            ? '✅ Data kegiatan dan Kurva S Provinsi berhasil diperbarui.'
+            ? 'Data kegiatan dan Kurva S Provinsi berhasil diperbarui.'
             : 'Data kegiatan berhasil diperbarui tanpa perubahan Kurva S.');
 }
 
@@ -357,6 +357,6 @@ class MasterKegiatanDetailProsesController extends BaseController
 
         return redirect()
             ->to(base_url('adminsurvei/master-kegiatan-detail-proses'))
-            ->with('success', '✅ Data kegiatan detail proses dan kurva S provinsi terkait berhasil dihapus.');
+            ->with('success', 'Data kegiatan detail proses dan kurva S provinsi terkait berhasil dihapus.');
     }
 }

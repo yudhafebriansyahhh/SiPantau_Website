@@ -223,7 +223,7 @@
 </div>
 
 <!-- ========================= -->
-<!-- ✅ SCRIPT APEXCHARTS -->
+<!-- SCRIPT APEXCHARTS -->
 <!-- ========================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js"></script>
 <script>

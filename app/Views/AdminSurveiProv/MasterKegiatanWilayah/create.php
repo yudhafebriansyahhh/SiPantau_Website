@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetInput.placeholder = 'Masukkan target wilayah';
                 } else {
                     sisaInfo.innerHTML = `
-                        🎯 <strong>Target Provinsi:</strong> ${data.target_prov} |
+                        <strong>Target Provinsi:</strong> ${data.target_prov} |
                         <strong>Terpakai:</strong> ${data.terpakai} |
                         <strong>Sisa:</strong> ${data.sisa}
                     `;
