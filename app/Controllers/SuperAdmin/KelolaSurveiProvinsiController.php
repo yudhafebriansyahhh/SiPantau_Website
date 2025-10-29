@@ -41,14 +41,14 @@ class KelolaSurveiProvinsiController extends BaseController
     {
         $search = $this->request->getGet('search') ?? '';
         $roleFilter = $this->request->getGet('role') ?? '';
-        
+
         // Get all admin survei provinsi dengan informasi user dan kegiatan
         $builder = $this->db->table('admin_survei_provinsi asp')
             ->select('asp.id_admin_provinsi, asp.sobat_id, u.nama_user, u.email, u.hp, u.is_active, u.role, k.nama_kabupaten')
             ->join('sipantau_user u', 'asp.sobat_id = u.sobat_id')
             ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
             ->orderBy('u.nama_user', 'ASC');
-        
+
         if (!empty($search)) {
             $builder->groupStart()
                 ->like('u.nama_user', $search)
@@ -56,9 +56,9 @@ class KelolaSurveiProvinsiController extends BaseController
                 ->orLike('u.hp', $search)
                 ->groupEnd();
         }
-        
+
         $adminList = $builder->get()->getResultArray();
-        
+
         // Get kegiatan untuk setiap admin
         foreach ($adminList as &$admin) {
             $kegiatan = $this->db->table('master_kegiatan_detail_admin mkda')
@@ -68,10 +68,10 @@ class KelolaSurveiProvinsiController extends BaseController
                 ->where('mkda.id_admin_provinsi', $admin['id_admin_provinsi'])
                 ->get()
                 ->getResultArray();
-            
+
             $admin['kegiatan'] = $kegiatan;
             $admin['jumlah_kegiatan'] = count($kegiatan);
-            
+
             // Get role names dengan role tambahan
             $admin['role_names'] = $this->getUserRoleNames($admin['sobat_id'], $admin['role']);
         }
@@ -92,7 +92,7 @@ class KelolaSurveiProvinsiController extends BaseController
     private function getUserRoleNames($sobatId, $roleJson)
     {
         $roleNames = [];
-        
+
         // Decode role dari tabel user
         $userRoles = [];
         if (is_string($roleJson) && (str_starts_with($roleJson, '[') || str_starts_with($roleJson, '{'))) {
@@ -101,13 +101,13 @@ class KelolaSurveiProvinsiController extends BaseController
                 $userRoles = array_map('intval', $decoded);
             }
         } else {
-            $userRoles = [(int)$roleJson];
+            $userRoles = [(int) $roleJson];
         }
-        
+
         // Check admin status
         $isAdminProvinsi = $this->adminProvinsiModel->isAdminProvinsi($sobatId);
         $isAdminKabupaten = $this->adminKabupatenModel->isAdminKabupaten($sobatId);
-        
+
         // Build available roles dengan nama yang sesuai
         foreach ($userRoles as $roleId) {
             $roleInfo = $this->roleModel->find($roleId);
@@ -124,16 +124,16 @@ class KelolaSurveiProvinsiController extends BaseController
                 }
             }
         }
-        
+
         // Tambahkan role admin jika terdaftar
         if ($isAdminProvinsi) {
             $roleNames[] = 'Admin Survei Provinsi';
         }
-        
+
         if ($isAdminKabupaten) {
             $roleNames[] = 'Admin Survei Kabupaten';
         }
-        
+
         return $roleNames;
     }
 
@@ -145,7 +145,7 @@ class KelolaSurveiProvinsiController extends BaseController
         $isEdit = !is_null($idAdminProvinsi);
         $admin = null;
         $assignedIds = [];
-        
+
         if ($isEdit) {
             // Get admin info
             $admin = $this->db->table('admin_survei_provinsi asp')
@@ -154,22 +154,22 @@ class KelolaSurveiProvinsiController extends BaseController
                 ->where('asp.id_admin_provinsi', $idAdminProvinsi)
                 ->get()
                 ->getRowArray();
-                
+
             if (!$admin) {
                 return redirect()->to(base_url('superadmin/kelola-admin-surveyprov'))
                     ->with('error', 'Admin tidak ditemukan');
             }
-            
+
             // Get assigned kegiatan
             $assigned = $this->db->table('master_kegiatan_detail_admin')
                 ->select('id_kegiatan_detail')
                 ->where('id_admin_provinsi', $idAdminProvinsi)
                 ->get()
                 ->getResultArray();
-            
+
             $assignedIds = array_column($assigned, 'id_kegiatan_detail');
         }
-        
+
         // Get all active users (untuk mode create)
         $users = $this->db->table('sipantau_user')
             ->select('sobat_id, nama_user, email, hp')
@@ -177,7 +177,7 @@ class KelolaSurveiProvinsiController extends BaseController
             ->orderBy('nama_user', 'ASC')
             ->get()
             ->getResultArray();
-        
+
         // Get all kegiatan detail
         $kegiatanDetails = $this->kegiatanDetailModel->getWithKegiatan();
 
@@ -200,19 +200,19 @@ class KelolaSurveiProvinsiController extends BaseController
     public function storeAssign()
     {
         $sobatId = $this->request->getPost('sobat_id');
-        $kegiatanDetails = $this->request->getPost('kegiatan_details');
-        
+        $idKegiatanDetail = $this->request->getPost('id_kegiatan_detail'); // Ubah nama variable
+
         // Validation
         if (empty($sobatId)) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Silakan pilih user');
         }
-        
-        if (empty($kegiatanDetails) || !is_array($kegiatanDetails)) {
+
+        if (empty($idKegiatanDetail)) { // Ubah validasi
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Silakan pilih minimal satu kegiatan detail');
+                ->with('error', 'Silakan pilih kegiatan detail');
         }
 
         // Check apakah user exists
@@ -225,7 +225,7 @@ class KelolaSurveiProvinsiController extends BaseController
 
         // Check apakah user sudah menjadi admin provinsi
         $existingAdmin = $this->adminProvinsiModel->where('sobat_id', $sobatId)->first();
-        
+
         if ($existingAdmin) {
             $idAdminProvinsi = $existingAdmin['id_admin_provinsi'];
         } else {
@@ -234,26 +234,25 @@ class KelolaSurveiProvinsiController extends BaseController
             $idAdminProvinsi = $this->db->insertID();
         }
 
-        // Assign multiple kegiatan detail
-        $insertedCount = 0;
-        foreach ($kegiatanDetails as $idKegiatanDetail) {
-            // Check apakah admin sudah di-assign ke kegiatan ini
-            $existingAssignment = $this->db->table('master_kegiatan_detail_admin')
-                ->where([
-                    'id_admin_provinsi' => $idAdminProvinsi,
-                    'id_kegiatan_detail' => $idKegiatanDetail
-                ])
-                ->get()
-                ->getRowArray();
+        // Check apakah admin sudah di-assign ke kegiatan ini
+        $existingAssignment = $this->db->table('master_kegiatan_detail_admin')
+            ->where([
+                'id_admin_provinsi' => $idAdminProvinsi,
+                'id_kegiatan_detail' => $idKegiatanDetail
+            ])
+            ->get()
+            ->getRowArray();
 
-            if (!$existingAssignment) {
-                $this->db->table('master_kegiatan_detail_admin')->insert([
-                    'id_admin_provinsi' => $idAdminProvinsi,
-                    'id_kegiatan_detail' => $idKegiatanDetail
-                ]);
-                $insertedCount++;
-            }
+        if ($existingAssignment) {
+            return redirect()->back()
+                ->with('error', 'Admin sudah di-assign ke kegiatan ini');
         }
+
+        // Insert assignment
+        $this->db->table('master_kegiatan_detail_admin')->insert([
+            'id_admin_provinsi' => $idAdminProvinsi,
+            'id_kegiatan_detail' => $idKegiatanDetail
+        ]);
 
         $this->db->transComplete();
 
@@ -261,12 +260,8 @@ class KelolaSurveiProvinsiController extends BaseController
             return redirect()->back()->with('error', 'Gagal melakukan assignment');
         }
 
-        $message = $insertedCount > 0 
-            ? "Admin berhasil di-assign ke {$insertedCount} kegiatan" 
-            : "Admin sudah di-assign ke semua kegiatan yang dipilih";
-
         return redirect()->to(base_url('superadmin/kelola-admin-surveyprov'))
-            ->with('success', $message);
+            ->with('success', 'Admin berhasil di-assign ke kegiatan');
     }
 
     /**
@@ -275,7 +270,7 @@ class KelolaSurveiProvinsiController extends BaseController
     public function update($idAdminProvinsi)
     {
         $kegiatanDetails = $this->request->getPost('kegiatan_details');
-        
+
         // Validation
         if (empty($kegiatanDetails) || !is_array($kegiatanDetails)) {
             return redirect()->back()
@@ -315,7 +310,7 @@ class KelolaSurveiProvinsiController extends BaseController
     {
         $idAdminProvinsi = $this->request->getPost('id_admin_provinsi');
         $idKegiatanDetail = $this->request->getPost('id_kegiatan_detail');
-        
+
         if (!$idAdminProvinsi || !$idKegiatanDetail) {
             return $this->response->setJSON([
                 'success' => false,
@@ -359,7 +354,7 @@ class KelolaSurveiProvinsiController extends BaseController
             'message' => 'Assignment berhasil dihapus'
         ]);
     }
-    
+
     /**
      * Delete admin completely
      */
@@ -429,15 +424,15 @@ class KelolaSurveiProvinsiController extends BaseController
                 ->orderBy('tanggal_mulai', 'ASC')
                 ->get()
                 ->getResultArray();
-            
+
             // Calculate progress untuk setiap proses
             $totalProses = count($prosesList);
             $totalProgressSum = 0;
-            
+
             foreach ($prosesList as &$proses) {
                 // Get target dari master_kegiatan_detail_proses
-                $targetProses = (int)$proses['target'];
-                
+                $targetProses = (int) $proses['target'];
+
                 // Hitung realisasi kumulatif dari semua PCL yang terkait dengan proses ini
                 $realisasiKumulatif = $this->db->table('pantau_progress pp')
                     ->select('COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as total_realisasi', false)
@@ -448,30 +443,30 @@ class KelolaSurveiProvinsiController extends BaseController
                     ->groupBy('pp.id_pcl')
                     ->get()
                     ->getResultArray();
-                
+
                 // Jumlahkan realisasi dari semua PCL
                 $totalRealisasi = 0;
                 foreach ($realisasiKumulatif as $item) {
-                    $totalRealisasi += (int)$item['total_realisasi'];
+                    $totalRealisasi += (int) $item['total_realisasi'];
                 }
-                
+
                 // Hitung persentase progress
                 if ($targetProses > 0) {
                     $progressPercentage = min(100, round(($totalRealisasi / $targetProses) * 100, 1));
                 } else {
                     $progressPercentage = 0;
                 }
-                
+
                 // Set progress dan status
                 $proses['target'] = $targetProses;
                 $proses['realisasi'] = $totalRealisasi;
                 $proses['progress'] = $progressPercentage;
-                
+
                 // Determine status based on progress and dates
                 $today = date('Y-m-d');
                 $start = $proses['tanggal_mulai'];
                 $end = $proses['tanggal_selesai_target'];
-                
+
                 if ($today < $start) {
                     $proses['status'] = 'Belum Dimulai';
                     $proses['status_class'] = 'gray';
@@ -485,32 +480,32 @@ class KelolaSurveiProvinsiController extends BaseController
                     $proses['status'] = 'Sedang Berlangsung';
                     $proses['status_class'] = 'blue';
                 }
-                
+
                 // Get jumlah wilayah untuk proses ini
                 $jumlahWilayah = $this->db->table('kegiatan_wilayah')
                     ->where('id_kegiatan_detail_proses', $proses['id_kegiatan_detail_proses'])
                     ->countAllResults();
-                
+
                 $proses['jumlah_wilayah'] = $jumlahWilayah;
-                
+
                 // Get jumlah PML dan PCL
                 $jumlahPML = $this->db->table('pml')
                     ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
                     ->where('kw.id_kegiatan_detail_proses', $proses['id_kegiatan_detail_proses'])
                     ->countAllResults();
-                
+
                 $jumlahPCL = $this->db->table('pcl')
                     ->join('pml', 'pcl.id_pml = pml.id_pml')
                     ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
                     ->where('kw.id_kegiatan_detail_proses', $proses['id_kegiatan_detail_proses'])
                     ->countAllResults();
-                
+
                 $proses['jumlah_pml'] = $jumlahPML;
                 $proses['jumlah_pcl'] = $jumlahPCL;
-                
+
                 $totalProgressSum += $progressPercentage;
             }
-            
+
             $k['proses_list'] = $prosesList;
             $k['total_proses'] = $totalProses;
             $k['overall_progress'] = $totalProses > 0 ? round($totalProgressSum / $totalProses, 1) : 0;
