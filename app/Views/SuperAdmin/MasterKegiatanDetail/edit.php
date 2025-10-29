@@ -189,7 +189,7 @@
             <textarea id="keterangan" 
                       name="keterangan" 
                       rows="3" 
-                      class="input-field resize-none <?= session('errors.keterangan') ? 'border-red-500' : '' ?>"
+                      class="input-field resize-none <?= session('errors.keterangan') ? 'border-red-500' : '' ?>"><?= old('keterangan', $detail['keterangan']) ?></textarea>
             <?php if (session('errors.keterangan')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.keterangan') ?></p>
             <?php else: ?>

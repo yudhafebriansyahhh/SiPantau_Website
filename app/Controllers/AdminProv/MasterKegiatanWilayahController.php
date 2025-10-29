@@ -17,6 +17,7 @@ class MasterKegiatanWilayahController extends BaseController
     protected $masterKegiatanWilayahModel;
     protected $masterKab;
     protected $validation;
+    protected $db;
 
     public function __construct()
     {
@@ -24,15 +25,99 @@ class MasterKegiatanWilayahController extends BaseController
         $this->masterKegiatanWilayahModel = new MasterKegiatanWilayahModel();
         $this->validation = \Config\Services::validation();
         $this->masterKab = new MasterKabModel();
+        $this->db = \Config\Database::connect();
     }
 
     public function index()
     {
-        $kegiatanWilayah = $this->masterKegiatanWilayahModel->getData();
+        // Get filter parameters
+        $filterKegiatan = $this->request->getGet('kegiatan_detail') ?? '';
+        $filterKabupaten = $this->request->getGet('kabupaten') ?? '';
+        
+        // Build query dengan progress
+        $builder = $this->db->table('kegiatan_wilayah kw')
+            ->select('kw.*, mkdp.nama_kegiatan_detail_proses, mkdp.target as target_proses, 
+                      mkdp.tanggal_mulai, mkdp.tanggal_selesai, mk.nama_kabupaten,
+                      mkd.nama_kegiatan_detail, mkg.nama_kegiatan')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->join('master_kegiatan mkg', 'mkd.id_kegiatan = mkg.id_kegiatan')
+            ->join('master_kabupaten mk', 'kw.id_kabupaten = mk.id_kabupaten')
+            ->orderBy('mkd.nama_kegiatan_detail', 'ASC')
+            ->orderBy('mk.nama_kabupaten', 'ASC');
+        
+        // Apply filters
+        if (!empty($filterKegiatan)) {
+            $builder->where('mkdp.id_kegiatan_detail', $filterKegiatan);
+        }
+        
+        if (!empty($filterKabupaten)) {
+            $builder->where('kw.id_kabupaten', $filterKabupaten);
+        }
+        
+        $kegiatanWilayah = $builder->get()->getResultArray();
+        
+        // Calculate progress for each kegiatan wilayah
+        foreach ($kegiatanWilayah as &$kw) {
+            $targetWilayah = (int)$kw['target_wilayah'];
+            
+            // Get realisasi dari PCL
+            $realisasi = $this->db->table('pantau_progress pp')
+                ->select('COALESCE(SUM(pp.jumlah_realisasi_kumulatif), 0) as total_realisasi', false)
+                ->join('pcl', 'pp.id_pcl = pcl.id_pcl')
+                ->join('pml', 'pcl.id_pml = pml.id_pml')
+                ->where('pml.id_kegiatan_wilayah', $kw['id_kegiatan_wilayah'])
+                ->groupBy('pp.id_pcl')
+                ->get()
+                ->getResultArray();
+            
+            $totalRealisasi = 0;
+            foreach ($realisasi as $item) {
+                $totalRealisasi += (int)$item['total_realisasi'];
+            }
+            
+            // Calculate progress percentage
+            if ($targetWilayah > 0) {
+                $progressPercentage = min(100, round(($totalRealisasi / $targetWilayah) * 100, 1));
+            } else {
+                $progressPercentage = 0;
+            }
+            
+            $kw['realisasi'] = $totalRealisasi;
+            $kw['progress'] = $progressPercentage;
+            
+            // Determine color based on progress
+            if ($progressPercentage >= 80) {
+                $kw['progress_color'] = '#10b981'; // green
+            } elseif ($progressPercentage >= 50) {
+                $kw['progress_color'] = '#3b82f6'; // blue
+            } elseif ($progressPercentage >= 25) {
+                $kw['progress_color'] = '#f59e0b'; // orange
+            } else {
+                $kw['progress_color'] = '#ef4444'; // red
+            }
+        }
+        
+        // Get all kegiatan detail for filter
+        $allKegiatanDetail = $this->db->table('master_kegiatan_detail mkd')
+            ->select('mkd.id_kegiatan_detail, mkd.nama_kegiatan_detail, mkg.nama_kegiatan')
+            ->join('master_kegiatan mkg', 'mkd.id_kegiatan = mkg.id_kegiatan')
+            ->orderBy('mkg.nama_kegiatan', 'ASC')
+            ->orderBy('mkd.nama_kegiatan_detail', 'ASC')
+            ->get()
+            ->getResultArray();
+        
+        // Get all kabupaten for filter
+        $allKabupaten = $this->masterKab->orderBy('nama_kabupaten', 'ASC')->findAll();
+        
         $data = [
             'title' => 'Kelola Master Kegiatan Wilayah',
             'active_menu' => 'master-kegiatan-wilayah',
             'kegiatanWilayah' => $kegiatanWilayah,
+            'allKegiatanDetail' => $allKegiatanDetail,
+            'allKabupaten' => $allKabupaten,
+            'filterKegiatan' => $filterKegiatan,
+            'filterKabupaten' => $filterKabupaten
         ];
         return view('AdminSurveiProv/MasterKegiatanWilayah/index', $data);
     }
@@ -50,7 +135,7 @@ class MasterKegiatanWilayahController extends BaseController
     }
 
     // ============================================================
-    // STORE
+    // STORE - WITH DUPLICATE VALIDATION
     // ============================================================
     public function store()
     {
@@ -69,6 +154,22 @@ class MasterKegiatanWilayahController extends BaseController
         $idKabupaten = $this->request->getPost('kabupaten');
         $targetWilayah = (int)$this->request->getPost('target');
         $keterangan = $this->request->getPost('keterangan');
+
+        // ✅ CHECK DUPLICATE: Apakah kabupaten sudah ada di kegiatan detail proses ini?
+        $existingWilayah = $this->masterKegiatanWilayahModel
+            ->where('id_kegiatan_detail_proses', $idDetailProses)
+            ->where('id_kabupaten', $idKabupaten)
+            ->first();
+        
+        if ($existingWilayah) {
+            $kabupatenInfo = $this->masterKab->find($idKabupaten);
+            $kabupatenName = $kabupatenInfo['nama_kabupaten'] ?? 'Kabupaten ini';
+            
+            return redirect()->back()->withInput()->with(
+                'error',
+                $kabupatenName . ' sudah ditambahkan pada kegiatan detail proses ini. Setiap kabupaten hanya dapat ditambahkan sekali per kegiatan.'
+            );
+        }
 
         $detailProses = $this->masterDetailProsesModel->find($idDetailProses);
         if (!$detailProses) {
@@ -92,7 +193,7 @@ class MasterKegiatanWilayahController extends BaseController
         if (($totalExisting + $targetWilayah) > $targetProv) {
             return redirect()->back()->withInput()->with(
                 'error',
-                'Total target wilayah melebihi target provinsi (' . $targetProv . ').'
+                'Total target wilayah melebihi target provinsi (' . $targetProv . '). Sisa target yang tersedia: ' . ($targetProv - $totalExisting) . '.'
             );
         }
 
@@ -137,7 +238,7 @@ class MasterKegiatanWilayahController extends BaseController
     }
 
     // ============================================================
-    // UPDATE
+    // UPDATE - WITH DUPLICATE VALIDATION
     // ============================================================
     public function update($id)
     {
@@ -161,6 +262,23 @@ class MasterKegiatanWilayahController extends BaseController
         $idKabupaten = $this->request->getPost('kabupaten');
         $targetWilayah = (int)$this->request->getPost('target');
         $keterangan = $this->request->getPost('keterangan');
+
+        // ✅ CHECK DUPLICATE: Apakah kabupaten sudah ada (kecuali data yang sedang diedit)?
+        $existingWilayah = $this->masterKegiatanWilayahModel
+            ->where('id_kegiatan_detail_proses', $idDetailProses)
+            ->where('id_kabupaten', $idKabupaten)
+            ->where('id_kegiatan_wilayah !=', $id)
+            ->first();
+        
+        if ($existingWilayah) {
+            $kabupatenInfo = $this->masterKab->find($idKabupaten);
+            $kabupatenName = $kabupatenInfo['nama_kabupaten'] ?? 'Kabupaten ini';
+            
+            return redirect()->back()->withInput()->with(
+                'error',
+                $kabupatenName . ' sudah ditambahkan pada kegiatan detail proses ini. Setiap kabupaten hanya dapat ditambahkan sekali per kegiatan.'
+            );
+        }
 
         $detailProses = $this->masterDetailProsesModel->find($idDetailProses);
         $tanggalMulai = $detailProses['tanggal_mulai'];
@@ -281,36 +399,30 @@ class MasterKegiatanWilayahController extends BaseController
         $kurvaModel->insertBatch($insertData);
     }
 
-// ============================================================
-// GET SISA TARGET UNTUK AJAX
-// ============================================================
-public function getSisaTarget($idKegiatanDetailProses)
-{
-    $detail = $this->masterDetailProsesModel->find($idKegiatanDetailProses);
-    if (!$detail) {
-        return $this->response->setJSON(['error' => 'Data kegiatan detail proses tidak ditemukan.']);
+    // ============================================================
+    // GET SISA TARGET UNTUK AJAX
+    // ============================================================
+    public function getSisaTarget($idKegiatanDetailProses)
+    {
+        $detail = $this->masterDetailProsesModel->find($idKegiatanDetailProses);
+        if (!$detail) {
+            return $this->response->setJSON(['error' => 'Data kegiatan detail proses tidak ditemukan.']);
+        }
+
+        $targetProv = (int) $detail['target'];
+        $terpakai = (int) $this->masterKegiatanWilayahModel
+            ->where('id_kegiatan_detail_proses', $idKegiatanDetailProses)
+            ->selectSum('target_wilayah')
+            ->get()
+            ->getRow()
+            ->target_wilayah ?? 0;
+
+        $sisa = max($targetProv - $terpakai, 0);
+
+        return $this->response->setJSON([
+            'target_prov' => $targetProv,
+            'terpakai'    => $terpakai,
+            'sisa'        => $sisa
+        ]);
     }
-
-    // Ambil target provinsi dari master_detail_proses
-    $targetProv = (int) $detail['target'];
-
-    // Hitung total target wilayah yang sudah dipakai
-    $terpakai = (int) $this->masterKegiatanWilayahModel
-        ->where('id_kegiatan_detail_proses', $idKegiatanDetailProses)
-        ->selectSum('target_wilayah')
-        ->get()
-        ->getRow()
-        ->target_wilayah ?? 0;
-
-    // Hitung sisa
-    $sisa = max($targetProv - $terpakai, 0);
-
-    return $this->response->setJSON([
-        'target_prov' => $targetProv,
-        'terpakai'    => $terpakai,
-        'sisa'        => $sisa
-    ]);
-}
-
-
 }

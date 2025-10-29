@@ -5,6 +5,8 @@ namespace App\Controllers\SuperAdmin;
 use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\RoleModel;
+use App\Models\AdminSurveiProvinsiModel;
+use App\Models\AdminSurveiKabupatenModel;
 use CodeIgniter\HTTP\ResponseInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -16,12 +18,16 @@ class KelolaPenggunaController extends BaseController
 {
     protected $userModel;
     protected $roleModel;
+    protected $adminProvinsiModel;
+    protected $adminKabupatenModel;
     protected $db;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
+        $this->adminProvinsiModel = new AdminSurveiProvinsiModel();
+        $this->adminKabupatenModel = new AdminSurveiKabupatenModel();
         $this->db = \Config\Database::connect();
     }
 
@@ -30,16 +36,75 @@ class KelolaPenggunaController extends BaseController
         $search = $this->request->getGet('search') ?? '';
         $roleFilter = $this->request->getGet('role') ?? '';
 
+        // Get users with details
+        $users = $this->userModel->getUsersWithDetails($search, $roleFilter);
+        
+        // Tambahkan role tambahan untuk setiap user
+        foreach ($users as &$user) {
+            $user['role_names'] = $this->getUserRoleNames($user['sobat_id'], $user['role']);
+        }
+
         $data = [
             'title' => 'Kelola Pengguna',
             'active_menu' => 'kelola-pengguna',
-            'users' => $this->userModel->getUsersWithDetails($search, $roleFilter),
+            'users' => $users,
             'roles' => $this->roleModel->findAll(),
             'search' => $search,
             'roleFilter' => $roleFilter
         ];
 
         return view('SuperAdmin/KelolaPengguna/index', $data);
+    }
+
+    /**
+     * Get user role names termasuk role tambahan dari tabel admin
+     */
+    private function getUserRoleNames($sobatId, $roleJson)
+    {
+        $roleNames = [];
+        
+        // Decode role dari tabel user
+        $userRoles = [];
+        if (is_string($roleJson) && (str_starts_with($roleJson, '[') || str_starts_with($roleJson, '{'))) {
+            $decoded = json_decode($roleJson, true);
+            if (is_array($decoded)) {
+                $userRoles = array_map('intval', $decoded);
+            }
+        } else {
+            $userRoles = [(int)$roleJson];
+        }
+        
+        // Check admin status
+        $isAdminProvinsi = $this->adminProvinsiModel->isAdminProvinsi($sobatId);
+        $isAdminKabupaten = $this->adminKabupatenModel->isAdminKabupaten($sobatId);
+        
+        // Build available roles dengan nama yang sesuai
+        foreach ($userRoles as $roleId) {
+            $roleInfo = $this->roleModel->find($roleId);
+            if ($roleInfo) {
+                if ($roleId == 2) {
+                    // Role Pemantau Provinsi (role asli)
+                    $roleNames[] = 'Pemantau Provinsi';
+                } elseif ($roleId == 3) {
+                    // Role Pemantau Kabupaten (role asli)
+                    $roleNames[] = 'Pemantau Kabupaten';
+                } else {
+                    // Role lain
+                    $roleNames[] = $roleInfo['roleuser'];
+                }
+            }
+        }
+        
+        // Tambahkan role admin jika terdaftar
+        if ($isAdminProvinsi) {
+            $roleNames[] = 'Admin Survei Provinsi';
+        }
+        
+        if ($isAdminKabupaten) {
+            $roleNames[] = 'Admin Survei Kabupaten';
+        }
+        
+        return $roleNames;
     }
 
     public function create()
@@ -344,7 +409,14 @@ class KelolaPenggunaController extends BaseController
 
     public function export()
     {
+        // Get users with details
         $users = $this->userModel->getUsersWithDetails();
+        
+        // Tambahkan role tambahan untuk setiap user
+        foreach ($users as &$user) {
+            $roleNames = $this->getUserRoleNames($user['sobat_id'], $user['role']);
+            $user['roles_display'] = implode(', ', $roleNames);
+        }
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();

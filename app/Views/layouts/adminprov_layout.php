@@ -81,7 +81,7 @@
                     <div class="py-2"><div class="border-t border-gray-200"></div></div>
 
                     <!-- Kelola Pengguna -->
-                    <a href="<?= base_url('adminsurvei/assign-admin-kab') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
+                    <a href="<?= base_url('adminsurvei/admin-survei-kab') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
                         <i class="fas fa-users w-5"></i>
                         <span class="ml-3">Assign Admin Survei Kab</span>
                     </a>

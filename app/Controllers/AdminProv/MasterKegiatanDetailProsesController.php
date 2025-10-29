@@ -64,7 +64,7 @@ class MasterKegiatanDetailProsesController extends BaseController
             'keterangan'             => 'required|max_length[255]',
             'periode'                => 'required|max_length[50]',
             'target'                 => 'required|numeric',
-            'persentase_target_awal'    => 'required|numeric',
+            'persentase_target_awal' => 'required|numeric',
             'tanggal_selesai_target' => 'required|valid_date',
         ];
 
@@ -160,7 +160,7 @@ class MasterKegiatanDetailProsesController extends BaseController
         'periode'                 => 'required|max_length[50]',
         'target'                  => 'required|numeric',
         'persentase_target_awal'     => 'required|numeric',
-        'target_tanggal_selesai'  => 'required|valid_date',
+        'tanggal_selesai_target'  => 'required|valid_date',
     ];
 
     if (! $this->validate($rules)) {
@@ -174,7 +174,7 @@ class MasterKegiatanDetailProsesController extends BaseController
 
     $tanggalMulai      = $this->request->getPost('tanggal_mulai');
     $tanggalSelesai    = $this->request->getPost('tanggal_selesai');
-    $tanggal100Persen  = $this->request->getPost('target_tanggal_selesai');
+    $tanggal100Persen  = $this->request->getPost('tanggal_selesai_target');
 
     // Validasi hubungan antar tanggal
     if (

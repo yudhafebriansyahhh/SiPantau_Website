@@ -4,7 +4,9 @@ namespace App\Controllers\SuperAdmin;
 
 use App\Controllers\BaseController;
 use App\Models\AdminSurveiProvinsiModel;
+use App\Models\AdminSurveiKabupatenModel;
 use App\Models\UserModel;
+use App\Models\RoleModel;
 use App\Models\MasterKegiatanDetailModel;
 use App\Models\MasterKegiatanDetailAdminModel;
 use App\Models\MasterKegiatanDetailProsesModel;
@@ -12,7 +14,9 @@ use App\Models\MasterKegiatanDetailProsesModel;
 class KelolaSurveiProvinsiController extends BaseController
 {
     protected $adminProvinsiModel;
+    protected $adminKabupatenModel;
     protected $userModel;
+    protected $roleModel;
     protected $kegiatanDetailModel;
     protected $kegiatanDetailAdminModel;
     protected $kegiatanDetailProsesModel;
@@ -21,7 +25,9 @@ class KelolaSurveiProvinsiController extends BaseController
     public function __construct()
     {
         $this->adminProvinsiModel = new AdminSurveiProvinsiModel();
+        $this->adminKabupatenModel = new AdminSurveiKabupatenModel();
         $this->userModel = new UserModel();
+        $this->roleModel = new RoleModel();
         $this->kegiatanDetailModel = new MasterKegiatanDetailModel();
         $this->kegiatanDetailAdminModel = new MasterKegiatanDetailAdminModel();
         $this->kegiatanDetailProsesModel = new MasterKegiatanDetailProsesModel();
@@ -38,7 +44,7 @@ class KelolaSurveiProvinsiController extends BaseController
         
         // Get all admin survei provinsi dengan informasi user dan kegiatan
         $builder = $this->db->table('admin_survei_provinsi asp')
-            ->select('asp.id_admin_provinsi, asp.sobat_id, u.nama_user, u.email, u.hp, u.is_active, k.nama_kabupaten')
+            ->select('asp.id_admin_provinsi, asp.sobat_id, u.nama_user, u.email, u.hp, u.is_active, u.role, k.nama_kabupaten')
             ->join('sipantau_user u', 'asp.sobat_id = u.sobat_id')
             ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
             ->orderBy('u.nama_user', 'ASC');
@@ -66,9 +72,8 @@ class KelolaSurveiProvinsiController extends BaseController
             $admin['kegiatan'] = $kegiatan;
             $admin['jumlah_kegiatan'] = count($kegiatan);
             
-            // Get role names
-            $userRoles = $this->userModel->getUserWithRoles($admin['sobat_id']);
-            $admin['role_names'] = $userRoles['role_names'] ?? [];
+            // Get role names dengan role tambahan
+            $admin['role_names'] = $this->getUserRoleNames($admin['sobat_id'], $admin['role']);
         }
 
         $data = [
@@ -79,6 +84,57 @@ class KelolaSurveiProvinsiController extends BaseController
         ];
 
         return view('SuperAdmin/KelolaAdminSurvey/index', $data);
+    }
+
+    /**
+     * Get user role names termasuk role tambahan dari tabel admin
+     */
+    private function getUserRoleNames($sobatId, $roleJson)
+    {
+        $roleNames = [];
+        
+        // Decode role dari tabel user
+        $userRoles = [];
+        if (is_string($roleJson) && (str_starts_with($roleJson, '[') || str_starts_with($roleJson, '{'))) {
+            $decoded = json_decode($roleJson, true);
+            if (is_array($decoded)) {
+                $userRoles = array_map('intval', $decoded);
+            }
+        } else {
+            $userRoles = [(int)$roleJson];
+        }
+        
+        // Check admin status
+        $isAdminProvinsi = $this->adminProvinsiModel->isAdminProvinsi($sobatId);
+        $isAdminKabupaten = $this->adminKabupatenModel->isAdminKabupaten($sobatId);
+        
+        // Build available roles dengan nama yang sesuai
+        foreach ($userRoles as $roleId) {
+            $roleInfo = $this->roleModel->find($roleId);
+            if ($roleInfo) {
+                if ($roleId == 2) {
+                    // Role Pemantau Provinsi (role asli)
+                    $roleNames[] = 'Pemantau Provinsi';
+                } elseif ($roleId == 3) {
+                    // Role Pemantau Kabupaten (role asli)
+                    $roleNames[] = 'Pemantau Kabupaten';
+                } else {
+                    // Role lain
+                    $roleNames[] = $roleInfo['roleuser'];
+                }
+            }
+        }
+        
+        // Tambahkan role admin jika terdaftar
+        if ($isAdminProvinsi) {
+            $roleNames[] = 'Admin Survei Provinsi';
+        }
+        
+        if ($isAdminKabupaten) {
+            $roleNames[] = 'Admin Survei Kabupaten';
+        }
+        
+        return $roleNames;
     }
 
     /**
@@ -376,46 +432,88 @@ class KelolaSurveiProvinsiController extends BaseController
             
             // Calculate progress untuk setiap proses
             $totalProses = count($prosesList);
-            $completedProses = 0;
-            $totalProgress = 0;
+            $totalProgressSum = 0;
             
             foreach ($prosesList as &$proses) {
-                // Hitung progress berdasarkan tanggal
-                if (!empty($proses['tanggal_mulai']) && !empty($proses['tanggal_selesai_target'])) {
-                    $today = date('Y-m-d');
-                    $start = strtotime($proses['tanggal_mulai']);
-                    $end = strtotime($proses['tanggal_selesai_target']);
-                    $current = strtotime($today);
-                    
-                    if ($current < $start) {
-                        $proses['progress'] = 0;
-                        $proses['status'] = 'Belum Dimulai';
-                        $proses['status_class'] = 'gray';
-                    } elseif ($current > $end) {
-                        $proses['progress'] = 100;
-                        $proses['status'] = 'Selesai';
-                        $proses['status_class'] = 'green';
-                        $completedProses++;
-                    } else {
-                        $totalDays = ($end - $start) / (60 * 60 * 24);
-                        $elapsedDays = ($current - $start) / (60 * 60 * 24);
-                        $proses['progress'] = min(100, round(($elapsedDays / $totalDays) * 100, 1));
-                        $proses['status'] = 'Sedang Berlangsung';
-                        $proses['status_class'] = 'blue';
-                    }
-                } else {
-                    $proses['progress'] = 0;
-                    $proses['status'] = 'Tidak Ada Target';
-                    $proses['status_class'] = 'gray';
+                // Get target dari master_kegiatan_detail_proses
+                $targetProses = (int)$proses['target'];
+                
+                // Hitung realisasi kumulatif dari semua PCL yang terkait dengan proses ini
+                $realisasiKumulatif = $this->db->table('pantau_progress pp')
+                    ->select('COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as total_realisasi', false)
+                    ->join('pcl', 'pp.id_pcl = pcl.id_pcl')
+                    ->join('pml', 'pcl.id_pml = pml.id_pml')
+                    ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+                    ->where('kw.id_kegiatan_detail_proses', $proses['id_kegiatan_detail_proses'])
+                    ->groupBy('pp.id_pcl')
+                    ->get()
+                    ->getResultArray();
+                
+                // Jumlahkan realisasi dari semua PCL
+                $totalRealisasi = 0;
+                foreach ($realisasiKumulatif as $item) {
+                    $totalRealisasi += (int)$item['total_realisasi'];
                 }
                 
-                $totalProgress += $proses['progress'];
+                // Hitung persentase progress
+                if ($targetProses > 0) {
+                    $progressPercentage = min(100, round(($totalRealisasi / $targetProses) * 100, 1));
+                } else {
+                    $progressPercentage = 0;
+                }
+                
+                // Set progress dan status
+                $proses['target'] = $targetProses;
+                $proses['realisasi'] = $totalRealisasi;
+                $proses['progress'] = $progressPercentage;
+                
+                // Determine status based on progress and dates
+                $today = date('Y-m-d');
+                $start = $proses['tanggal_mulai'];
+                $end = $proses['tanggal_selesai_target'];
+                
+                if ($today < $start) {
+                    $proses['status'] = 'Belum Dimulai';
+                    $proses['status_class'] = 'gray';
+                } elseif ($progressPercentage >= 100) {
+                    $proses['status'] = 'Selesai';
+                    $proses['status_class'] = 'green';
+                } elseif ($today > $end && $progressPercentage < 100) {
+                    $proses['status'] = 'Terlambat';
+                    $proses['status_class'] = 'red';
+                } else {
+                    $proses['status'] = 'Sedang Berlangsung';
+                    $proses['status_class'] = 'blue';
+                }
+                
+                // Get jumlah wilayah untuk proses ini
+                $jumlahWilayah = $this->db->table('kegiatan_wilayah')
+                    ->where('id_kegiatan_detail_proses', $proses['id_kegiatan_detail_proses'])
+                    ->countAllResults();
+                
+                $proses['jumlah_wilayah'] = $jumlahWilayah;
+                
+                // Get jumlah PML dan PCL
+                $jumlahPML = $this->db->table('pml')
+                    ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+                    ->where('kw.id_kegiatan_detail_proses', $proses['id_kegiatan_detail_proses'])
+                    ->countAllResults();
+                
+                $jumlahPCL = $this->db->table('pcl')
+                    ->join('pml', 'pcl.id_pml = pml.id_pml')
+                    ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+                    ->where('kw.id_kegiatan_detail_proses', $proses['id_kegiatan_detail_proses'])
+                    ->countAllResults();
+                
+                $proses['jumlah_pml'] = $jumlahPML;
+                $proses['jumlah_pcl'] = $jumlahPCL;
+                
+                $totalProgressSum += $progressPercentage;
             }
             
             $k['proses_list'] = $prosesList;
             $k['total_proses'] = $totalProses;
-            $k['completed_proses'] = $completedProses;
-            $k['overall_progress'] = $totalProses > 0 ? round($totalProgress / $totalProses, 1) : 0;
+            $k['overall_progress'] = $totalProses > 0 ? round($totalProgressSum / $totalProses, 1) : 0;
         }
 
         $data = [

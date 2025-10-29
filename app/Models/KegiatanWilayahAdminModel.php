@@ -9,33 +9,92 @@ class KegiatanWilayahAdminModel extends Model
     protected $table = 'kegiatan_wilayah_admin';
     protected $primaryKey = 'id';
     protected $allowedFields = ['id_admin_kabupaten', 'id_kegiatan_wilayah'];
-    
-    // Get admin kabupaten untuk kegiatan wilayah tertentu
-    public function getAdminByKegiatanWilayah($idKegiatanWilayah)
+    protected $useTimestamps = false;
+
+    /**
+     * Get assigned kegiatan wilayah untuk admin tertentu
+     */
+    public function getAssignedKegiatanByAdmin($idAdminKabupaten)
     {
-        return $this->select('admin_survei_kabupaten.sobat_id, sipantau_user.nama_user, sipantau_user.email')
-            ->join('admin_survei_kabupaten', 'admin_survei_kabupaten.id_admin_kabupaten = kegiatan_wilayah_admin.id_admin_kabupaten')
-            ->join('sipantau_user', 'sipantau_user.sobat_id = admin_survei_kabupaten.sobat_id')
-            ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
+        return $this->where('id_admin_kabupaten', $idAdminKabupaten)
             ->findAll();
     }
-    
-    // Assign admin ke kegiatan wilayah
-    public function assignAdmin($idAdminKabupaten, $idKegiatanWilayah)
+
+    /**
+     * Check apakah kegiatan sudah di-assign ke admin
+     */
+    public function isAssigned($idAdminKabupaten, $idKegiatanWilayah)
     {
-        // Check if already assigned
-        $existing = $this->where([
+        return $this->where([
             'id_admin_kabupaten' => $idAdminKabupaten,
             'id_kegiatan_wilayah' => $idKegiatanWilayah
-        ])->first();
-        
-        if (!$existing) {
-            return $this->insert([
+        ])->first() !== null;
+    }
+
+    /**
+     * Assign admin ke kegiatan wilayah
+     */
+    public function assignAdmin($idAdminKabupaten, $idKegiatanWilayah)
+    {
+        // Check jika sudah ada
+        if ($this->isAssigned($idAdminKabupaten, $idKegiatanWilayah)) {
+            return false;
+        }
+
+        return $this->insert([
+            'id_admin_kabupaten' => $idAdminKabupaten,
+            'id_kegiatan_wilayah' => $idKegiatanWilayah
+        ]);
+    }
+
+    /**
+     * Unassign admin dari kegiatan wilayah
+     */
+    public function unassignAdmin($idAdminKabupaten, $idKegiatanWilayah)
+    {
+        return $this->where([
+            'id_admin_kabupaten' => $idAdminKabupaten,
+            'id_kegiatan_wilayah' => $idKegiatanWilayah
+        ])->delete();
+    }
+
+    /**
+     * Get jumlah kegiatan yang di-assign ke admin
+     */
+    public function countKegiatanByAdmin($idAdminKabupaten)
+    {
+        return $this->where('id_admin_kabupaten', $idAdminKabupaten)
+            ->countAllResults();
+    }
+
+    /**
+     * Delete all assignments untuk admin tertentu
+     */
+    public function deleteByAdmin($idAdminKabupaten)
+    {
+        return $this->where('id_admin_kabupaten', $idAdminKabupaten)->delete();
+    }
+
+    /**
+     * Bulk assign - hapus semua lalu insert baru
+     */
+    public function bulkAssign($idAdminKabupaten, array $kegiatanWilayahIds)
+    {
+        $this->db->transStart();
+
+        // Hapus semua assignment lama
+        $this->deleteByAdmin($idAdminKabupaten);
+
+        // Insert assignment baru
+        foreach ($kegiatanWilayahIds as $idKegiatanWilayah) {
+            $this->insert([
                 'id_admin_kabupaten' => $idAdminKabupaten,
                 'id_kegiatan_wilayah' => $idKegiatanWilayah
             ]);
         }
-        
-        return false;
+
+        $this->db->transComplete();
+
+        return $this->db->transStatus();
     }
 }
