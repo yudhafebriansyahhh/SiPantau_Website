@@ -12,7 +12,8 @@ class MasterKegiatanWilayahModel extends Model
         'id_kegiatan_detail_proses',
         'id_kabupaten',
         'target_wilayah',
-        'keterangan'
+        'keterangan',
+        'status'
     ];
     protected $useTimestamps = false;
 
@@ -41,7 +42,7 @@ class MasterKegiatanWilayahModel extends Model
     }
 
     /**
-     * Get kegiatan wilayah by kabupaten
+     * Get kegiatan wilayah by kabupaten (untuk filter dropdown)
      */
     public function getByKabupaten($idKabupaten)
     {
@@ -64,7 +65,7 @@ class MasterKegiatanWilayahModel extends Model
     public function getWithAdminInfo($idKegiatanWilayah)
     {
         return $this->db->table('kegiatan_wilayah kw')
-            ->select('kw.*, mkdp.nama_kegiatan_detail_proses, 
+            ->select('kw.*, mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
                      mkd.nama_kegiatan_detail, mk.nama_kegiatan,
                      kab.nama_kabupaten')
             ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')

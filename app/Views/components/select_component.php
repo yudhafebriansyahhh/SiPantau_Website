@@ -1,6 +1,6 @@
 <?php
 
-$label = $label ?? 'Select';
+$label = $label ?? '';
 $name = $name ?? 'select_field';
 $id = $id ?? $name;
 $required = $required ?? false;
@@ -22,12 +22,14 @@ $componentId = 'select-component-' . uniqid();
 ?>
 
 <div class="form-group">
+    <?php if (!empty($label)): ?>
     <label class="block text-sm font-medium text-gray-700 mb-2">
         <?= esc($label) ?>
         <?php if ($required): ?>
             <span class="text-red-500">*</span>
         <?php endif; ?>
     </label>
+    <?php endif; ?>
     
     <?php if (empty($options)): ?>
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">

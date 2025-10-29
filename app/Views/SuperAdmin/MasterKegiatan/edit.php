@@ -97,15 +97,14 @@
             <?php endif; ?>
         </div>
 
-        <!-- Keterangan -->
-        <div class="mb-6">
+       <div class="mb-6">
             <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-2">
                 Keterangan
             </label>
             <textarea id="keterangan" 
                       name="keterangan" 
                       rows="3" 
-                      class="input-field resize-none" 
+                      class="input-field resize-none"><?= old('keterangan', $kegiatan['keterangan']) ?></textarea>
             <p class="mt-1 text-xs text-gray-500">Tambahkan keterangan atau detail tambahan kegiatan (opsional)</p>
         </div>
 

@@ -16,7 +16,7 @@ class LoginController extends BaseController
 
         // Jika user sudah login, arahkan langsung ke dashboard sesuai role
         if ($session->get('isLoggedIn')) {
-            return $this->redirectToDashboard($session->get('role'));
+            return $this->redirectToDashboard($session->get('role'), $session->get('role_type'));
         }
 
         return view('auth/login');
@@ -69,6 +69,10 @@ class LoginController extends BaseController
         $isAdminProvinsi = $adminProvinsiModel->isAdminProvinsi($user['sobat_id']);
         $isAdminKabupaten = $adminKabupatenModel->isAdminKabupaten($user['sobat_id']);
         
+        // Get admin IDs
+        $adminProvinsiId = $isAdminProvinsi ? $adminProvinsiModel->getAdminProvinsiId($user['sobat_id']) : null;
+        $adminKabupatenId = $isAdminKabupaten ? $adminKabupatenModel->getAdminKabupatenId($user['sobat_id']) : null;
+        
         // Build available roles
         $availableRoles = [];
         
@@ -96,21 +100,21 @@ class LoginController extends BaseController
         }
         
         // 2. Tambahkan role admin JIKA terdaftar di tabel admin (role tambahan)
-        if ($isAdminProvinsi) {
+        if ($isAdminProvinsi && $adminProvinsiId) {
             // Tambahkan opsi Admin Survei Provinsi
             $availableRoles[] = [
                 'id' => 2,
                 'type' => 'admin_provinsi',
-                'admin_id' => $adminProvinsiModel->getAdminProvinsiId($user['sobat_id'])
+                'admin_id' => $adminProvinsiId
             ];
         }
         
-        if ($isAdminKabupaten) {
+        if ($isAdminKabupaten && $adminKabupatenId) {
             // Tambahkan opsi Admin Survei Kabupaten
             $availableRoles[] = [
                 'id' => 3,
                 'type' => 'admin_kabupaten',
-                'admin_id' => $adminKabupatenModel->getAdminKabupatenId($user['sobat_id'])
+                'admin_id' => $adminKabupatenId
             ];
         }
         
@@ -232,22 +236,32 @@ class LoginController extends BaseController
         // Set session dasar
         $sessionData = [
             'user_id'    => $user['sobat_id'],
+            'sobat_id'   => $user['sobat_id'], // Tambahkan ini untuk konsistensi
             'nama_user'  => $user['nama_user'],
             'email'      => $user['email'],
             'role'       => (int)$roleId,
             'role_type'  => $roleType,
-            'all_roles'  => json_decode($user['role'], true),
+            'all_roles'  => is_string($user['role']) ? json_decode($user['role'], true) : [$user['role']],
             'isLoggedIn' => true
         ];
         
         // Tambahkan admin_id ke session jika tipe admin
         if ($roleType === 'admin_provinsi' && isset($roleData['admin_id'])) {
             $sessionData['id_admin_provinsi'] = $roleData['admin_id'];
+            
+            // Debug log
+            log_message('info', 'Login Admin Provinsi - ID: ' . $roleData['admin_id']);
         } elseif ($roleType === 'admin_kabupaten' && isset($roleData['admin_id'])) {
             $sessionData['id_admin_kabupaten'] = $roleData['admin_id'];
+            
+            // Debug log
+            log_message('info', 'Login Admin Kabupaten - ID: ' . $roleData['admin_id'] . ' | Sobat ID: ' . $user['sobat_id']);
         }
 
         $session->set($sessionData);
+
+        // Debug: Print session data
+        log_message('info', 'Session Data After Login: ' . json_encode($sessionData));
 
         // Hapus temporary data
         $session->removeTempdata('temp_user_data');
@@ -257,7 +271,7 @@ class LoginController extends BaseController
     }
 
     // Helper untuk redirect ke dashboard
-    private function redirectToDashboard($role, $roleType = null)
+    private function redirectToDashboard($role, $roleType = 'default')
     {
         switch ($role) {
             case 1:
@@ -266,19 +280,21 @@ class LoginController extends BaseController
                 if ($roleType === 'admin_provinsi') {
                     return redirect()->to('/adminsurvei'); // Admin Provinsi
                 } else {
-                    return redirect()->to('/pemantau-provinsi'); // Pemantau Provinsi
+                    // Pemantau Provinsi - route belum ada, redirect ke coming soon atau dashboard default
+                    return redirect()->to('/pemantau')->with('info', 'Dashboard Pemantau Provinsi belum tersedia.');
                 }
             case 3:
                 if ($roleType === 'admin_kabupaten') {
                     return redirect()->to('/adminsurvei-kab'); // Admin Kab/Kota
                 } else {
-                    return redirect()->to('/pemantau-kabupaten'); // Pemantau Kabupaten
+                    // Pemantau Kabupaten - route belum ada
+                    return redirect()->to('/pemantau')->with('info', 'Dashboard Pemantau Kabupaten belum tersedia.');
                 }
             case 4:
                 return redirect()->to('/pemantau'); // Pemantau Pusat
             default:
                 session()->setFlashdata('error', 'Role tidak dikenali.');
-                return redirect()->to('/');
+                return redirect()->to('/login');
         }
     }
 
@@ -307,25 +323,26 @@ class LoginController extends BaseController
         $isAdminProvinsi = $adminProvinsiModel->isAdminProvinsi($user['sobat_id']);
         $isAdminKabupaten = $adminKabupatenModel->isAdminKabupaten($user['sobat_id']);
         
+        // Get admin IDs
+        $adminProvinsiId = $isAdminProvinsi ? $adminProvinsiModel->getAdminProvinsiId($user['sobat_id']) : null;
+        $adminKabupatenId = $isAdminKabupaten ? $adminKabupatenModel->getAdminKabupatenId($user['sobat_id']) : null;
+        
         // Build available roles
         $availableRoles = [];
         
         // 1. Tambahkan role dari tabel user (role asli)
         foreach ($allRoles as $roleId) {
             if ($roleId == 2) {
-                // Pemantau Provinsi (role asli)
                 $availableRoles[] = [
                     'id' => 2,
                     'type' => 'pemantau_provinsi'
                 ];
             } elseif ($roleId == 3) {
-                // Pemantau Kabupaten (role asli)
                 $availableRoles[] = [
                     'id' => 3,
                     'type' => 'pemantau_kabupaten'
                 ];
             } else {
-                // Role lain (Super Admin, Pemantau Pusat, dll)
                 $availableRoles[] = [
                     'id' => $roleId,
                     'type' => 'default'
@@ -333,22 +350,20 @@ class LoginController extends BaseController
             }
         }
         
-        // 2. Tambahkan role admin JIKA terdaftar di tabel admin (role tambahan)
-        if ($isAdminProvinsi) {
-            // Tambahkan opsi Admin Survei Provinsi
+        // 2. Tambahkan role admin JIKA terdaftar di tabel admin
+        if ($isAdminProvinsi && $adminProvinsiId) {
             $availableRoles[] = [
                 'id' => 2,
                 'type' => 'admin_provinsi',
-                'admin_id' => $adminProvinsiModel->getAdminProvinsiId($user['sobat_id'])
+                'admin_id' => $adminProvinsiId
             ];
         }
         
-        if ($isAdminKabupaten) {
-            // Tambahkan opsi Admin Survei Kabupaten
+        if ($isAdminKabupaten && $adminKabupatenId) {
             $availableRoles[] = [
                 'id' => 3,
                 'type' => 'admin_kabupaten',
-                'admin_id' => $adminKabupatenModel->getAdminKabupatenId($user['sobat_id'])
+                'admin_id' => $adminKabupatenId
             ];
         }
 

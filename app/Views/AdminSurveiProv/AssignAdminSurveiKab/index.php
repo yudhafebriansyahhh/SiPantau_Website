@@ -150,37 +150,89 @@
                                     <?php if (!empty($admin['kegiatan_wilayah'])): ?>
                                         <div class="space-y-2">
                                             <?php foreach ($admin['kegiatan_wilayah'] as $kegiatan): ?>
+                                                <?php
+                                                // Progress sudah dihitung di controller
+                                                $progress = $kegiatan['progress'] ?? 0;
+                                                $realisasi = $kegiatan['realisasi'] ?? 0;
+                                                
+                                                // Determine color
+                                                if ($progress >= 80) {
+                                                    $progressColor = '#10b981';
+                                                    $progressLabel = 'Sangat Baik';
+                                                    $progressLabelClass = 'text-green-600';
+                                                } elseif ($progress >= 50) {
+                                                    $progressColor = '#3b82f6';
+                                                    $progressLabel = 'Baik';
+                                                    $progressLabelClass = 'text-blue-600';
+                                                } elseif ($progress >= 25) {
+                                                    $progressColor = '#f59e0b';
+                                                    $progressLabel = 'Sedang';
+                                                    $progressLabelClass = 'text-orange-600';
+                                                } else {
+                                                    $progressColor = '#ef4444';
+                                                    $progressLabel = 'Rendah';
+                                                    $progressLabelClass = 'text-red-600';
+                                                }
+                                                ?>
+                                                
                                                 <div class="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                    <div class="flex-1">
-                                                        <div class="flex items-start gap-3">
-                                                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                                <i class="fas fa-map-marked-alt text-green-600 text-xs"></i>
-                                                            </div>
-                                                            <div class="flex-1 min-w-0">
-                                                                <p class="text-sm font-medium text-gray-900">
-                                                                    <?= esc($kegiatan['nama_kegiatan_detail_proses']) ?>
-                                                                </p>
-                                                                <p class="text-xs text-gray-600 mt-1">
-                                                                    <?= esc($kegiatan['nama_kegiatan']) ?> - <?= esc($kegiatan['nama_kegiatan_detail']) ?>
-                                                                </p>
-                                                                <div class="flex flex-wrap gap-2 mt-2">
-                                                                    <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
-                                                                        <i class="fas fa-bullseye mr-1 text-gray-500"></i>
-                                                                        Target: <?= number_format($kegiatan['target_wilayah']) ?>
-                                                                    </span>
-                                                                    <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
-                                                                        <i class="fas fa-calendar mr-1 text-gray-500"></i>
-                                                                        <?= date('d M Y', strtotime($kegiatan['tanggal_mulai'])) ?> - <?= date('d M Y', strtotime($kegiatan['tanggal_selesai'])) ?>
-                                                                    </span>
-                                                                </div>
+                                                    <div class="flex-1 flex items-start gap-3">
+                                                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                            <i class="fas fa-map-marked-alt text-green-600 text-xs"></i>
+                                                        </div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="text-sm font-medium text-gray-900">
+                                                                <?= esc($kegiatan['nama_kegiatan_detail_proses']) ?>
+                                                            </p>
+                                                            <p class="text-xs text-gray-600 mt-1">
+                                                                <?= esc($kegiatan['nama_kegiatan']) ?> - <?= esc($kegiatan['nama_kegiatan_detail']) ?>
+                                                            </p>
+                                                            <div class="flex flex-wrap gap-2 mt-2">
+                                                                <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
+                                                                    <i class="fas fa-bullseye mr-1 text-gray-500"></i>
+                                                                    Target: <?= number_format($kegiatan['target_wilayah']) ?>
+                                                                </span>
+                                                                <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
+                                                                    <i class="fas fa-check-circle mr-1 text-gray-500"></i>
+                                                                    Realisasi: <?= number_format($realisasi) ?>
+                                                                </span>
+                                                                <span class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded text-xs">
+                                                                    <i class="fas fa-calendar mr-1 text-gray-500"></i>
+                                                                    <?= date('d M Y', strtotime($kegiatan['tanggal_mulai'])) ?> - <?= date('d M Y', strtotime($kegiatan['tanggal_selesai'])) ?>
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <button onclick="deleteAssignment(<?= $admin['id_admin_kabupaten'] ?>, <?= $kegiatan['id_kegiatan_wilayah'] ?>, '<?= esc($kegiatan['nama_kegiatan_detail_proses']) ?>')"
-                                                            class="ml-3 p-1.5 text-red-600 hover:bg-red-50 rounded"
-                                                            title="Hapus Assignment">
-                                                        <i class="fas fa-times text-sm"></i>
-                                                    </button>
+                                                    
+                                                    <!-- Progress Circle Chart -->
+                                                    <div class="flex items-center gap-3 ml-4">
+                                                        <div class="flex flex-col items-center">
+                                                            <div class="relative inline-flex items-center justify-center">
+                                                                <svg class="transform -rotate-90" width="50" height="50">
+                                                                    <circle cx="25" cy="25" r="20" stroke="#e5e7eb" stroke-width="4" fill="none"/>
+                                                                    <circle cx="25" cy="25" r="20" 
+                                                                            stroke="<?= $progressColor ?>" 
+                                                                            stroke-width="4" 
+                                                                            fill="none"
+                                                                            stroke-dasharray="<?= (2 * 3.14159 * 20) ?>"
+                                                                            stroke-dashoffset="<?= (2 * 3.14159 * 20) * (1 - ($progress / 100)) ?>"
+                                                                            stroke-linecap="round"/>
+                                                                </svg>
+                                                                <span class="absolute text-xs font-semibold" style="color: <?= $progressColor ?>">
+                                                                    <?= number_format($progress, 1) ?>%
+                                                                </span>
+                                                            </div>
+                                                            <div class="mt-1 text-xs text-center">
+                                                                <span class="<?= $progressLabelClass ?> font-medium"><?= $progressLabel ?></span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <button onclick="deleteAssignment(<?= $admin['id_admin_kabupaten'] ?>, <?= $kegiatan['id_kegiatan_wilayah'] ?>, '<?= esc($kegiatan['nama_kegiatan_detail_proses']) ?>')"
+                                                                class="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                                                                title="Hapus Assignment">
+                                                            <i class="fas fa-times text-sm"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             <?php endforeach; ?>
                                         </div>
@@ -354,4 +406,4 @@ function deleteAssignment(idAdmin, idKegiatan, namaKegiatan) {
 <?php endif; ?>
 </script>
 
-<?= $this->endSection() ?> 
+<?= $this->endSection() ?>

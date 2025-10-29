@@ -125,7 +125,7 @@
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
-                            </div> -->
+                            </div>
                         </div>
                     </div>
                 </div>

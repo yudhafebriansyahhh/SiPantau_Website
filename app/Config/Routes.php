@@ -124,8 +124,9 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->post('store', 'AdminProv\AssignAdminSurveiKabController::storeAssign');
         $routes->post('update/(:num)', 'AdminProv\AssignAdminSurveiKabController::update/$1');
         $routes->post('delete-assignment', 'AdminProv\AssignAdminSurveiKabController::deleteAssignment');
-        $routes->delete('delete/(:num)', 'AdminProv\AssignAdminSurveiKabController::delete/$1');
+        $routes->post('delete/(:num)', 'AdminProv\AssignAdminSurveiKabController::delete/$1');
         $routes->get('get-kegiatan/(:num)', 'AdminProv\AssignAdminSurveiKabController::getKegiatanByKabupaten/$1');
+        $routes->get('get-assigned-kegiatan/(:segment)', 'AdminProv\AssignAdminSurveiKabController::getAssignedKegiatan/$1');
     });
 
 });
@@ -133,12 +134,24 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
 
 // ================== ADMIN SURVEI KABUPATEN (id_role = 3) ==================
 $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($routes) {
-    $routes->get('/', 'AdminSurveiKabController::index');
-    $routes->get('assign-petugas', 'AdminSurveiKabController::AssignPetugas');
-    $routes->get('assign-petugas/create', 'AdminSurveiKabController::createAssignPetugas');
-    $routes->get('assign-petugas/detail/(:num)', 'AdminSurveiKabController::detail/$1');
-    $routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
-    $routes->get('approval-laporan', 'AdminSurveiKabController::approve_laporan');
+    $routes->get('/', 'AdminKab\DashboardController::index');
+    // Assign Admin Survei Kabupaten
+    $routes->group('assign-petugas', static function ($routes) {
+        $routes->get('/', 'AdminKab\AssignPetugasController::index');
+        $routes->get('create', 'AdminKab\AssignPetugasController::create');
+        $routes->post('store', 'AdminKab\AssignPetugasController::store');
+        $routes->get('detail/(:num)', 'AdminKab\AssignPetugasController::detail/$1');
+        $routes->post('delete/(:num)', 'AdminKab\AssignPetugasController::delete/$1');
+        $routes->post('get-sisa-target-wilayah', 'AdminKab\AssignPetugasController::getSisaTargetKegiatanWilayah');
+        // AJAX endpoints
+        $routes->post('get-available-pml', 'AdminKab\AssignPetugasController::getAvailablePML');
+        $routes->post('get-available-pcl', 'AdminKab\AssignPetugasController::getAvailablePCL');
+    });
+    // $routes->get('assign-petugas', 'AdminSurveiKabController::AssignPetugas');
+    // $routes->get('assign-petugas/create', 'AdminSurveiKabController::createAssignPetugas');
+    // $routes->get('assign-petugas/detail/(:num)', 'AdminSurveiKabController::detail/$1');
+    // $routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
+    $routes->get('approval-laporan', 'AdminKab\DashboardController::approve_laporan');
 });
 
 // ================== PEMANTAU (id_role = 4) ==================

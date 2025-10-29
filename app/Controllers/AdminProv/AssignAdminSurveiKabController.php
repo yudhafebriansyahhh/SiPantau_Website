@@ -30,9 +30,7 @@ class AssignAdminSurveiKabController extends BaseController
         $this->db = \Config\Database::connect();
     }
 
-    /**
-     * Halaman index - daftar admin kabupaten dengan kegiatan wilayah mereka
-     */
+    // Halaman index - daftar admin kabupaten dengan kegiatan wilayah mereka
     public function index()
     {
         $search = $this->request->getGet('search') ?? '';
@@ -60,12 +58,12 @@ class AssignAdminSurveiKabController extends BaseController
 
         $adminList = $builder->get()->getResultArray();
 
-        // Get kegiatan wilayah untuk setiap admin
+        // Get kegiatan wilayah untuk setiap admin dengan progress
         foreach ($adminList as &$admin) {
             $kegiatanWilayah = $this->db->table('kegiatan_wilayah_admin kwa')
                 ->select('kw.id_kegiatan_wilayah, kw.target_wilayah, kw.keterangan, 
-                         mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
-                         mkd.nama_kegiatan_detail, mk.nama_kegiatan, kab.nama_kabupaten')
+                     mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
+                     mkd.nama_kegiatan_detail, mk.nama_kegiatan, kab.nama_kabupaten')
                 ->join('kegiatan_wilayah kw', 'kwa.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
                 ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
                 ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
@@ -76,18 +74,46 @@ class AssignAdminSurveiKabController extends BaseController
                 ->get()
                 ->getResultArray();
 
+            // Calculate progress for each kegiatan
+            foreach ($kegiatanWilayah as &$kegiatan) {
+                $targetWilayah = (int) $kegiatan['target_wilayah'];
+
+                // Get realisasi dari PCL
+                $realisasi = $this->db->table('pantau_progress pp')
+                    ->select('COALESCE(SUM(pp.jumlah_realisasi_kumulatif), 0) as total_realisasi', false)
+                    ->join('pcl', 'pp.id_pcl = pcl.id_pcl')
+                    ->join('pml', 'pcl.id_pml = pml.id_pml')
+                    ->where('pml.id_kegiatan_wilayah', $kegiatan['id_kegiatan_wilayah'])
+                    ->groupBy('pp.id_pcl')
+                    ->get()
+                    ->getResultArray();
+
+                $totalRealisasi = 0;
+                foreach ($realisasi as $item) {
+                    $totalRealisasi += (int) $item['total_realisasi'];
+                }
+
+                $kegiatan['realisasi'] = $totalRealisasi;
+
+                // Calculate progress percentage
+                if ($targetWilayah > 0) {
+                    $kegiatan['progress'] = min(100, round(($totalRealisasi / $targetWilayah) * 100, 1));
+                } else {
+                    $kegiatan['progress'] = 0;
+                }
+            }
+
             $admin['kegiatan_wilayah'] = $kegiatanWilayah;
             $admin['jumlah_kegiatan'] = count($kegiatanWilayah);
         }
 
-        // ✅ FIX: Get all kabupaten untuk filter dropdown
         $allKabupaten = $this->masterKabModel->orderBy('nama_kabupaten', 'ASC')->findAll();
 
         $data = [
             'title' => 'Kelola Admin Survei Kabupaten',
             'active_menu' => 'admin-survei-kab',
             'admin_list' => $adminList,
-            'allKabupaten' => $allKabupaten, // ✅ Tambahkan ini
+            'allKabupaten' => $allKabupaten,
             'search' => $search,
             'filterKabupaten' => $filterKabupaten
         ];
@@ -95,23 +121,17 @@ class AssignAdminSurveiKabController extends BaseController
         return view('AdminSurveiProv/AssignAdminSurveiKab/index', $data);
     }
 
-    /**
-     * Halaman assign admin kabupaten ke kegiatan wilayah
-     */
-    /**
-     * Halaman assign admin kabupaten ke kegiatan wilayah
-     */
+    // Halaman assign admin kabupaten ke kegiatan wilayah
     public function assign($idAdminKabupaten = null)
     {
         $isEdit = !is_null($idAdminKabupaten);
         $admin = null;
         $assignedIds = [];
 
-        // ✅ FIX: Pindahkan ke atas sebelum pengecekan apapun
         $allKabupaten = $this->masterKabModel->orderBy('nama_kabupaten', 'ASC')->findAll();
 
         if ($isEdit) {
-            // Get admin info
+            // MODE EDIT - Get admin info
             $admin = $this->db->table('admin_survei_kabupaten ask')
                 ->select('ask.*, u.nama_user, u.email, u.hp, k.nama_kabupaten, k.id_kabupaten')
                 ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
@@ -133,50 +153,99 @@ class AssignAdminSurveiKabController extends BaseController
                 ->getResultArray();
 
             $assignedIds = array_column($assigned, 'id_kegiatan_wilayah');
+
+            // Get all kegiatan wilayah untuk kabupaten ini
+            $kegiatanWilayah = $this->db->table('kegiatan_wilayah kw')
+                ->select('kw.id_kegiatan_wilayah, kw.target_wilayah, kw.keterangan,
+                     mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
+                     mkd.nama_kegiatan_detail, mk.nama_kegiatan, 
+                     kab.nama_kabupaten, kab.id_kabupaten')
+                ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+                ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+                ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
+                ->join('master_kabupaten kab', 'kw.id_kabupaten = kab.id_kabupaten')
+                ->where('kw.id_kabupaten', $admin['id_kabupaten'])
+                ->orderBy('mkdp.tanggal_mulai', 'DESC')
+                ->get()
+                ->getResultArray();
+
+            $data = [
+                'title' => 'Edit Assignment Admin Survei Kabupaten',
+                'active_menu' => 'admin-survei-kab',
+                'kegiatan_wilayah' => $kegiatanWilayah,
+                'admin' => $admin,
+                'assigned_ids' => $assignedIds,
+                'allKabupaten' => $allKabupaten,
+                'is_edit' => true,
+                'users' => [] // Empty array untuk edit mode
+            ];
+
+            return view('AdminSurveiProv/AssignAdminSurveiKab/assign', $data);
+
+        } else {
+            // MODE CREATE - Get all active users grouped by kabupaten
+            $users = $this->db->table('sipantau_user u')
+                ->select('u.sobat_id, u.nama_user, u.email, u.hp, k.nama_kabupaten, k.id_kabupaten')
+                ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
+                ->where('u.is_active', 1)
+                ->orderBy('k.nama_kabupaten', 'ASC')
+                ->orderBy('u.nama_user', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            // Get assigned kegiatan for each user
+            $usersWithAssignments = [];
+            foreach ($users as $user) {
+                $adminRecord = $this->db->table('admin_survei_kabupaten')
+                    ->where('sobat_id', $user['sobat_id'])
+                    ->get()
+                    ->getRowArray();
+
+                $assignedKegiatanIds = [];
+                if ($adminRecord) {
+                    $assignedKegiatan = $this->db->table('kegiatan_wilayah_admin')
+                        ->select('id_kegiatan_wilayah')
+                        ->where('id_admin_kabupaten', $adminRecord['id_admin_kabupaten'])
+                        ->get()
+                        ->getResultArray();
+                    $assignedKegiatanIds = array_column($assignedKegiatan, 'id_kegiatan_wilayah');
+                }
+
+                $user['assigned_kegiatan_ids'] = $assignedKegiatanIds;
+                $usersWithAssignments[] = $user;
+            }
+
+            // Get all kegiatan wilayah dengan detail
+            $kegiatanWilayah = $this->db->table('kegiatan_wilayah kw')
+                ->select('kw.id_kegiatan_wilayah, kw.target_wilayah, kw.keterangan,
+                     mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
+                     mkd.nama_kegiatan_detail, mk.nama_kegiatan, 
+                     kab.nama_kabupaten, kab.id_kabupaten')
+                ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+                ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+                ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
+                ->join('master_kabupaten kab', 'kw.id_kabupaten = kab.id_kabupaten')
+                ->orderBy('kab.nama_kabupaten', 'ASC')
+                ->orderBy('mkdp.tanggal_mulai', 'DESC')
+                ->get()
+                ->getResultArray();
+
+            $data = [
+                'title' => 'Assign Admin Survei Kabupaten',
+                'active_menu' => 'admin-survei-kab',
+                'users' => $usersWithAssignments,
+                'kegiatan_wilayah' => $kegiatanWilayah,
+                'allKabupaten' => $allKabupaten,
+                'is_edit' => false,
+                'admin' => null,
+                'assigned_ids' => []
+            ];
+
+            return view('AdminSurveiProv/AssignAdminSurveiKab/assign', $data);
         }
-
-        // Get all active users
-        $users = $this->db->table('sipantau_user u')
-            ->select('u.sobat_id, u.nama_user, u.email, u.hp, k.nama_kabupaten, k.id_kabupaten')
-            ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
-            ->where('u.is_active', 1)
-            ->orderBy('k.nama_kabupaten', 'ASC')
-            ->orderBy('u.nama_user', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        // Get all kegiatan wilayah dengan detail
-        $kegiatanWilayah = $this->db->table('kegiatan_wilayah kw')
-            ->select('kw.id_kegiatan_wilayah, kw.target_wilayah, kw.keterangan,
-                 mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
-                 mkd.nama_kegiatan_detail, mk.nama_kegiatan, 
-                 kab.nama_kabupaten, kab.id_kabupaten')
-            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
-            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
-            ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
-            ->join('master_kabupaten kab', 'kw.id_kabupaten = kab.id_kabupaten')
-            ->orderBy('kab.nama_kabupaten', 'ASC')
-            ->orderBy('mkdp.tanggal_mulai', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        $data = [
-            'title' => $isEdit ? 'Edit Assignment Admin Survei Kabupaten' : 'Assign Admin Survei Kabupaten',
-            'active_menu' => 'admin-survei-kab',
-            'users' => $users,
-            'kegiatan_wilayah' => $kegiatanWilayah,
-            'is_edit' => $isEdit,
-            'admin' => $admin,
-            'assigned_ids' => $assignedIds,
-            'allKabupaten' => $allKabupaten
-        ];
-
-        return view('AdminSurveiProv/AssignAdminSurveiKab/assign', $data);
     }
 
-    /**
-     * Process assign admin kabupaten
-     */
+    // Process assign admin kabupaten
     public function storeAssign()
     {
         $sobatId = $this->request->getPost('sobat_id');
@@ -249,9 +318,7 @@ class AssignAdminSurveiKabController extends BaseController
             ->with('success', $message);
     }
 
-    /**
-     * Update assignment admin
-     */
+    // Update assignment admin
     public function update($idAdminKabupaten)
     {
         $kegiatanWilayahIds = $this->request->getPost('kegiatan_wilayah');
@@ -288,13 +355,15 @@ class AssignAdminSurveiKabController extends BaseController
             ->with('success', 'Assignment berhasil diupdate');
     }
 
-    /**
-     * Delete assignment admin dari kegiatan wilayah tertentu
-     */
+    // Delete assignment admin dari kegiatan wilayah tertentu
     public function deleteAssignment()
     {
-        $idAdminKabupaten = $this->request->getPost('id_admin_kabupaten');
-        $idKegiatanWilayah = $this->request->getPost('id_kegiatan_wilayah');
+        // Get JSON input
+        $json = $this->request->getJSON();
+
+        // Try getPost as fallback
+        $idAdminKabupaten = $json->id_admin_kabupaten ?? $this->request->getPost('id_admin_kabupaten');
+        $idKegiatanWilayah = $json->id_kegiatan_wilayah ?? $this->request->getPost('id_kegiatan_wilayah');
 
         if (!$idAdminKabupaten || !$idKegiatanWilayah) {
             return $this->response->setJSON([
@@ -336,15 +405,21 @@ class AssignAdminSurveiKabController extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'Assignment berhasil dihapus'
+            'message' => 'Assignment berhasil dihapus',
+            'redirect' => $remainingAssignments == 0
         ]);
     }
 
-    /**
-     * Delete admin completely
-     */
+    // Delete admin completely (beserta semua assignment)
     public function delete($idAdminKabupaten)
     {
+        if (!$idAdminKabupaten) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ID Admin tidak valid'
+            ]);
+        }
+
         $this->db->transStart();
 
         // Hapus semua assignment
@@ -368,13 +443,11 @@ class AssignAdminSurveiKabController extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'Admin berhasil dihapus'
+            'message' => 'Admin beserta semua assignment berhasil dihapus'
         ]);
     }
 
-    /**
-     * Get kegiatan wilayah by kabupaten (AJAX)
-     */
+    // Get kegiatan wilayah by kabupaten (AJAX)
     public function getKegiatanByKabupaten($idKabupaten)
     {
         $kegiatanWilayah = $this->db->table('kegiatan_wilayah kw')
@@ -390,5 +463,30 @@ class AssignAdminSurveiKabController extends BaseController
             ->getResultArray();
 
         return $this->response->setJSON($kegiatanWilayah);
+    }
+
+    // Get assigned kegiatan for a user (AJAX)
+    public function getAssignedKegiatan($sobatId)
+    {
+        // Get admin_kabupaten record for this user
+        $admin = $this->db->table('admin_survei_kabupaten')
+            ->where('sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if (!$admin) {
+            return $this->response->setJSON([]);
+        }
+
+        // Get assigned kegiatan IDs
+        $assignedKegiatan = $this->db->table('kegiatan_wilayah_admin')
+            ->select('id_kegiatan_wilayah')
+            ->where('id_admin_kabupaten', $admin['id_admin_kabupaten'])
+            ->get()
+            ->getResultArray();
+
+        $kegiatanIds = array_column($assignedKegiatan, 'id_kegiatan_wilayah');
+
+        return $this->response->setJSON($kegiatanIds);
     }
 }

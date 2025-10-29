@@ -1,0 +1,576 @@
+<?php
+
+namespace App\Controllers\AdminKab;
+
+use App\Controllers\BaseController;
+use App\Models\AdminSurveiKabupatenModel;
+use App\Models\MasterKegiatanWilayahModel;
+use App\Models\PMLModel;
+use App\Models\PCLModel;
+use App\Models\UserModel;
+use App\Models\KurvaPetugasModel;
+use App\Models\MasterKegiatanDetailProsesModel;
+use DateInterval;
+use DatePeriod;
+use DateTime;
+
+class AssignPetugasController extends BaseController
+{
+    protected $adminKabModel;
+    protected $kegiatanWilayahModel;
+    protected $pmlModel;
+    protected $pclModel;
+    protected $userModel;
+    protected $kurvaModel;
+    protected $prosesModel;
+
+    public function __construct()
+    {
+        $this->adminKabModel = new AdminSurveiKabupatenModel();
+        $this->kegiatanWilayahModel = new MasterKegiatanWilayahModel();
+        $this->pmlModel = new PMLModel();
+        $this->pclModel = new PCLModel();
+        $this->userModel = new UserModel();
+        $this->kurvaModel = new KurvaPetugasModel();
+        $this->prosesModel = new MasterKegiatanDetailProsesModel();
+    }
+
+    /**
+     * Halaman Index - Daftar Assignment PML
+     */
+    public function index()
+    {
+        $sobatId = session()->get('sobat_id');
+        
+        if (!$sobatId) {
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
+        }
+
+        $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+            ->select('ask.*, u.nama_user, u.id_kabupaten, k.nama_kabupaten')
+            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+            ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten')
+            ->where('ask.sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if (!$admin) {
+            return redirect()->to('/')->with('error', 'Anda tidak memiliki akses sebagai admin kabupaten');
+        }
+
+        $idKabupaten = $admin['id_kabupaten'];
+        $idKegiatanWilayah = $this->request->getGet('kegiatan');
+
+        $dataPML = $this->pmlModel->getPMLByKabupaten($idKabupaten, $idKegiatanWilayah);
+        $kegiatanList = $this->kegiatanWilayahModel->getByKabupaten($idKabupaten);
+
+        $data = [
+            'title' => 'Assign Petugas Survei',
+            'admin' => $admin,
+            'dataPML' => $dataPML,
+            'kegiatanList' => $kegiatanList,
+            'selectedKegiatan' => $idKegiatanWilayah
+        ];
+
+        return view('AdminSurveiKab/AssignPetugasSurvei/index', $data);
+    }
+
+    /**
+     * Halaman Create - Form Assign PML dan PCL
+     */
+    public function create()
+    {
+        $sobatId = session()->get('sobat_id');
+        
+        if (!$sobatId) {
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
+        }
+
+        $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+            ->select('ask.*, u.nama_user, u.id_kabupaten, k.nama_kabupaten')
+            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+            ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten')
+            ->where('ask.sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if (!$admin) {
+            return redirect()->to('/')->with('error', 'Anda tidak memiliki akses sebagai admin kabupaten');
+        }
+
+        $idKabupaten = $admin['id_kabupaten'];
+        $kegiatanList = $this->kegiatanWilayahModel->getByKabupaten($idKabupaten);
+
+        $data = [
+            'title' => 'Assign Petugas Survei',
+            'admin' => $admin,
+            'kegiatanList' => $kegiatanList
+        ];
+
+        return view('AdminSurveiKab/AssignPetugasSurvei/create', $data);
+    }
+
+    /**
+     * AJAX: Get Sisa Target Kegiatan Wilayah
+     * Menghitung sisa target dari kegiatan wilayah dikurangi total target PML yang sudah di-assign
+     */
+    public function getSisaTargetKegiatanWilayah()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Invalid request']);
+        }
+
+        $idKegiatanWilayah = $this->request->getPost('id_kegiatan_wilayah');
+        
+        if (!$idKegiatanWilayah) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => 'ID Kegiatan Wilayah tidak ditemukan',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        try {
+            // Get kegiatan wilayah
+            $kegiatanWilayah = $this->kegiatanWilayahModel->find($idKegiatanWilayah);
+            
+            if (!$kegiatanWilayah) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'error' => 'Kegiatan wilayah tidak ditemukan',
+                    'csrf_hash' => csrf_hash()
+                ]);
+            }
+
+            // Cek apakah field target_wilayah ada
+            if (!isset($kegiatanWilayah['target_wilayah'])) {
+                // Jika tidak ada, coba cek field lain yang mungkin
+                log_message('error', 'Field target_wilayah tidak ditemukan. Data: ' . json_encode($kegiatanWilayah));
+                
+                return $this->response->setJSON([
+                    'success' => false,
+                    'error' => 'Field target tidak ditemukan di database. Silakan periksa struktur tabel.',
+                    'csrf_hash' => csrf_hash(),
+                    'debug_data' => array_keys($kegiatanWilayah) // Kirim nama field yang ada
+                ]);
+            }
+
+            $targetWilayah = (int)$kegiatanWilayah['target_wilayah'];
+
+            // Hitung total target PML yang sudah di-assign untuk kegiatan ini
+            $totalTargetPML = $this->pmlModel->db->table('pml')
+                ->selectSum('target', 'total_target')
+                ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
+                ->get()
+                ->getRow()
+                ->total_target ?? 0;
+
+            $sisaTarget = $targetWilayah - (int)$totalTargetPML;
+
+            return $this->response->setJSON([
+                'success' => true,
+                'target_wilayah' => $targetWilayah,
+                'target_terpakai' => (int)$totalTargetPML,
+                'sisa_target' => max(0, $sisaTarget),
+                'csrf_hash' => csrf_hash()
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error getSisaTargetKegiatanWilayah: ' . $e->getMessage());
+            
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => 'Terjadi kesalahan: ' . $e->getMessage(),
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Get Available PML
+     */
+    public function getAvailablePML()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Invalid request']);
+        }
+
+        $sobatId = session()->get('sobat_id');
+        $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+            ->select('u.id_kabupaten')
+            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+            ->where('ask.sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if (!$admin) {
+            return $this->response->setJSON([
+                'success' => false, 
+                'error' => 'Unauthorized',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        $idKegiatanWilayah = $this->request->getPost('id_kegiatan_wilayah');
+        $users = $this->pmlModel->getAvailablePML($admin['id_kabupaten'], $idKegiatanWilayah);
+
+        return $this->response->setJSON([
+            'success' => true, 
+            'data' => $users,
+            'csrf_hash' => csrf_hash()
+        ]);
+    }
+
+    /**
+     * AJAX: Get Available PCL
+     */
+    public function getAvailablePCL()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Invalid request']);
+        }
+
+        $sobatId = session()->get('sobat_id');
+        $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+            ->select('u.id_kabupaten')
+            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+            ->where('ask.sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if (!$admin) {
+            return $this->response->setJSON([
+                'success' => false, 
+                'error' => 'Unauthorized',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        $idPML = $this->request->getPost('id_pml');
+        $users = $this->pclModel->getAvailablePCL($admin['id_kabupaten'], $idPML);
+
+        return $this->response->setJSON([
+            'success' => true, 
+            'data' => $users,
+            'csrf_hash' => csrf_hash()
+        ]);
+    }
+
+    /**
+     * AJAX: Get Sisa Target PML
+     */
+    public function getSisaTargetPML()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Invalid request']);
+        }
+
+        $idPML = $this->request->getPost('id_pml');
+        $excludePCLId = $this->request->getPost('exclude_pcl_id');
+        
+        $sisaTarget = $this->pclModel->getSisaTargetPML($idPML, $excludePCLId);
+
+        return $this->response->setJSON([
+            'success' => true, 
+            'sisa_target' => $sisaTarget,
+            'csrf_hash' => csrf_hash()
+        ]);
+    }
+
+    /**
+     * Store Assignment - Updated with validation
+     */
+    public function store()
+    {
+        $sobatId = session()->get('sobat_id');
+        
+        if (!$sobatId) {
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
+        }
+
+        $rules = [
+            'kegiatan_survei' => 'required|numeric',
+            'pml_sobat_id' => 'required|numeric',
+            'pml_target' => 'required|numeric|greater_than[0]'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        $idKegiatanWilayah = $this->request->getPost('kegiatan_survei');
+        $pmlSobatId = $this->request->getPost('pml_sobat_id');
+        $pmlTarget = (int)$this->request->getPost('pml_target');
+        $pclData = $this->request->getPost('pcl');
+
+        // Validasi 1: Cek sisa target kegiatan wilayah
+        $kegiatanWilayah = $this->kegiatanWilayahModel->find($idKegiatanWilayah);
+        if (!$kegiatanWilayah) {
+            return redirect()->back()->withInput()->with('error', 'Kegiatan wilayah tidak ditemukan');
+        }
+
+        $targetWilayah = (int)$kegiatanWilayah['target_wilayah'];
+        
+        // Hitung total target PML yang sudah ada
+        $totalTargetPMLExisting = $this->pmlModel->db->table('pml')
+            ->selectSum('target', 'total_target')
+            ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
+            ->get()
+            ->getRow()
+            ->total_target ?? 0;
+
+        $sisaTargetWilayah = $targetWilayah - (int)$totalTargetPMLExisting;
+
+        if ($pmlTarget > $sisaTargetWilayah) {
+            return redirect()->back()->withInput()->with('error', 
+                "Target PML ($pmlTarget) melebihi sisa target kegiatan wilayah yang tersedia ($sisaTargetWilayah)");
+        }
+
+        // Validasi 2: total target PCL tidak melebihi target PML
+        $totalTargetPCL = 0;
+        if ($pclData && is_array($pclData)) {
+            foreach ($pclData as $pcl) {
+                if (!empty($pcl['target'])) {
+                    $totalTargetPCL += (int)$pcl['target'];
+                }
+            }
+        }
+
+        if ($totalTargetPCL > $pmlTarget) {
+            return redirect()->back()->withInput()->with('error', 
+                "Total target PCL ($totalTargetPCL) melebihi target PML ($pmlTarget)");
+        }
+
+        $this->pmlModel->db->transStart();
+
+        try {
+            // Insert PML
+            $pmlId = $this->pmlModel->insert([
+                'sobat_id' => $pmlSobatId,
+                'id_kegiatan_wilayah' => $idKegiatanWilayah,
+                'target' => $pmlTarget,
+                'status_approval' => 0,
+                'tanggal_approval' => null
+            ]);
+
+            // Get kegiatan detail proses untuk mendapatkan tanggal
+            $detailProses = $this->prosesModel->find($kegiatanWilayah['id_kegiatan_detail_proses']);
+
+            // Insert PCL dan generate Kurva S
+            if ($pclData && is_array($pclData)) {
+                foreach ($pclData as $pcl) {
+                    if (!empty($pcl['sobat_id']) && !empty($pcl['target'])) {
+                        $pclId = $this->pclModel->insert([
+                            'sobat_id' => $pcl['sobat_id'],
+                            'id_pml' => $pmlId,
+                            'target' => $pcl['target'],
+                            'status_approval' => 0,
+                            'tanggal_approval' => null
+                        ]);
+
+                        // Generate Kurva S untuk PCL
+                        $this->generateKurvaPetugas(
+                            $pclId,
+                            $pcl['target'],
+                            $detailProses['persentase_target_awal'],
+                            $detailProses['tanggal_mulai'],
+                            $detailProses['tanggal_selesai_target'],
+                            $detailProses['tanggal_selesai']
+                        );
+                    }
+                }
+            }
+
+            $this->pmlModel->db->transComplete();
+
+            if ($this->pmlModel->db->transStatus() === false) {
+                return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data');
+            }
+
+            return redirect()->to('/adminsurvei-kab/assign-petugas')
+                ->with('success', 'Berhasil assign petugas survei dan generate Kurva S');
+
+        } catch (\Exception $e) {
+            $this->pmlModel->db->transRollback();
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate Kurva S untuk PCL
+     */
+    private function generateKurvaPetugas($idPCL, $target, $persenAwal, $tanggalMulai, $tanggal100, $tanggalSelesai)
+    {
+        $totalTarget = (int) $target;
+        $persenAwal  = (float) $persenAwal;
+
+        $start   = new DateTime($tanggalMulai);
+        $tgl100  = new DateTime($tanggal100);
+        $end     = new DateTime($tanggalSelesai);
+        $end->modify('+1 day');
+
+        $interval = new DateInterval('P1D');
+        $periodTotal = iterator_to_array(new DatePeriod($start, $interval, $end));
+
+        // Ambil hanya hari kerja (Senin–Jumat)
+        $workdays = array_filter($periodTotal, fn($d) => $d->format('N') <= 5);
+        $workdays = array_values($workdays);
+
+        // Filter hanya sampai tanggal 100%
+        $workdaysUntil100 = array_filter($workdays, fn($d) => $d <= $tgl100);
+        $workdaysUntil100 = array_values($workdaysUntil100);
+
+        $daysSigmoid = max(count($workdaysUntil100), 2);
+        $k = 8;   // kelengkungan
+        $x0 = 0.5; // titik tengah
+
+        // Hitung batas normalisasi sigmoid
+        $sigmoidMin = 1 / (1 + exp(-$k * (0 - $x0)));
+        $sigmoidMax = 1 / (1 + exp(-$k * (1 - $x0)));
+
+        $workdayData = [];
+        foreach ($workdaysUntil100 as $i => $date) {
+            $progress = $i / ($daysSigmoid - 1);
+
+            // Normalisasi sigmoid
+            $sigmoid = 1 / (1 + exp(-$k * ($progress - $x0)));
+            $normalizedSigmoid = ($sigmoid - $sigmoidMin) / ($sigmoidMax - $sigmoidMin);
+
+            $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $normalizedSigmoid;
+            if ($kumulatifPersen > 100) $kumulatifPersen = 100;
+
+            $workdayData[$date->format('Y-m-d')] = $kumulatifPersen;
+        }
+
+        $kumulatifAbsolut = 0;
+        $insertData = [];
+
+        // Tahap 1: hitung semua data
+        foreach ($workdaysUntil100 as $date) {
+            $currentDate = $date->format('Y-m-d');
+            $kumulatifPersen = $workdayData[$currentDate];
+            $harianAbsolut = round(($totalTarget * ($kumulatifPersen / 100)) - $kumulatifAbsolut);
+            $kumulatifAbsolut += $harianAbsolut;
+
+            $insertData[] = [
+                'tanggal' => $currentDate,
+                'persen' => round($kumulatifPersen, 2),
+                'harian' => $harianAbsolut,
+                'kumulatif' => $kumulatifAbsolut
+            ];
+        }
+
+        // Koreksi hari terakhir agar total tepat = totalTarget
+        $selisih = $totalTarget - $kumulatifAbsolut;
+        if (!empty($insertData) && $selisih !== 0) {
+            $insertData[count($insertData) - 1]['harian'] += $selisih;
+            $insertData[count($insertData) - 1]['kumulatif'] += $selisih;
+            $kumulatifAbsolut = $totalTarget;
+        }
+
+        // Simpan ke DB
+        foreach ($insertData as $row) {
+            $this->kurvaModel->insert([
+                'id_pcl' => $idPCL,
+                'tanggal_target' => $row['tanggal'],
+                'target_persen_kumulatif' => $row['persen'],
+                'target_harian_absolut' => $row['harian'],
+                'target_kumulatif_absolut' => $row['kumulatif'],
+                'is_hari_kerja' => 1
+            ]);
+        }
+
+        // Tahap 2: setelah tanggal100 → mendatar
+        $workdaysAfter100 = array_filter($workdays, fn($d) => $d > $tgl100);
+        $workdaysAfter100 = array_values($workdaysAfter100);
+
+        foreach ($workdaysAfter100 as $date) {
+            $currentDate = $date->format('Y-m-d');
+            $this->kurvaModel->insert([
+                'id_pcl' => $idPCL,
+                'tanggal_target' => $currentDate,
+                'target_persen_kumulatif' => 100,
+                'target_harian_absolut' => 0,
+                'target_kumulatif_absolut' => $totalTarget,
+                'is_hari_kerja' => 1
+            ]);
+        }
+
+        log_message('info', "Kurva S PCL dibuat untuk id_pcl=$idPCL (total=$totalTarget)");
+    }
+
+    /**
+     * Detail PML dan PCL-nya
+     */
+    public function detail($idPML)
+    {
+        $sobatId = session()->get('sobat_id');
+        
+        if (!$sobatId) {
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
+        }
+
+        $pml = $this->pmlModel->getPMLWithDetails($idPML);
+
+        if (!$pml) {
+            return redirect()->to('/adminsurvei-kab/assign-petugas')->with('error', 'Data PML tidak ditemukan');
+        }
+
+        $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+            ->select('u.id_kabupaten')
+            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+            ->where('ask.sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if ($admin['id_kabupaten'] != $pml['id_kabupaten']) {
+            return redirect()->to('/adminsurvei-kab/assign-petugas')->with('error', 'Akses ditolak');
+        }
+
+        $dataPCL = $this->pclModel->getPCLByPML($idPML);
+
+        $data = [
+            'title' => 'Detail Assignment PML',
+            'pml' => $pml,
+            'dataPCL' => $dataPCL
+        ];
+
+        return view('AdminSurveiKab/AssignPetugasSurvei/detail', $data);
+    }
+
+    /**
+     * Delete PML beserta PCL dan Kurva-nya
+     */
+    public function delete($idPML)
+    {
+        $sobatId = session()->get('sobat_id');
+        
+        if (!$sobatId) {
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
+        }
+
+        $pml = $this->pmlModel->getPMLWithDetails($idPML);
+        
+        if (!$pml) {
+            return redirect()->to('/adminsurvei-kab/assign-petugas')->with('error', 'Data tidak ditemukan');
+        }
+
+        $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+            ->select('u.id_kabupaten')
+            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+            ->where('ask.sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if ($admin['id_kabupaten'] != $pml['id_kabupaten']) {
+            return redirect()->to('/adminsurvei-kab/assign-petugas')->with('error', 'Akses ditolak');
+        }
+
+        // Delete dengan cascade (PCL dan Kurva akan terhapus otomatis jika FK ON DELETE CASCADE)
+        if ($this->pmlModel->deletePMLWithPCL($idPML)) {
+            return redirect()->to('/adminsurvei-kab/assign-petugas')
+                ->with('success', 'Berhasil menghapus assignment PML, PCL, dan Kurva S');
+        }
+
+        return redirect()->to('/adminsurvei-kab/assign-petugas')->with('error', 'Gagal menghapus data');
+    }
+}

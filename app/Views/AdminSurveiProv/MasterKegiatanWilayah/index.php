@@ -241,7 +241,7 @@
         }
     });
 
-    // 🔍 Fitur pencarian tabel
+    // Fitur pencarian tabel
     function searchTable() {
         const input = document.getElementById('searchInput');
         const filter = input.value.toLowerCase();
@@ -262,7 +262,7 @@
         }
     }
 
-    // 🗑️ Konfirmasi hapus
+    // Konfirmasi hapus
     function confirmDelete(id, name) {
         Swal.fire({
             title: 'Hapus Data?',
@@ -294,7 +294,7 @@
         });
     }
 
-    // ✅ Alert sukses dari session flashdata
+    // Alert sukses dari session flashdata
     <?php if (session()->getFlashdata('success')) : ?>
         Swal.fire({
             icon: 'success',
@@ -304,7 +304,7 @@
         });
     <?php endif; ?>
 
-    // ⚠️ Alert error dari session flashdata
+    // Alert error dari session flashdata
     <?php if (session()->getFlashdata('error')) : ?>
         Swal.fire({
             icon: 'error',
