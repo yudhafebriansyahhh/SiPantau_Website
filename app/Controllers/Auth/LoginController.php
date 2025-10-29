@@ -272,7 +272,7 @@ class LoginController extends BaseController
                 if ($roleType === 'admin_kabupaten') {
                     return redirect()->to('/adminsurvei-kab'); // Admin Kab/Kota
                 } else {
-                    return redirect()->to('/pemantau-kabupaten'); // Pemantau Kabupaten
+                    return redirect()->to('/adminsurvei-kab'); // Pemantau Kabupaten
                 }
             case 4:
                 return redirect()->to('/pemantau'); // Pemantau Pusat

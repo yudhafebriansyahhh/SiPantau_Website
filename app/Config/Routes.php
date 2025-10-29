@@ -120,12 +120,22 @@ $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($rout
     $routes->get('approval-laporan', 'AdminSurveiKabController::approve_laporan');
 });
 
+    $routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
+
+
 // ================== PEMANTAU (id_role = 4) ==================
 $routes->group('pemantau', ['filter' => 'role:4'], static function ($routes) {
     $routes->get('/', 'PemantauController::index');
-    $routes->get('detail-proses', 'PemantauController::DetailProses');
-    $routes->get('kegiatan-wilayah-pemantau', 'PemantauController::KegiatanWilayah');
+
+    $routes->get('detail-proses', 'Pemantau\MasterKegiatanDetailProses::index');
+    $routes->get('kegiatan-wilayah-pemantau', 'Pemantau\MasterKegiatanWilayah::index');
     $routes->get('data-petugas', 'PemantauController::DataPetugas');
     $routes->get('laporan-petugas', 'PemantauController::LaporanPetugas');
     $routes->get('laporan-petugas/detail/(:num)', 'PemantauController::detailLaporanPetugas/$1');
 });
+
+$routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static function ($routes) {
+    $routes->post('login', 'AuthController::login');
+    $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
+});
+
