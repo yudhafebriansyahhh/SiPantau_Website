@@ -573,4 +573,79 @@ class AssignPetugasController extends BaseController
 
         return redirect()->to('/adminsurvei-kab/assign-petugas')->with('error', 'Gagal menghapus data');
     }
+
+    public function detailPML($id_pml)
+{
+    // Ambil data PML
+    $pml = $this->pmlModel
+        ->select('pml.*, 
+                  u.nama_user AS nama_pml, u.email AS email_pml,
+                  kw.id_kegiatan_wilayah, 
+                  kd.nama_kegiatan_detail, 
+                  kdp.nama_kegiatan_detail_proses')
+        ->join('sipantau_user u', 'u.sobat_id = pml.sobat_id')
+        ->join('kegiatan_wilayah kw', 'kw.id_kegiatan_wilayah = pml.id_kegiatan_wilayah')
+        ->join('master_kegiatan_detail_proses kdp', 'kdp.id_kegiatan_detail_proses = kw.id_kegiatan_detail_proses')
+        ->join('master_kegiatan_detail kd', 'kd.id_kegiatan_detail = kdp.id_kegiatan_detail')
+        ->where('pml.id_pml', $id_pml)
+        ->first();
+
+    if (!$pml) {
+        return redirect()->back()->with('error', 'Data PML tidak ditemukan.');
+    }
+
+    // Ambil semua PCL di bawah PML ini
+    $pclList = $this->pclModel
+        ->select('pcl.*, u.nama_user AS nama_pcl, u.email AS email_pcl')
+        ->join('sipantau_user u', 'u.sobat_id = pcl.sobat_id')
+        ->where('pcl.id_pml', $id_pml)
+        ->findAll();
+
+    // Ringkasan sederhana
+    $summary = [
+        'total_pcl' => count($pclList),
+        'total_target' => array_sum(array_column($pclList, 'target'))
+    ];
+
+    return view('AdminSurveiKab/AssignPetugasSurvei/detail', [
+        'pml' => $pml,
+        'pclList' => $pclList,
+        'summary' => $summary
+    ]);
+}
+
+public function pclDetail($id_pcl)
+    {
+        // Gunakan fungsi bawaan model → lebih konsisten
+        $pcl = $this->pclModel->getPCLWithDetails($id_pcl);
+        if (!$pcl) {
+            return redirect()->back()->with('error', 'Data PCL tidak ditemukan.');
+        }
+
+        // Ambil data Kurva S dari model
+        $kurvaData = $this->kurvaModel->getByPCL($id_pcl);
+
+        // Siapkan data kumulatif untuk chart
+        $labels = [];
+        $targetKumulatif = [];
+        $aktualKumulatif = [];
+        $totalTarget = 0;
+        $totalAktual = 0;
+
+        foreach ($kurvaData as $row) {
+            $labels[] = date('d M', strtotime($row['tanggal_target']));
+            $totalTarget += (float) ($row['target_harian_absolut'] ?? 0);
+            $totalAktual += 0; // belum ada data aktual
+            $targetKumulatif[] = $totalTarget;
+            $aktualKumulatif[] = $totalAktual;
+        }
+
+        return view('AdminSurveiKab/AssignPetugasSurvei/kurva_s', [
+            'pcl'              => $pcl,
+            'kurvaData'        => $kurvaData,
+            'labels'           => $labels,
+            'targetKumulatif'  => $targetKumulatif,
+            'aktualKumulatif'  => $aktualKumulatif
+        ]);
+    }
 }

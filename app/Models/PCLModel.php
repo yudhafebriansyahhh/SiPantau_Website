@@ -40,27 +40,31 @@ class PCLModel extends Model
      * Get PCL dengan detail lengkap
      */
     public function getPCLWithDetails($idPCL)
-    {
-        return $this->db->table('pcl p')
-            ->select('p.*, u.nama_user as nama_pcl, u.email, u.hp,
-                     pml.target as target_pml,
-                     u_pml.nama_user as nama_pml,
-                     kw.id_kegiatan_wilayah, kw.id_kabupaten,
-                     mkdp.nama_kegiatan_detail_proses,
-                     mkdp.tanggal_mulai, mkdp.tanggal_selesai,
-                     mkdp.tanggal_selesai_target, mkdp.persentase_target_awal,
-                     mk.nama_kegiatan')
-            ->join('sipantau_user u', 'p.sobat_id = u.sobat_id')
-            ->join('pml', 'p.id_pml = pml.id_pml')
-            ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
-            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
-            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
-            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
-            ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
-            ->where('p.id_pcl', $idPCL)
-            ->get()
-            ->getRowArray();
-    }
+{
+    return $this->db->table('pcl p')
+        ->select('p.*, 
+                 u.nama_user AS nama_pcl, u.email, u.hp, 
+                 kab.nama_kabupaten, 
+                 pml.target AS target_pml, 
+                 u_pml.nama_user AS nama_pml, 
+                 kw.id_kegiatan_wilayah, kw.id_kabupaten, 
+                 mkdp.nama_kegiatan_detail_proses, 
+                 mkdp.tanggal_mulai, mkdp.tanggal_selesai, 
+                 mkdp.tanggal_selesai_target, mkdp.persentase_target_awal, 
+                 mk.nama_kegiatan')
+        ->join('sipantau_user u', 'p.sobat_id = u.sobat_id')
+        ->join('master_kabupaten kab', 'u.id_kabupaten = kab.id_kabupaten', 'left')
+        ->join('pml', 'p.id_pml = pml.id_pml')
+        ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
+        ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+        ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+        ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+        ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
+        ->where('p.id_pcl', $idPCL)
+        ->get()
+        ->getRowArray();
+}
+
 
     /**
      * Get user yang bisa dijadikan PCL (belum di-assign untuk PML tertentu)
