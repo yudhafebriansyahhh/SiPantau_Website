@@ -144,6 +144,8 @@ $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($rout
         $routes->post('delete/(:num)', 'AdminKab\AssignPetugasController::delete/$1');
         $routes->post('get-sisa-target-wilayah', 'AdminKab\AssignPetugasController::getSisaTargetKegiatanWilayah');
         $routes->get('pcl-detail/(:num)', 'AdminKab\AssignPetugasController::pclDetail/$1');
+        $routes->get('edit/(:num)', 'AdminKab\AssignPetugasController::edit/$1');
+$routes->post('update/(:num)', 'AdminKab\AssignPetugasController::update/$1');
 
         // AJAX endpoints
         $routes->post('get-available-pml', 'AdminKab\AssignPetugasController::getAvailablePML');

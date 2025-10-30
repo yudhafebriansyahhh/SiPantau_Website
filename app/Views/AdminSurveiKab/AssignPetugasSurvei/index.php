@@ -191,6 +191,11 @@
                                title="Detail">
                                 Detail
                             </a>
+                            <a href="<?= base_url('adminsurvei-kab/assign-petugas/edit/' . $pml['id_pml']) ?>" 
+                               class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium rounded transition-colors"
+                               title="Detail">
+                                Edit
+                            </a>
                             <button onclick="confirmDelete(<?= $pml['id_pml'] ?>, '<?= esc($pml['nama_pml'], 'js') ?>', <?= $pml['jumlah_pcl'] ?>)" 
                                     class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
                                     title="Hapus">

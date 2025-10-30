@@ -63,9 +63,7 @@
                                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">
                                    Detail
                                 </a>
-                                <a href="#" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded">
-                                   Edit
-                                </a>
+                                
                                 <button onclick="confirmDelete(<?= $pcl['id_pcl'] ?>)" 
                                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded">
                                    Delete

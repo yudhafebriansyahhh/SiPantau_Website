@@ -110,6 +110,141 @@ class AssignPetugasController extends BaseController
         return view('AdminSurveiKab/AssignPetugasSurvei/create', $data);
     }
 
+  // ----------------------- EDIT -----------------------
+public function edit($id_pml)
+{
+    $sobatId = session()->get('sobat_id');
+
+    if (!$sobatId) {
+        return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
+    }
+
+    // Ambil data admin kabupaten
+    $admin = $this->adminKabModel->join('sipantau_user u', 'admin_survei_kabupaten.sobat_id = u.sobat_id')
+        ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten')
+        ->select('admin_survei_kabupaten.*, u.id_kabupaten, u.nama_user, k.nama_kabupaten')
+        ->where('admin_survei_kabupaten.sobat_id', $sobatId)
+        ->first();
+
+    if (!$admin) {
+        return redirect()->to('/')->with('error', 'Anda tidak memiliki akses sebagai admin kabupaten');
+    }
+
+    $idKabupaten = $admin['id_kabupaten'];
+
+    // Ambil data PML beserta PCL-nya
+    $pml = $this->pmlModel->getPMLWithDetails($id_pml);
+    if (!$pml || $pml['id_kabupaten'] != $idKabupaten) {
+        return redirect()->back()->with('error', 'Data PML tidak ditemukan atau akses ditolak');
+    }
+
+    // Ambil PCL terkait
+    $pclsRaw = $this->pclModel->getPCLByPML($id_pml);
+    $pcls = [];
+    foreach ($pclsRaw as $p) {
+        $user = $this->userModel->find($p['sobat_id']);
+        $p['nama_user'] = $user['nama_user'] ?? 'Unknown';
+        $pcls[] = $p;
+    }
+
+    // Kegiatan yang tersedia untuk kabupaten
+    $kegiatanList = $this->kegiatanWilayahModel->getByKabupaten($idKabupaten);
+
+    // PCL yang bisa dipilih
+    $availablePCL = $this->pclModel->getAvailablePCL($idKabupaten, $id_pml);
+
+    return view('AdminSurveiKab/AssignPetugasSurvei/edit', [
+        'title' => 'Edit Assign Petugas Survei',
+        'pml' => $pml,
+        'pcls' => $pcls,
+        'kegiatanList' => $kegiatanList,
+        'availablePCL' => $availablePCL,
+        'isEdit' => true
+    ]);
+}
+
+// ----------------------- UPDATE -----------------------
+public function update($id_pml)
+{
+    $sobatId = session()->get('sobat_id');
+    if (!$sobatId) {
+        return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
+    }
+
+    $admin = $this->adminKabModel->join('sipantau_user u', 'admin_survei_kabupaten.sobat_id = u.sobat_id')
+        ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten')
+        ->select('admin_survei_kabupaten.*, u.id_kabupaten, u.nama_user, k.nama_kabupaten')
+        ->where('admin_survei_kabupaten.sobat_id', $sobatId)
+        ->first();
+
+    if (!$admin) {
+        return redirect()->to('/')->with('error', 'Anda tidak memiliki akses sebagai admin kabupaten');
+    }
+
+    $idKabupaten = $admin['id_kabupaten'];
+
+    // Ambil PML beserta id_kabupaten
+    $pml = $this->pmlModel->db->table('pml p')
+        ->select('p.*, kw.id_kabupaten')
+        ->join('kegiatan_wilayah kw', 'kw.id_kegiatan_wilayah = p.id_kegiatan_wilayah')
+        ->where('p.id_pml', $id_pml)
+        ->get()
+        ->getRowArray();
+
+    if (!$pml || $pml['id_kabupaten'] != $idKabupaten) {
+        return redirect()->back()->with('error', 'Data PML tidak ditemukan atau akses ditolak');
+    }
+
+    // Validasi input
+    $pmlTarget = (int)$this->request->getPost('pml_target');
+    $kegiatanSurvei = $this->request->getPost('kegiatan_survei');
+    $pclData = $this->request->getPost('pcl') ?? [];
+
+    // Update PML
+    $this->pmlModel->update($id_pml, [
+        'target' => $pmlTarget,
+        'id_kegiatan_wilayah' => $kegiatanSurvei
+    ]);
+
+    // Hapus PCL lama beserta Kurva
+    $oldPCLs = $this->pclModel->where('id_pml', $id_pml)->findAll();
+    foreach ($oldPCLs as $pcl) {
+        $this->kurvaModel->where('id_pcl', $pcl['id_pcl'])->delete();
+    }
+    $this->pclModel->where('id_pml', $id_pml)->delete();
+
+    // Insert PCL baru & generate Kurva
+    foreach ($pclData as $p) {
+        if (!empty($p['sobat_id']) && !empty($p['target'])) {
+            $idPCL = $this->pclModel->insert([
+                'id_pml' => $id_pml,
+                'sobat_id' => $p['sobat_id'],
+                'target' => $p['target']
+            ], true);
+
+            // Ambil data proses
+            $kegiatan = $this->kegiatanWilayahModel->find($kegiatanSurvei);
+            $detailProses = $this->prosesModel->find($kegiatan['id_kegiatan_detail_proses']);
+
+            $this->generateKurvaPetugas(
+                $idPCL,
+                $p['target'],
+                $detailProses['persentase_target_awal'],
+                $detailProses['tanggal_mulai'],
+                $detailProses['tanggal_selesai_target'],
+                $detailProses['tanggal_selesai']
+            );
+        }
+    }
+
+    return redirect()->to('adminsurvei-kab/assign-petugas/detail/' . $id_pml)
+        ->with('success', 'Data assignment berhasil diperbarui dan kurva petugas diperbarui.');
+}
+
+
+
+
+
     /**
      * AJAX: Get Sisa Target Kegiatan Wilayah
      * Menghitung sisa target dari kegiatan wilayah dikurangi total target PML yang sudah di-assign
