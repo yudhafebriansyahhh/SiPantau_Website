@@ -83,7 +83,6 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     });
 
     $routes->get('comingsoon', 'ComingSoon::index');
-
 });
 
 // ================== ADMIN SURVEI PROVINSI (id_role = 2) ==================
@@ -128,7 +127,6 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->get('get-kegiatan/(:num)', 'AdminProv\AssignAdminSurveiKabController::getKegiatanByKabupaten/$1');
         $routes->get('get-assigned-kegiatan/(:segment)', 'AdminProv\AssignAdminSurveiKabController::getAssignedKegiatan/$1');
     });
-
 });
 
 
@@ -145,7 +143,7 @@ $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($rout
         $routes->post('get-sisa-target-wilayah', 'AdminKab\AssignPetugasController::getSisaTargetKegiatanWilayah');
         $routes->get('pcl-detail/(:num)', 'AdminKab\AssignPetugasController::pclDetail/$1');
         $routes->get('edit/(:num)', 'AdminKab\AssignPetugasController::edit/$1');
-$routes->post('update/(:num)', 'AdminKab\AssignPetugasController::update/$1');
+        $routes->post('update/(:num)', 'AdminKab\AssignPetugasController::update/$1');
 
         // AJAX endpoints
         $routes->post('get-available-pml', 'AdminKab\AssignPetugasController::getAvailablePML');
@@ -158,7 +156,7 @@ $routes->post('update/(:num)', 'AdminKab\AssignPetugasController::update/$1');
     $routes->get('approval-laporan', 'AdminKab\DashboardController::approve_laporan');
 });
 
-    $routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
+$routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
 
 
 // ================== PEMANTAU (id_role = 4) ==================
@@ -177,3 +175,12 @@ $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static f
     $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
 });
 
+$routes->group('api', [
+    'namespace' => 'App\Controllers\Api',
+    'filter'    => 'jwt'
+], static function ($routes) {
+    $routes->get('pelaporan', 'PelaporanController::index');
+    $routes->post('pelaporan', 'PelaporanController::create');
+    $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
+    $routes->get('kegiatan', 'KegiatanController::index');
+});

@@ -27,7 +27,7 @@ class AuthController extends BaseController
      */
     public function login()
     {
-        $data = $this->request->getPost();
+        $data = $this->request->getJSON(true) ?? $this->request->getPost();
 
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';
