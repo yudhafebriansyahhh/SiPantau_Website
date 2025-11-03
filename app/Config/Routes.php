@@ -170,17 +170,19 @@ $routes->group('pemantau', ['filter' => 'role:4'], static function ($routes) {
     $routes->get('laporan-petugas/detail/(:num)', 'PemantauController::detailLaporanPetugas/$1');
 });
 
-$routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static function ($routes) {
-    $routes->post('login', 'AuthController::login');
-    $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
-});
+//===================Api Auth Login===============================
+    $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static function ($routes) {
+        $routes->post('login', 'AuthController::login');
+        $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
+    });
 
-$routes->group('api', [
-    'namespace' => 'App\Controllers\Api',
-    'filter'    => 'jwt'
-], static function ($routes) {
-    $routes->get('pelaporan', 'PelaporanController::index');
-    $routes->post('pelaporan', 'PelaporanController::create');
-    $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
-    $routes->get('kegiatan', 'KegiatanController::index');
-});
+    //=================== Api Fitur Aplikasi Mobile ===============================
+    $routes->group('api', [
+        'namespace' => 'App\Controllers\Api',
+        'filter'    => 'jwt'
+    ], static function ($routes) {
+        $routes->get('pelaporan', 'PelaporanController::index');
+        $routes->post('pelaporan', 'PelaporanController::create');
+        $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
+        $routes->get('kegiatan', 'KegiatanController::index');
+    });
