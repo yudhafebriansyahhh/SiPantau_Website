@@ -15,7 +15,6 @@ class MasterKegiatanModel extends Model
     protected $allowedFields    = [
         'id_output', 
         'nama_kegiatan', 
-        'fungsi', 
         'keterangan', 
         'pelaksana', 
         'periode'
@@ -29,7 +28,6 @@ class MasterKegiatanModel extends Model
     protected $validationRules = [
         'id_output'     => 'required|numeric',
         'nama_kegiatan' => 'required|max_length[255]',
-        'fungsi'        => 'required|max_length[255]',
         'periode'       => 'required|max_length[50]'
     ];
 
@@ -41,10 +39,6 @@ class MasterKegiatanModel extends Model
         'nama_kegiatan' => [
             'required'   => 'Nama kegiatan harus diisi',
             'max_length' => 'Nama kegiatan maksimal 255 karakter'
-        ],
-        'fungsi' => [
-            'required'   => 'Fungsi harus diisi',
-            'max_length' => 'Fungsi maksimal 255 karakter'
         ],
         'periode' => [
             'required'   => 'Periode harus diisi',
@@ -74,7 +68,7 @@ class MasterKegiatanModel extends Model
         return $this->select('
                 master_kegiatan.*,
                 master_output.nama_output,
-                master_output.alias
+                master_output.fungsi
             ')
             ->join('master_output', 'master_output.id_output = master_kegiatan.id_output', 'left')
             ->orderBy('master_kegiatan.id_kegiatan', 'DESC')
@@ -87,7 +81,7 @@ class MasterKegiatanModel extends Model
         return $this->select('
                 master_kegiatan.*,
                 master_output.nama_output,
-                master_output.alias
+                master_output.fungsi
             ')
             ->join('master_output', 'master_output.id_output = master_kegiatan.id_output', 'left')
             ->where('master_kegiatan.id_kegiatan', $id)
@@ -97,11 +91,18 @@ class MasterKegiatanModel extends Model
     // Get kegiatan berdasarkan master output
      
     public function getByOutput($idOutput)
-    {
-        return $this->where('id_output', $idOutput)
-                    ->orderBy('id_kegiatan', 'DESC')
-                    ->findAll();
-    }
+{
+    return $this->select('
+            master_kegiatan.*,
+            master_output.nama_output,
+            master_output.fungsi
+        ')
+        ->join('master_output', 'master_output.id_output = master_kegiatan.id_output', 'left')
+        ->where('master_kegiatan.id_output', $idOutput)
+        ->orderBy('master_kegiatan.id_kegiatan', 'DESC')
+        ->findAll();
+}
+
 
     // Search kegiatan
     public function search($keyword)
@@ -113,7 +114,7 @@ class MasterKegiatanModel extends Model
             ->join('master_output', 'master_output.id_output = master_kegiatan.id_output', 'left')
             ->groupStart()
                 ->like('master_kegiatan.nama_kegiatan', $keyword)
-                ->orLike('master_kegiatan.fungsi', $keyword)
+                ->orLike('master_output.fungsi', $keyword)
                 ->orLike('master_kegiatan.periode', $keyword)
                 ->orLike('master_output.nama_output', $keyword)
             ->groupEnd()

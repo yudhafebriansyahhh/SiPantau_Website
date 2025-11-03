@@ -52,6 +52,7 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     $routes->put('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::update/$1');
     $routes->delete('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::delete/$1');
     $routes->get('master-kegiatan-detail/by-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getByKegiatan/$1');
+    $routes->get('master-kegiatan-detail/get-admins/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getAdmins/$1');
 
     // Kelola Pengguna Routes
     $routes->group('kelola-pengguna', static function ($routes) {
@@ -102,6 +103,7 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->get('edit/(:num)', 'AdminProv\MasterKegiatanDetailProsesController::edit/$1');
         $routes->post('update/(:num)', 'AdminProv\MasterKegiatanDetailProsesController::update/$1');
         $routes->delete('delete/(:num)', 'AdminProv\MasterKegiatanDetailProsesController::delete/$1');
+        $routes->get('clear-filter', 'AdminProv\MasterKegiatanDetailProsesController::clearFilter');
     });
 
     // Master Kegiatan Wilayah
@@ -113,6 +115,8 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->post('update/(:num)', 'AdminProv\MasterKegiatanWilayahController::update/$1');
         $routes->delete('delete/(:num)', 'AdminProv\MasterKegiatanWilayahController::delete/$1');
         $routes->get('sisa-target/(:num)', 'AdminProv\MasterKegiatanWilayahController::getSisaTarget/$1');
+        $routes->get('get-kegiatan-detail-proses/(:num)', 'AdminProv\MasterKegiatanWilayahController::getKegiatanDetailProses/$1');
+        $routes->get('clear-filter', 'AdminProv\MasterKegiatanWilayahController::clearFilter');
     });
 
     // Assign Admin Survei Kabupaten

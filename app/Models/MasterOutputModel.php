@@ -16,7 +16,7 @@ class MasterOutputModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['nama_output', 'fungsi', 'alias'];
+    protected $allowedFields    = ['nama_output', 'fungsi'];
 
     // Timestamps - Disabled karena tidak ada created_at & updated_at
     protected $useTimestamps = false;
@@ -28,7 +28,6 @@ class MasterOutputModel extends Model
     protected $validationRules = [
         'nama_output' => 'required|max_length[255]',
         'fungsi'      => 'required',
-        'alias'       => 'required|max_length[100]'
     ];
 
     // Validation Messages
@@ -39,10 +38,6 @@ class MasterOutputModel extends Model
         ],
         'fungsi' => [
             'required' => 'Fungsi harus diisi'
-        ],
-        'alias' => [
-            'required'   => 'Alias harus diisi',
-            'max_length' => 'Alias maksimal 100 karakter'
         ]
     ];
 
@@ -68,7 +63,6 @@ class MasterOutputModel extends Model
     {
         return $this->like('nama_output', $keyword)
                     ->orLike('fungsi', $keyword)
-                    ->orLike('alias', $keyword)
                     ->orderBy('id_output', 'DESC')
                     ->findAll();
     }
@@ -78,10 +72,6 @@ class MasterOutputModel extends Model
         return $this->countAll();
     }
 
-    public function getByAlias($alias)
-    {
-        return $this->where('alias', $alias)->first();
-    }
 
     public function checkDuplicate($field, $value, $excludeId = null)
     {

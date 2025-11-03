@@ -28,19 +28,9 @@ class CreateMasterKegiatanTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
-            'fungsi' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 255,
-                'null'       => true,
-            ],
             'keterangan' => [
                 'type' => 'TEXT',
                 'null' => true,
-            ],
-            'alias' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 50,
-                'null'       => true,
             ],
             'periode' => [
                 'type'       => 'VARCHAR',
@@ -48,8 +38,8 @@ class CreateMasterKegiatanTable extends Migration
                 'null'       => true,
             ],
             'pelaksana' => [
-                'type'       => 'INT',
-                'constraint' => 11,
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
                 'null'       => true,
             ],
             'created_at' => [

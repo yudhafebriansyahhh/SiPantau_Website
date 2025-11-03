@@ -24,7 +24,7 @@
             </div>
             <input type="text" id="searchInput" 
                    class="input-field w-full pl-10" 
-                   placeholder="Cari nama, fungsi, atau alias..."
+                   placeholder="Cari nama, fungsi..."
                    onkeyup="searchTable()">
         </div>
         
@@ -50,9 +50,6 @@
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Fungsi
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Alias
-                    </th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                         Aksi
                     </th>
@@ -76,11 +73,7 @@
                             <td class="px-4 py-4">
                                 <p class="text-sm text-gray-600 line-clamp-2"><?= esc($output['fungsi']) ?></p>
                             </td>
-                            <td class="px-4 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <?= esc($output['alias']) ?>
-                                </span>
-                            </td>
+                            
                             <td class="px-4 py-4">
                                 <div class="flex items-center justify-center space-x-2">
                                     <a href="<?= base_url('superadmin/master-output/' . $output['id_output'] . '/edit') ?>" 

@@ -10,7 +10,7 @@
         </a>
     </div>
     <h1 class="text-2xl font-bold text-gray-900">Kelola Master Kegiatan</h1>
-    <p class="text-gray-600 mt-1">Kelola data master kegiatan survei/sensus beserta detail periode dan fungsinya</p>
+    <p class="text-gray-600 mt-1">Kelola data master kegiatan survei/sensus beserta detail periode</p>
 </div>
 
 <!-- Main Card -->
@@ -25,7 +25,7 @@
                 </div>
                 <input type="text" id="searchInput" 
                        class="input-field w-full pl-10" 
-                       placeholder="Cari nama kegiatan, fungsi, atau periode..."
+                       placeholder="Cari nama kegiatan, atau periode..."
                        onkeyup="searchTable()">
             </div>
             
@@ -228,7 +228,7 @@ function deleteData(id, name) {
     });
 
     // Kirim request delete ke server
-    fetch(`<?= base_url('superadmin/master-kegiatan/delete') ?>/${id}`, {
+    fetch(`<?= base_url('superadmin/master-kegiatan/') ?>${id}`, {
         method: 'DELETE',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',

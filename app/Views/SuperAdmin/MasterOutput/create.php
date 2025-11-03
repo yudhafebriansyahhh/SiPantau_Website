@@ -51,23 +51,6 @@
             <p class="mt-1 text-xs text-gray-500">Jelaskan fungsi atau tujuan dari kegiatan ini</p>
         </div>
 
-        <!-- Alias -->
-        <div class="mb-6">
-            <label for="alias" class="block text-sm font-medium text-gray-700 mb-2">
-                Alias/Singkatan <span class="text-red-500">*</span>
-            </label>
-            <input type="text" 
-                   id="alias" 
-                   name="alias" 
-                   class="input-field <?= session('errors.alias') ? 'border-red-500' : '' ?>" 
-x`                   value="<?= old('alias') ?>"
-                   required>
-            <?php if (session('errors.alias')): ?>
-                <p class="mt-1 text-sm text-red-600"><?= session('errors.alias') ?></p>
-            <?php endif; ?>
-            <p class="mt-1 text-xs text-gray-500">Masukkan singkatan atau alias dari kegiatan</p>
-        </div>
-
         <!-- Divider -->
         <div class="border-t border-gray-200 my-6"></div>
 
@@ -106,9 +89,8 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
     
     const namaOutput = document.getElementById('nama_output').value.trim();
     const fungsi = document.getElementById('fungsi').value.trim();
-    const alias = document.getElementById('alias').value.trim();
     
-    if (!namaOutput || !fungsi || !alias) {
+    if (!namaOutput || !fungsi) {
         Swal.fire({
             icon: 'error',
             title: 'Form Tidak Lengkap',
@@ -191,13 +173,6 @@ function resetForm() {
         }
     });
 }
-
-// ====================================================================
-// Auto Uppercase Alias
-// ====================================================================
-document.getElementById('alias').addEventListener('input', function(e) {
-    this.value = this.value.toUpperCase();
-});
 </script>
 
 <?= $this->endSection() ?>

@@ -87,14 +87,24 @@ class MasterKegiatanDetailProsesModel extends Model
     // Custom Methods
     // ====================================================================
 
-    public function getData ()
+    public function getData($kegiatanDetailFilter = null, $idAdminProvinsi = null)
     {
-        return $this->select('
-            master_kegiatan_detail_proses.*,
-            master_kegiatan_detail.nama_kegiatan_detail,
-        ')
-        ->join('master_kegiatan_detail', 'master_kegiatan_detail.id_kegiatan_detail = master_kegiatan_detail_proses.id_kegiatan_detail','left')
-        ->orderBy('master_kegiatan_detail_proses.id_kegiatan_detail_proses', 'DESC')
-        ->findAll();
+        $builder = $this->db->table($this->table . ' kdp')
+            ->select('kdp.*, mkd.nama_kegiatan_detail')
+            ->join('master_kegiatan_detail mkd', 'mkd.id_kegiatan_detail = kdp.id_kegiatan_detail');
+
+        // Filter berdasarkan assignment admin provinsi
+        // Jika idAdminProvinsi null, artinya Super Admin, tampilkan semua
+        if ($idAdminProvinsi !== null) {
+            $builder->join('master_kegiatan_detail_admin mkda', 'mkda.id_kegiatan_detail = kdp.id_kegiatan_detail')
+                ->where('mkda.id_admin_provinsi', $idAdminProvinsi);
+        }
+
+        // Filter by kegiatan detail jika ada
+        if ($kegiatanDetailFilter) {
+            $builder->where('kdp.id_kegiatan_detail', $kegiatanDetailFilter);
+        }
+
+        return $builder->orderBy('kdp.created_at', 'DESC')->get()->getResultArray();
     }
 }

@@ -66,23 +66,6 @@
             <p class="mt-1 text-xs text-gray-500">Jelaskan fungsi atau tujuan dari kegiatan ini</p>
         </div>
 
-        <!-- Alias -->
-        <div class="mb-6">
-            <label for="alias" class="block text sm font-medium text-gray-700 mb-2">
-                Alias/Singkatan <span class="text-red-500">*</span>
-            </label>
-            <input type="text" 
-                   id="alias" 
-                   name="alias" 
-                   class="input-field <?= session('errors.alias') ? 'border-red-500' : '' ?>" 
-                   value="<?= old('alias', $output['alias']) ?>"
-                   required>
-            <?php if (session('errors.alias')): ?>
-                <p class="mt-1 text-sm text-red-600"><?= session('errors.alias') ?></p>
-            <?php endif; ?>
-            <p class="mt-1 text-xs text-gray-500">Masukkan singkatan atau alias dari kegiatan</p>
-        </div>
-
         <!-- Divider -->
         <div class="border-t border-gray-200 my-6"></div>
 
@@ -119,7 +102,6 @@
 const originalValues = {
     nama_output: '<?= esc($output['nama_output']) ?>',
     fungsi: '<?= esc($output['fungsi']) ?>',
-    alias: '<?= esc($output['alias']) ?>'
 };
 
 // ====================================================================
@@ -130,9 +112,8 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
     
     const namaOutput = document.getElementById('nama_output').value.trim();
     const fungsi = document.getElementById('fungsi').value.trim();
-    const alias = document.getElementById('alias').value.trim();
     
-    if (!namaOutput || !fungsi || !alias) {
+    if (!namaOutput || !fungsi) {
         Swal.fire({
             icon: 'error',
             title: 'Form Tidak Lengkap',
@@ -150,7 +131,6 @@ document.getElementById('formMasterOutput').addEventListener('submit', function(
     const hasChanges = 
         namaOutput !== originalValues.nama_output || 
         fungsi !== originalValues.fungsi || 
-        alias !== originalValues.alias;
     
     if (!hasChanges) {
         Swal.fire({
@@ -222,7 +202,6 @@ function resetToOriginal() {
         if (result.isConfirmed) {
             document.getElementById('nama_output').value = originalValues.nama_output;
             document.getElementById('fungsi').value = originalValues.fungsi;
-            document.getElementById('alias').value = originalValues.alias;
             
             // Remove highlight
             document.querySelectorAll('.border-blue-500, .bg-blue-50').forEach(el => {
@@ -245,16 +224,9 @@ function resetToOriginal() {
 }
 
 // ====================================================================
-// Auto Uppercase Alias
-// ====================================================================
-document.getElementById('alias').addEventListener('input', function(e) {
-    this.value = this.value.toUpperCase();
-});
-
-// ====================================================================
 // Track Changes for Highlight
 // ====================================================================
-const formInputs = ['nama_output', 'fungsi', 'alias'];
+const formInputs = ['nama_output', 'fungsi'];
 formInputs.forEach(inputId => {
     const input = document.getElementById(inputId);
     input.addEventListener('input', function() {
