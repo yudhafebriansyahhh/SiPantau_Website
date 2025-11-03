@@ -27,7 +27,11 @@ class AuthController extends BaseController
      */
     public function login()
     {
-        $data = $this->request->getJSON(true) ?? $this->request->getPost();
+        if ($this->request->getHeaderLine('Content-Type') === 'application/json') {
+            $data = $this->request->getJSON(true);
+        } else {
+            $data = $this->request->getPost();
+        }
 
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';
@@ -38,8 +42,8 @@ class AuthController extends BaseController
 
         $userModel = new UserModel();
         $user = $userModel->where('email', $email)
-                          ->where('is_active', 1)
-                          ->first();
+            ->where('is_active', 1)
+            ->first();
 
         if (!$user) {
             return $this->failNotFound('User tidak ditemukan atau tidak aktif');

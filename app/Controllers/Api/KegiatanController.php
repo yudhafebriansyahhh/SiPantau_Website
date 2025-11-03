@@ -87,7 +87,9 @@ class KegiatanController extends BaseController
                         mk.nama_kegiatan, mkdp.nama_kegiatan_detail_proses,
                         mkdp.tanggal_mulai, mkdp.tanggal_selesai,
                         kab.nama_kabupaten,
-                        u_pml.nama_user as nama_pml
+                        u_pml.nama_user as nama_pml,
+                        kw.keterangan AS keterangan_wilayah
+
                     ')
                     ->join('pml', 'pcl.id_pml = pml.id_pml')
                     ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
@@ -110,7 +112,6 @@ class KegiatanController extends BaseController
                     'kegiatan' => $dataKegiatan
                 ]);
             }
-
         } catch (\Exception $e) {
             return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
         }

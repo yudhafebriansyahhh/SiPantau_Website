@@ -44,14 +44,22 @@ class PelaporanController extends BaseController
             return $this->failUnauthorized('Hanya PCL yang bisa mengakses pelaporan.');
         }
 
-        // 🔹 Ambil semua id_pcl milik user ini (jika punya banyak kegiatan)
+        // 🔹 Ambil semua id_pcl milik user ini
         $pclIds = array_column($pclList, 'id_pcl');
 
-        // 🔍 Ambil data transaksi berdasarkan id_pcl user yang login
-        $transaksiModel = new SipantauTransaksiModel();
+        // 🔸 Ambil parameter filter dari query string (opsional)
+        $filterIdPcl = $this->request->getGet('id_pcl');
 
-        // Kita join untuk tampilkan data kegiatan juga (optional tapi informatif)
-        $laporan = $transaksiModel
+        // 🔒 Validasi jika id_pcl dikirim, pastikan milik user
+        if (!empty($filterIdPcl) && !in_array($filterIdPcl, $pclIds)) {
+            return $this->failForbidden('Anda tidak memiliki akses ke id_pcl tersebut.');
+        }
+
+        // 🔍 Model transaksi
+        $transaksiModel = new \App\Models\SipantauTransaksiModel();
+
+        // 🔧 Query dasar
+        $builder = $transaksiModel
             ->select("
                 sipantau_transaksi.id_sipantau_transaksi,
                 sipantau_transaksi.resume,
@@ -74,17 +82,22 @@ class PelaporanController extends BaseController
             ->join('master_kabupaten kab', 'kab.id_kabupaten = kw.id_kabupaten', 'left')
             ->join('master_kecamatan kec', 'kec.id_kecamatan = sipantau_transaksi.id_kecamatan', 'left')
             ->join('master_desa des', 'des.id_desa = sipantau_transaksi.id_desa', 'left')
-            ->whereIn('sipantau_transaksi.id_pcl', $pclIds)
-            ->orderBy('sipantau_transaksi.created_at', 'DESC')
-            ->findAll();
+            ->orderBy('sipantau_transaksi.created_at', 'DESC');
 
-        // 🔄 Ubah imagepath menjadi URL lengkap agar bisa diakses langsung
+        // 🔹 Jika ada filter id_pcl, gunakan itu
+        if (!empty($filterIdPcl)) {
+            $builder->where('sipantau_transaksi.id_pcl', $filterIdPcl);
+        } else {
+            $builder->whereIn('sipantau_transaksi.id_pcl', $pclIds);
+        }
+
+        $laporan = $builder->findAll();
+
+        // 🖼️ Ubah imagepath jadi URL lengkap
         foreach ($laporan as &$item) {
-            if (!empty($item['imagepath'])) {
-                $item['image_url'] = base_url($item['imagepath']);
-            } else {
-                $item['image_url'] = null;
-            }
+            $item['image_url'] = !empty($item['imagepath'])
+                ? base_url($item['imagepath'])
+                : null;
         }
 
         return $this->respond([
@@ -102,8 +115,9 @@ class PelaporanController extends BaseController
 
 
 
+
     /**
-     * 🟡 POST /api/pelaporan
+     *  POST /api/pelaporan
      * Membuat laporan baru oleh PCL
      */
     public function create()
@@ -114,25 +128,31 @@ class PelaporanController extends BaseController
     }
 
     try {
+        // 🔐 Decode token JWT
         $decoded = \Firebase\JWT\JWT::decode($matches[1], new \Firebase\JWT\Key($this->jwtKey, 'HS256'));
         $sobat_id = $decoded->data->sobat_id;
-
-        $pclModel = new \App\Models\PCLModel();
-        $pcl = $pclModel->where('sobat_id', $sobat_id)->first();
-
-        if (!$pcl) {
-            return $this->failUnauthorized('Hanya PCL yang bisa menambahkan pelaporan.');
-        }
 
         // Ambil data dari multipart form
         $data = $this->request->getPost();
         $image = $this->request->getFile('image');
 
-        if (empty($data['id_kegiatan_detail_proses']) || empty($data['resume'])) {
-            return $this->failValidationErrors('Kegiatan dan resume wajib diisi.');
+        // 🧩 Validasi input wajib
+        if (empty($data['id_pcl']) || empty($data['id_kegiatan_detail_proses']) || empty($data['resume'])) {
+            return $this->failValidationErrors('id_pcl, kegiatan, dan resume wajib diisi.');
         }
 
-        // 📸 Proses upload gambar
+        // 🔎 Verifikasi bahwa id_pcl memang milik user yang login
+        $pclModel = new \App\Models\PCLModel();
+        $pcl = $pclModel
+            ->where('id_pcl', $data['id_pcl'])
+            ->where('sobat_id', $sobat_id)
+            ->first();
+
+        if (!$pcl) {
+            return $this->failUnauthorized('id_pcl tidak valid atau bukan milik user ini.');
+        }
+
+        // 📸 Proses upload gambar (jika ada)
         $imagePath = '';
         if ($image && $image->isValid() && !$image->hasMoved()) {
 
@@ -151,23 +171,22 @@ class PelaporanController extends BaseController
             // Simpan path relatif agar bisa diakses oleh frontend
             $imagePath = 'uploads/laporan/' . $newName;
 
-            // Debug logging
             log_message('info', 'File uploaded successfully: ' . $imagePath);
         } else {
-            log_message('error', 'Tidak ada file image yang diupload atau tidak valid.');
+            log_message('warning', 'Tidak ada file image yang diupload atau tidak valid.');
         }
 
-        // Simpan ke DB
+        // 💾 Simpan data ke database
         $transaksiModel = new \App\Models\SipantauTransaksiModel();
         $insertData = [
-            'id_pcl' => $pcl['id_pcl'],
+            'id_pcl' => $data['id_pcl'],
             'id_kegiatan_detail_proses' => $data['id_kegiatan_detail_proses'],
             'resume' => $data['resume'],
             'latitude' => $data['latitude'] ?? null,
             'longitude' => $data['longitude'] ?? null,
             'id_kecamatan' => $data['id_kecamatan'] ?? null,
             'id_desa' => $data['id_desa'] ?? null,
-            'imagepath' => $imagePath, // simpan path gambar
+            'imagepath' => $imagePath,
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -178,10 +197,14 @@ class PelaporanController extends BaseController
             'message' => 'Pelaporan berhasil disimpan',
             'data' => $insertData
         ]);
+
+    } catch (\Firebase\JWT\ExpiredException $e) {
+        return $this->failUnauthorized('Token kadaluarsa');
     } catch (\Exception $e) {
         return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
     }
 }
+
 
    /**
  * 🔴 DELETE /api/pelaporan/{id}
@@ -219,9 +242,9 @@ public function delete($id = null)
 
             if (file_exists($filePath)) {
                 unlink($filePath);
-                log_message('info', '🗑️ File dihapus: ' . $filePath);
+                log_message('info', 'File dihapus: ' . $filePath);
             } else {
-                log_message('warning', '⚠️ File tidak ditemukan: ' . $filePath);
+                log_message('warning', 'File tidak ditemukan: ' . $filePath);
             }
         }
 
