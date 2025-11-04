@@ -52,15 +52,7 @@
         <!-- Satuan -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Satuan<span class="text-red-500">*</span></label>
-            <select name="satuan" class="input-field" required>
-                <option value="">-- Pilih Satuan --</option>
-                <?php 
-                    $satuanList = ['unit', 'orang', 'dokumen', 'paket', 'kegiatan'];
-                    foreach ($satuanList as $satuan):
-                ?>
-                    <option value="<?= $satuan ?>" <?= $detailProses['satuan'] == $satuan ? 'selected' : '' ?>><?= ucfirst($satuan) ?></option>
-                <?php endforeach; ?>
-            </select>
+            <input type="text" name="satuan" value="<?= esc($detailProses['satuan']) ?>" class="input-field" required>
         </div>
 
         <!-- Keterangan -->
@@ -84,12 +76,12 @@
         <!-- Target Hari Pertama & Selesai -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Target Hari Pertama<span class="text-red-500">*</span></label>
-<input type="number" name="target_hari_pertama" value="<?= esc($detailProses['persentase_target_awal']) ?>" class="input-field" min="0" required>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Target Hari Pertama (Dalam Persen %)<span class="text-red-500">*</span></label>
+                <input type="number" name="target_hari_pertama" value="<?= esc($detailProses['persentase_target_awal']) ?>" class="input-field" min="0" required>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Target Tanggal Selesai<span class="text-red-500">*</span></label>
-<input type="date" id="target_tanggal_selesai" name="target_tanggal_selesai" value="<?= esc($detailProses['tanggal_selesai_target']) ?>" class="input-field" required>
+                <input type="date" id="target_tanggal_selesai" name="target_tanggal_selesai" value="<?= esc($detailProses['tanggal_selesai_target']) ?>" class="input-field" required>
             </div>
         </div>
 
@@ -102,60 +94,60 @@
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.getElementById('formMasterKegiatan').addEventListener('submit', function(e) {
-    e.preventDefault();
+    document.getElementById('formMasterKegiatan').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-    const tanggalMulai = new Date(document.getElementById('tanggal_mulai').value);
-    const tanggalSelesai = new Date(document.getElementById('tanggal_selesai').value);
-    const tanggal100 = new Date(document.getElementById('tanggal_selesai_target').value);
+        const tanggalMulai = new Date(document.getElementById('tanggal_mulai').value);
+        const tanggalSelesai = new Date(document.getElementById('tanggal_selesai').value);
+        const tanggal100 = new Date(document.getElementById('tanggal_selesai_target').value);
 
-    // === Validasi tanggal selesai tidak boleh < tanggal mulai ===
-    if (tanggalSelesai < tanggalMulai) {
+        // === Validasi tanggal selesai tidak boleh < tanggal mulai ===
+        if (tanggalSelesai < tanggalMulai) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Tanggal Tidak Valid',
+                text: 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai!',
+                confirmButtonColor: '#3b82f6',
+            });
+            return;
+        }
+
+        // === Validasi target 100% tidak boleh < tanggal mulai ===
+        if (tanggal100 < tanggalMulai) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Target 100% Tidak Valid',
+                text: 'Tanggal target 100% tidak boleh lebih awal dari tanggal mulai!',
+                confirmButtonColor: '#3b82f6',
+            });
+            return;
+        }
+
+        // === Validasi target 100% tidak boleh > tanggal selesai ===
+        if (tanggal100 > tanggalSelesai) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Target 100% Tidak Valid',
+                text: 'Tanggal target 100% tidak boleh melebihi tanggal selesai!',
+                confirmButtonColor: '#3b82f6',
+            });
+            return;
+        }
+
+        // === Konfirmasi jika semua valid ===
         Swal.fire({
-            icon: 'error',
-            title: 'Tanggal Tidak Valid',
-            text: 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai!',
+            title: 'Konfirmasi Perubahan',
+            text: 'Apakah data yang diubah sudah benar?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Simpan Perubahan',
+            cancelButtonText: 'Batal',
             confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+        }).then((result) => {
+            if (result.isConfirmed) this.submit();
         });
-        return;
-    }
-
-    // === Validasi target 100% tidak boleh < tanggal mulai ===
-    if (tanggal100 < tanggalMulai) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Target 100% Tidak Valid',
-            text: 'Tanggal target 100% tidak boleh lebih awal dari tanggal mulai!',
-            confirmButtonColor: '#3b82f6',
-        });
-        return;
-    }
-
-    // === Validasi target 100% tidak boleh > tanggal selesai ===
-    if (tanggal100 > tanggalSelesai) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Target 100% Tidak Valid',
-            text: 'Tanggal target 100% tidak boleh melebihi tanggal selesai!',
-            confirmButtonColor: '#3b82f6',
-        });
-        return;
-    }
-
-    // === Konfirmasi jika semua valid ===
-    Swal.fire({
-        title: 'Konfirmasi Perubahan',
-        text: 'Apakah data yang diubah sudah benar?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Simpan Perubahan',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#3b82f6',
-        cancelButtonColor: '#6b7280',
-    }).then((result) => {
-        if (result.isConfirmed) this.submit();
     });
-});
 </script>
 
 <?= $this->endSection() ?>

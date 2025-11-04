@@ -77,14 +77,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
                 Satuan<span class="text-red-500">*</span>
             </label>
-            <select name="satuan" class="input-field" required>
-                <option value="">-- Pilih Satuan --</option>
-                <option value="unit" <?= old('satuan') == 'unit' ? 'selected' : '' ?>>Unit</option>
-                <option value="orang" <?= old('satuan') == 'orang' ? 'selected' : '' ?>>Orang</option>
-                <option value="dokumen" <?= old('satuan') == 'dokumen' ? 'selected' : '' ?>>Dokumen</option>
-                <option value="paket" <?= old('satuan') == 'paket' ? 'selected' : '' ?>>Paket</option>
-                <option value="kegiatan" <?= old('satuan') == 'kegiatan' ? 'selected' : '' ?>>Kegiatan</option>
-            </select>
+            <input type="text" name="satuan" value="<?= old('satuan') ?>" class="input-field" required>
         </div>  
 
         <!-- Keterangan -->
@@ -115,7 +108,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Target Hari Pertama<span class="text-red-500">*</span>
+                    Target Hari Pertama (Dalam Persen %)<span class="text-red-500">*</span>
                 </label>
                 <input type="number" name="persentase_target_awal" value="<?= old('persentase_target_awal') ?>" class="input-field" min="0" required>
             </div>

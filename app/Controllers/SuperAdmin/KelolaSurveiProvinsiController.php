@@ -113,13 +113,10 @@ class KelolaSurveiProvinsiController extends BaseController
             $roleInfo = $this->roleModel->find($roleId);
             if ($roleInfo) {
                 if ($roleId == 2) {
-                    // Role Pemantau Provinsi (role asli)
                     $roleNames[] = 'Pemantau Provinsi';
                 } elseif ($roleId == 3) {
-                    // Role Pemantau Kabupaten (role asli)
                     $roleNames[] = 'Pemantau Kabupaten';
                 } else {
-                    // Role lain
                     $roleNames[] = $roleInfo['roleuser'];
                 }
             }
@@ -160,14 +157,17 @@ class KelolaSurveiProvinsiController extends BaseController
                     ->with('error', 'Admin tidak ditemukan');
             }
 
-            // Get assigned kegiatan
-            $assigned = $this->db->table('master_kegiatan_detail_admin')
-                ->select('id_kegiatan_detail')
-                ->where('id_admin_provinsi', $idAdminProvinsi)
+            // Get assigned kegiatan dengan detail lengkap
+            $assignedKegiatan = $this->db->table('master_kegiatan_detail_admin mkda')
+                ->select('mkd.id_kegiatan_detail, mkd.nama_kegiatan_detail, mk.nama_kegiatan, mkd.satuan, mkd.periode, mkd.tahun, mkd.tanggal_mulai, mkd.tanggal_selesai')
+                ->join('master_kegiatan_detail mkd', 'mkda.id_kegiatan_detail = mkd.id_kegiatan_detail')
+                ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
+                ->where('mkda.id_admin_provinsi', $idAdminProvinsi)
                 ->get()
                 ->getResultArray();
 
-            $assignedIds = array_column($assigned, 'id_kegiatan_detail');
+            $assignedIds = array_column($assignedKegiatan, 'id_kegiatan_detail');
+            $admin['assigned_kegiatan'] = $assignedKegiatan;
         }
 
         // Get all active users (untuk mode create)
@@ -182,7 +182,7 @@ class KelolaSurveiProvinsiController extends BaseController
         $kegiatanDetails = $this->kegiatanDetailModel->getWithKegiatan();
 
         $data = [
-            'title' => $isEdit ? 'Edit Assignment Admin Survei Provinsi' : 'Assign Admin Survei Provinsi',
+            'title' => $isEdit ? 'Edit Admin Survei Provinsi' : 'Assign Admin Survei Provinsi',
             'active_menu' => 'kelola-admin-surveyprov',
             'users' => $users,
             'kegiatan_details' => $kegiatanDetails,
@@ -200,7 +200,7 @@ class KelolaSurveiProvinsiController extends BaseController
     public function storeAssign()
     {
         $sobatId = $this->request->getPost('sobat_id');
-        $idKegiatanDetail = $this->request->getPost('id_kegiatan_detail'); // Ubah nama variable
+        $idKegiatanDetail = $this->request->getPost('id_kegiatan_detail');
 
         // Validation
         if (empty($sobatId)) {
@@ -209,7 +209,7 @@ class KelolaSurveiProvinsiController extends BaseController
                 ->with('error', 'Silakan pilih user');
         }
 
-        if (empty($idKegiatanDetail)) { // Ubah validasi
+        if (empty($idKegiatanDetail)) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Silakan pilih kegiatan detail');
@@ -265,42 +265,55 @@ class KelolaSurveiProvinsiController extends BaseController
     }
 
     /**
-     * Update assignment admin
+     * Update assignment admin - Menambah kegiatan baru
      */
     public function update($idAdminProvinsi)
     {
-        $kegiatanDetails = $this->request->getPost('kegiatan_details');
+        $idKegiatanDetail = $this->request->getPost('id_kegiatan_detail');
 
         // Validation
-        if (empty($kegiatanDetails) || !is_array($kegiatanDetails)) {
+        if (empty($idKegiatanDetail)) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Silakan pilih minimal satu kegiatan detail');
+                ->with('error', 'Silakan pilih kegiatan detail');
+        }
+
+        // Check apakah admin exists
+        $admin = $this->adminProvinsiModel->find($idAdminProvinsi);
+        if (!$admin) {
+            return redirect()->back()->with('error', 'Admin tidak ditemukan');
+        }
+
+        // Check apakah sudah di-assign ke kegiatan ini
+        $existingAssignment = $this->db->table('master_kegiatan_detail_admin')
+            ->where([
+                'id_admin_provinsi' => $idAdminProvinsi,
+                'id_kegiatan_detail' => $idKegiatanDetail
+            ])
+            ->get()
+            ->getRowArray();
+
+        if ($existingAssignment) {
+            return redirect()->back()
+                ->with('error', 'Admin sudah di-assign ke kegiatan ini');
         }
 
         $this->db->transStart();
 
-        // Hapus semua assignment lama
-        $this->db->table('master_kegiatan_detail_admin')
-            ->where('id_admin_provinsi', $idAdminProvinsi)
-            ->delete();
-
         // Insert assignment baru
-        foreach ($kegiatanDetails as $idKegiatanDetail) {
-            $this->db->table('master_kegiatan_detail_admin')->insert([
-                'id_admin_provinsi' => $idAdminProvinsi,
-                'id_kegiatan_detail' => $idKegiatanDetail
-            ]);
-        }
+        $this->db->table('master_kegiatan_detail_admin')->insert([
+            'id_admin_provinsi' => $idAdminProvinsi,
+            'id_kegiatan_detail' => $idKegiatanDetail
+        ]);
 
         $this->db->transComplete();
 
         if ($this->db->transStatus() === false) {
-            return redirect()->back()->with('error', 'Gagal melakukan update');
+            return redirect()->back()->with('error', 'Gagal menambahkan kegiatan');
         }
 
-        return redirect()->to(base_url('superadmin/kelola-admin-surveyprov'))
-            ->with('success', 'Assignment berhasil diupdate');
+        return redirect()->to(base_url('superadmin/kelola-admin-surveyprov/assign/' . $idAdminProvinsi))
+            ->with('success', 'Kegiatan berhasil ditambahkan');
     }
 
     /**
@@ -351,7 +364,8 @@ class KelolaSurveiProvinsiController extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'Assignment berhasil dihapus'
+            'message' => 'Assignment berhasil dihapus',
+            'remaining' => $remainingAssignments
         ]);
     }
 

@@ -15,28 +15,28 @@
 
 <!-- Flash Messages -->
 <?php if (session()->getFlashdata('error')): ?>
-<div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-    <div class="flex items-center">
-        <i class="fas fa-exclamation-circle text-red-600 mr-3"></i>
-        <p class="text-sm text-red-700"><?= session()->getFlashdata('error') ?></p>
+    <div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-circle text-red-600 mr-3"></i>
+            <p class="text-sm text-red-700"><?= session()->getFlashdata('error') ?></p>
+        </div>
     </div>
-</div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('success')): ?>
-<div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
-    <div class="flex items-center">
-        <i class="fas fa-check-circle text-green-600 mr-3"></i>
-        <p class="text-sm text-green-700"><?= session()->getFlashdata('success') ?></p>
+    <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-3"></i>
+            <p class="text-sm text-green-700"><?= session()->getFlashdata('success') ?></p>
+        </div>
     </div>
-</div>
 <?php endif; ?>
 
 <!-- Form Card -->
 <div class="card max-w-6xl">
     <form action="<?= base_url('adminsurvei-kab/assign-petugas/update/' . $pml['id_pml']) ?>" method="POST" id="editAssignForm">
         <?= csrf_field() ?>
-        
+
         <!-- Step 1: Kegiatan Survei -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -50,7 +50,7 @@
                 'placeholder' => 'Cari dan pilih kegiatan survei...',
                 'options' => $kegiatanList,
                 'optionValue' => 'id_kegiatan_wilayah',
-                'optionText' => function($k) {
+                'optionText' => function ($k) {
                     return $k['nama_kegiatan'] . (!empty($k['nama_kegiatan_detail_proses']) ? ' - ' . $k['nama_kegiatan_detail_proses'] : '');
                 },
                 'selected' => $pml['id_kegiatan_wilayah'],
@@ -66,10 +66,10 @@
                 <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full text-xs mr-2">2</span>
                 Nama PML <span class="text-red-500">*</span>
             </label>
-            <input type="text" 
-                   class="input-field bg-gray-50"
-                   value="<?= esc($pml['nama_pml']) ?>" 
-                   readonly>
+            <input type="text"
+                class="input-field bg-gray-50"
+                value="<?= esc($pml['nama_pml']) ?>"
+                readonly>
             <p class="text-sm text-gray-500 mt-2">
                 <i class="fas fa-info-circle mr-1"></i>
                 PML tidak dapat diubah saat edit
@@ -83,15 +83,15 @@
                 Target PML <span class="text-red-500">*</span>
             </label>
             <div class="relative">
-                <input type="number" 
-                       name="pml_target" 
-                       id="pmlTarget"
-                       class="input-field pr-16"
-                       placeholder="Masukkan target PML..."
-                       value="<?= esc($pml['target']) ?>"
-                       min="1"
-                       oninput="updateSisaTarget()"
-                       required>
+                <input type="number"
+                    name="pml_target"
+                    id="pmlTarget"
+                    class="input-field pr-16"
+                    placeholder="Masukkan target PML..."
+                    value="<?= esc($pml['target']) ?>"
+                    min="1"
+                    oninput="updateSisaTarget()"
+                    required>
                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                     <span class="text-gray-500 text-sm">unit</span>
                 </div>
@@ -129,39 +129,41 @@
                             <div class="flex gap-4">
                                 <div class="flex-1">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama PCL</label>
-                                    <select name="pcl[<?= $index ?>][sobat_id]" 
-                                            class="select2-pcl pcl-select" 
-                                            style="width: 100%"
-                                            data-row="<?= $index ?>">
+                                    <select name="pcl[<?= $index ?>][sobat_id]"
+                                        class="select2-pcl pcl-select"
+                                        style="width: 100%"
+                                        data-row="<?= $index ?>">
                                         <option value="">Pilih PCL...</option>
+
+                                        <!-- Option untuk PCL yang sedang dipilih (current) -->
+                                        <option value="<?= $pcl['sobat_id'] ?>" selected>
+                                            <?= esc($pcl['nama_user']) ?> - <?= esc($pcl['email'] ?? $pcl['hp'] ?? '') ?>
+                                        </option>
+
+                                        <!-- Options untuk available PCL lainnya -->
                                         <?php foreach ($availablePCL as $user): ?>
-                                            <option value="<?= $user['sobat_id'] ?>" 
-                                                <?= $pcl['sobat_id'] == $user['sobat_id'] ? 'selected' : '' ?>>
-                                                <?= esc($user['nama_user']) ?> - <?= esc($user['email']) ?>
-                                            </option>
+                                            <?php if ($user['sobat_id'] != $pcl['sobat_id']): ?>
+                                                <option value="<?= $user['sobat_id'] ?>">
+                                                    <?= esc($user['nama_user']) ?> - <?= esc($user['email']) ?>
+                                                </option>
+                                            <?php endif; ?>
                                         <?php endforeach; ?>
-                                        <!-- Preserve existing PCL if not in available list -->
-                                        <?php if (!in_array($pcl['sobat_id'], array_column($availablePCL, 'sobat_id'))): ?>
-                                            <option value="<?= $pcl['sobat_id'] ?>" selected>
-                                                <?= esc($pcl['nama_user']) ?>
-                                            </option>
-                                        <?php endif; ?>
                                     </select>
                                 </div>
                                 <div class="w-48">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Target</label>
-                                    <input type="number" 
-                                           name="pcl[<?= $index ?>][target]" 
-                                           class="input-field pcl-target"
-                                           placeholder="Target..."
-                                           value="<?= esc($pcl['target']) ?>"
-                                           min="1"
-                                           oninput="validatePCLTarget(this)">
+                                    <input type="number"
+                                        name="pcl[<?= $index ?>][target]"
+                                        class="input-field pcl-target"
+                                        placeholder="Target..."
+                                        value="<?= esc($pcl['target']) ?>"
+                                        min="1"
+                                        oninput="validatePCLTarget(this)">
                                 </div>
                                 <div class="w-12 flex items-end">
-                                    <button type="button" 
-                                            onclick="removePCLRow(<?= $index ?>)"
-                                            class="btn-danger btn-sm w-full h-10">
+                                    <button type="button"
+                                        onclick="removePCLRow(<?= $index ?>)"
+                                        class="btn-danger btn-sm w-full h-10">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -193,14 +195,14 @@
 
         <!-- Action Buttons -->
         <div class="flex gap-3 pt-4 border-t border-gray-200">
-            <a href="<?= base_url('adminsurvei-kab/assign-petugas') ?>" 
-               class="btn-secondary flex-1 text-center">
+            <a href="<?= base_url('adminsurvei-kab/assign-petugas') ?>"
+                class="btn-secondary flex-1 text-center">
                 <i class="fas fa-times mr-2"></i>
                 Batal
             </a>
-            <button type="submit" 
-                    class="btn-primary flex-1"
-                    id="submitBtn">
+            <button type="submit"
+                class="btn-primary flex-1"
+                id="submitBtn">
                 <i class="fas fa-save mr-2"></i>
                 Simpan Perubahan
             </button>
@@ -214,6 +216,7 @@
 // Global variables
 let pclCounter = <?= !empty($pcls) ? count($pcls) : 0 ?>;
 let selectedKegiatan = '<?= $pml['id_kegiatan_wilayah'] ?>';
+let selectedPML = '<?= $pml['sobat_id'] ?>'; // PML sobat_id untuk exclude dari PCL
 let targetPML = <?= $pml['target'] ?>;
 let availablePCL = <?= json_encode($availablePCL) ?>;
 let sisaTargetWilayah = 0;
@@ -239,12 +242,14 @@ $(document).ready(function() {
         $('#kegiatanSurvei').val(selectedKegiatan).trigger('change.select2');
     }
     
-    // Initialize Select2 for existing PCL
+    // Initialize Select2 for existing PCL with change handler
     $('.select2-pcl').each(function() {
         $(this).select2({
             placeholder: 'Cari dan pilih PCL...',
             allowClear: true,
             width: '100%'
+        }).on('change', function() {
+            handlePCLSelectChange();
         });
     });
     
@@ -260,17 +265,38 @@ $(document).ready(function() {
 // Handle kegiatan change
 function handleKegiatanChange() {
     const kegiatanValue = $('#kegiatanSurvei').val();
+    const oldKegiatan = selectedKegiatan;
     selectedKegiatan = kegiatanValue;
     
-    if (selectedKegiatan) {
-        loadSisaTargetWilayah(selectedKegiatan);
-    } else {
+    if (selectedKegiatan && selectedKegiatan !== oldKegiatan) {
+        Swal.fire({
+            title: 'Ubah Kegiatan?',
+            text: 'Mengubah kegiatan akan me-reload data PCL yang tersedia. Lanjutkan?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Ubah',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                loadSisaTargetWilayah(selectedKegiatan);
+                loadAvailablePCL(); // Reload PCL list
+            } else {
+                // Revert selection
+                selectedKegiatan = oldKegiatan;
+                $('#kegiatanSurvei').val(oldKegiatan).trigger('change.select2');
+            }
+        });
+    } else if (!selectedKegiatan) {
         Swal.fire({
             icon: 'warning',
             title: 'Peringatan',
             text: 'Pilih kegiatan survei terlebih dahulu',
             confirmButtonColor: '#3b82f6'
         });
+        selectedKegiatan = oldKegiatan;
+        $('#kegiatanSurvei').val(oldKegiatan).trigger('change.select2');
     }
 }
 
@@ -314,6 +340,106 @@ function loadSisaTargetWilayah(idKegiatanWilayah) {
     });
 }
 
+// Load available PCL - FIXED: kirim id_kegiatan_wilayah dan pml_sobat_id
+function loadAvailablePCL() {
+    if (!selectedPML || !selectedKegiatan) {
+        console.error('selectedPML atau selectedKegiatan belum diisi');
+        return;
+    }
+    
+    $.ajax({
+        url: '<?= base_url('adminsurvei-kab/assign-petugas/get-available-pcl') ?>',
+        method: 'POST',
+        data: {
+            id_pml: '<?= $pml['id_pml'] ?>', // ID PML yang sedang diedit
+            id_kegiatan_wilayah: selectedKegiatan, // WAJIB
+            pml_sobat_id: selectedPML, // Exclude PML dari list
+            [csrfName]: csrfHash
+        },
+        success: function(response) {
+            csrfHash = response.csrf_hash || csrfHash;
+            
+            if (response.success) {
+                availablePCL = response.data || [];
+                console.log('Available PCL loaded:', availablePCL.length);
+                
+                // Update dropdown yang sudah ada
+                updatePCLDropdowns();
+            } else {
+                console.error('Error loading PCL:', response.error);
+                availablePCL = [];
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading PCL:', error);
+            availablePCL = [];
+        }
+    });
+}
+
+// Update PCL dropdowns dengan data terbaru
+function updatePCLDropdowns() {
+    document.querySelectorAll('.pcl-select').forEach(select => {
+        const currentValue = select.value;
+        const $select = $(select);
+        
+        // Get current selected PCL info
+        let currentPCL = null;
+        if (currentValue) {
+            currentPCL = availablePCL.find(pcl => pcl.sobat_id.toString() === currentValue);
+            
+            // Jika PCL yang dipilih tidak ada di available list, tambahkan dari option yang ada
+            if (!currentPCL) {
+                const selectedOption = select.querySelector(`option[value="${currentValue}"]`);
+                if (selectedOption) {
+                    currentPCL = {
+                        sobat_id: currentValue,
+                        nama_user: selectedOption.textContent.split(' - ')[0],
+                        email: selectedOption.textContent.split(' - ')[1] || ''
+                    };
+                }
+            }
+        }
+        
+        // Rebuild options
+        $select.select2('destroy');
+        select.innerHTML = '<option value="">Pilih PCL...</option>';
+        
+        // Add current selection first if exists
+        if (currentPCL) {
+            const option = new Option(
+                `${currentPCL.nama_user} - ${currentPCL.email}`,
+                currentPCL.sobat_id,
+                false,
+                true
+            );
+            select.add(option);
+        }
+        
+        // Add other available PCL
+        availablePCL.forEach(pcl => {
+            if (pcl.sobat_id.toString() !== currentValue) {
+                const option = new Option(
+                    `${pcl.nama_user} - ${pcl.email}`,
+                    pcl.sobat_id,
+                    false,
+                    false
+                );
+                select.add(option);
+            }
+        });
+        
+        // Re-initialize select2
+        $select.select2({
+            placeholder: 'Cari dan pilih PCL...',
+            allowClear: true,
+            width: '100%'
+        }).on('change', function() {
+            handlePCLSelectChange();
+        });
+    });
+}
+
 // Update sisa target info
 function updateSisaTargetInfo() {
     const sisaInfo = document.getElementById('sisaTargetInfo');
@@ -349,13 +475,23 @@ function updateSisaTarget() {
     }
     
     if (targetPML > 0) {
-        document.getElementById('sisaTargetValue').textContent = targetPML;
+        document.getElementById('sisaTargetValue').textContent = targetPML.toLocaleString();
         updateTargetInfo();
     }
 }
 
-// Add PCL row
+// Add PCL row - UPDATED
 function addPCLRow() {
+    if (!selectedKegiatan) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pilih Kegiatan Dulu',
+            text: 'Silakan pilih kegiatan survei terlebih dahulu',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+
     if (availablePCL.length === 0) {
         Swal.fire({
             icon: 'warning',
@@ -386,9 +522,17 @@ function addPCLRow() {
     row.id = `pclRow${pclCounter}`;
     row.dataset.pclNumber = pclNumber;
     
+    // Filter: Exclude PCL yang sudah dipilih
+    const selectedPCLIds = [];
+    document.querySelectorAll('.pcl-select').forEach(select => {
+        if (select.value) selectedPCLIds.push(select.value);
+    });
+    
     let optionsHTML = '<option value="">Pilih PCL...</option>';
     availablePCL.forEach(pcl => {
-        optionsHTML += `<option value="${pcl.sobat_id}">${escapeHtml(pcl.nama_user)} - ${escapeHtml(pcl.email)}</option>`;
+        if (!selectedPCLIds.includes(pcl.sobat_id.toString())) {
+            optionsHTML += `<option value="${pcl.sobat_id}">${escapeHtml(pcl.nama_user)} - ${escapeHtml(pcl.email)}</option>`;
+        }
     });
     
     row.innerHTML = `
@@ -428,7 +572,7 @@ function addPCLRow() {
         </div>
         <p class="text-xs text-gray-500 mt-2">
             <i class="fas fa-info-circle mr-1"></i>
-            Maksimal target: <span class="font-medium text-gray-700">${sisaTarget}</span> unit
+            Maksimal target: <span class="font-medium text-gray-700">${sisaTarget.toLocaleString()}</span> unit
         </p>
     `;
     
@@ -439,12 +583,51 @@ function addPCLRow() {
         placeholder: 'Cari dan pilih PCL...',
         allowClear: true,
         width: '100%'
+    }).on('change', function() {
+        handlePCLSelectChange();
     });
     
     updateTargetInfo();
 }
 
-// Remove PCL row
+// Handle PCL select change - refresh options
+function handlePCLSelectChange() {
+    const selectedPCLIds = [];
+    document.querySelectorAll('.pcl-select').forEach(select => {
+        if (select.value) selectedPCLIds.push(select.value);
+    });
+    
+    document.querySelectorAll('.pcl-select').forEach(select => {
+        const currentValue = select.value;
+        const $select = $(select);
+        
+        $select.select2('destroy');
+        select.innerHTML = '<option value="">Pilih PCL...</option>';
+        
+        availablePCL.forEach(pcl => {
+            // Tampilkan: PCL yang sedang dipilih di select ini ATAU yang belum dipilih di mana pun
+            if (pcl.sobat_id.toString() === currentValue || !selectedPCLIds.includes(pcl.sobat_id.toString())) {
+                const option = new Option(
+                    `${pcl.nama_user} - ${pcl.email}`,
+                    pcl.sobat_id,
+                    false,
+                    pcl.sobat_id.toString() === currentValue
+                );
+                select.add(option);
+            }
+        });
+        
+        $select.select2({
+            placeholder: 'Cari dan pilih PCL...',
+            allowClear: true,
+            width: '100%'
+        }).on('change', function() {
+            handlePCLSelectChange();
+        });
+    });
+}
+
+// Remove PCL row - UPDATED
 function removePCLRow(id) {
     Swal.fire({
         title: 'Hapus PCL?',
@@ -459,12 +642,11 @@ function removePCLRow(id) {
         if (result.isConfirmed) {
             const row = document.getElementById(`pclRow${id}`);
             if (row) {
-                // Destroy Select2 before removing
                 $(row).find('.select2-pcl').select2('destroy');
                 row.remove();
                 
-                // Renumber remaining PCL rows
                 renumberPCLRows();
+                handlePCLSelectChange(); // Refresh options
                 updateTargetInfo();
             }
         }
@@ -501,7 +683,7 @@ function validatePCLTarget(input) {
         Swal.fire({
             icon: 'warning',
             title: 'Target Melebihi Batas',
-            text: `Target PCL tidak boleh melebihi sisa target PML (${sisaTarget} unit)`,
+            text: `Target PCL tidak boleh melebihi sisa target PML (${sisaTarget.toLocaleString()} unit)`,
             confirmButtonColor: '#3b82f6'
         });
         input.value = sisaTarget;
@@ -595,4 +777,4 @@ document.getElementById('editAssignForm').addEventListener('submit', function(e)
 });
 </script>
 
-<?= $this->endSection() ?>  
+<?= $this->endSection() ?>

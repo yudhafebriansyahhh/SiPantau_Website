@@ -628,28 +628,68 @@ document.getElementById('formEdit').addEventListener('submit', function(e) {
 });
 
 // Confirm delete
+// Confirm delete - Updated untuk gunakan AJAX
 function confirmDelete(id, name) {
     Swal.fire({
         title: 'Hapus Data?',
-        html: `Yakin ingin menghapus <strong>${name}</strong>?`,
+        html: `Yakin ingin menghapus <strong>${name}</strong>?<br><small class="text-gray-600">Kurva S terkait juga akan dihapus.</small>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Ya, Hapus',
+        confirmButtonText: '<i class="fas fa-trash mr-2"></i>Ya, Hapus',
         cancelButtonText: 'Batal',
     }).then((result) => {
         if (result.isConfirmed) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `<?= base_url('adminsurvei/master-kegiatan-wilayah/delete/') ?>${id}`;
-            const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = '<?= csrf_token() ?>';
-            csrf.value = '<?= csrf_hash() ?>';
-            form.appendChild(csrf);
-            document.body.appendChild(form);
-            form.submit();
+            // Show loading
+            Swal.fire({
+                title: 'Menghapus...',
+                html: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Kirim request delete via AJAX
+            const formData = new FormData();
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+            fetch(`<?= base_url('adminsurvei/master-kegiatan-wilayah/delete/') ?>${id}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: result.message,
+                        confirmButtonColor: '#3b82f6',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: result.message || 'Terjadi kesalahan saat menghapus data',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan pada sistem',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
         }
     });
 }

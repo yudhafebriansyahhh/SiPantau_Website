@@ -107,7 +107,7 @@ class AssignAdminSurveiKabController extends BaseController
             $admin['jumlah_kegiatan'] = count($kegiatanWilayah);
         }
 
-        $allKabupaten = $this->masterKabModel->orderBy('nama_kabupaten', 'ASC')->findAll();
+        $allKabupaten = $this->masterKabModel->orderBy('id_kabupaten', 'ASC')->findAll();
 
         $data = [
             'title' => 'Kelola Admin Survei Kabupaten',
@@ -128,7 +128,7 @@ class AssignAdminSurveiKabController extends BaseController
         $admin = null;
         $assignedIds = [];
 
-        $allKabupaten = $this->masterKabModel->orderBy('nama_kabupaten', 'ASC')->findAll();
+        $allKabupaten = $this->masterKabModel->orderBy('id_kabupaten', 'ASC')->findAll();
 
         if ($isEdit) {
             // MODE EDIT - Get admin info

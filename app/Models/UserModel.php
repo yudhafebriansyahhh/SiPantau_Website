@@ -44,7 +44,7 @@ class UserModel extends Model
         $builder = $this->db->table('sipantau_user u')
             ->select('u.*, k.nama_kabupaten')
             ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
-            ->orderBy('u.created_at', 'DESC');
+            ->orderBy('u.nama_user', 'ASC');
 
         if (!empty($search)) {
             $builder->groupStart()
