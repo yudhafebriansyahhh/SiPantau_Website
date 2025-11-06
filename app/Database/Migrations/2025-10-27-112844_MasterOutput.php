@@ -24,11 +24,6 @@ class CreateMasterOutputTable extends Migration
                 'constraint' => 255,
                 'null'       => true,
             ],
-            'alias' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 100,
-                'null'       => true,
-            ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,

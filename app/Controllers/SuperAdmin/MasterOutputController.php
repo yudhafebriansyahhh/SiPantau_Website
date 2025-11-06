@@ -63,14 +63,6 @@ class MasterOutputController extends BaseController
                 'errors' => [
                     'required' => 'Fungsi harus diisi'
                 ]
-            ],
-            'alias' => [
-                'rules'  => 'required|max_length[100]|is_unique[master_output.alias]',
-                'errors' => [
-                    'required'   => 'Alias harus diisi',
-                    'max_length' => 'Alias maksimal 100 karakter',
-                    'is_unique'  => 'Alias sudah terdaftar'
-                ]
             ]
         ];
 
@@ -84,7 +76,6 @@ class MasterOutputController extends BaseController
         $data = [
             'nama_output' => $this->request->getPost('nama_output'),
             'fungsi'      => $this->request->getPost('fungsi'),
-            'alias'       => strtoupper($this->request->getPost('alias'))
         ];
 
         $this->masterOutputModel->insert($data);
@@ -144,14 +135,6 @@ class MasterOutputController extends BaseController
                 'errors' => [
                     'required' => 'Fungsi harus diisi'
                 ]
-            ],
-            'alias' => [
-                'rules'  => "required|max_length[100]|is_unique[master_output.alias,id_output,{$id}]",
-                'errors' => [
-                    'required'   => 'Alias harus diisi',
-                    'max_length' => 'Alias maksimal 100 karakter',
-                    'is_unique'  => 'Alias sudah terdaftar'
-                ]
             ]
         ];
 
@@ -165,7 +148,6 @@ class MasterOutputController extends BaseController
         $data = [
             'nama_output' => $this->request->getPost('nama_output'),
             'fungsi'      => $this->request->getPost('fungsi'),
-            'alias'       => strtoupper($this->request->getPost('alias'))
         ];
 
         $this->masterOutputModel->update($id, $data);

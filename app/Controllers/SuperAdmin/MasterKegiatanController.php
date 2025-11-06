@@ -88,13 +88,6 @@ class MasterKegiatanController extends BaseController
                     'is_unique'  => 'Nama kegiatan sudah terdaftar'
                 ]
             ],
-            'fungsi' => [
-                'rules'  => 'required|max_length[255]',
-                'errors' => [
-                    'required'   => 'Fungsi harus diisi',
-                    'max_length' => 'Fungsi maksimal 255 karakter'
-                ]
-            ],
             'keterangan' => [
                 'rules'  => 'permit_empty',
                 'errors' => []
@@ -124,7 +117,6 @@ class MasterKegiatanController extends BaseController
         $data = [
             'id_output'     => $this->request->getPost('id_output'),
             'nama_kegiatan' => $this->request->getPost('nama_kegiatan'),
-            'fungsi'        => $this->request->getPost('fungsi'),
             'keterangan'    => $this->request->getPost('keterangan'),
             'pelaksana'     => $this->request->getPost('pelaksana'),
             'periode'       => $this->request->getPost('periode')
@@ -223,13 +215,6 @@ class MasterKegiatanController extends BaseController
                     'is_unique'  => 'Nama kegiatan sudah terdaftar'
                 ]
             ],
-            'fungsi' => [
-                'rules'  => 'required|max_length[255]',
-                'errors' => [
-                    'required'   => 'Fungsi harus diisi',
-                    'max_length' => 'Fungsi maksimal 255 karakter'
-                ]
-            ],
             'keterangan' => [
                 'rules'  => 'permit_empty',
                 'errors' => []
@@ -259,7 +244,6 @@ class MasterKegiatanController extends BaseController
         $data = [
             'id_output'     => $this->request->getPost('id_output'),
             'nama_kegiatan' => $this->request->getPost('nama_kegiatan'),
-            'fungsi'        => $this->request->getPost('fungsi'),
             'keterangan'    => $this->request->getPost('keterangan'),
             'pelaksana'     => $this->request->getPost('pelaksana'),
             'periode'       => $this->request->getPost('periode')

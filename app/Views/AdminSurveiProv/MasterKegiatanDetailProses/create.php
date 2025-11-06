@@ -4,7 +4,14 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('adminprov/master-kegiatan-detail-proses') ?>" class="hover:text-blue-600 transition-colors">
+        <?php
+        // Build back URL dengan filter jika ada
+        $backUrl = base_url('adminprov/master-kegiatan-detail-proses');
+        if ($kegiatanDetailFilter) {
+            $backUrl .= '?kegiatan_detail=' . $kegiatanDetailFilter;
+        }
+        ?>
+        <a href="<?= $backUrl ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Master Kegiatan Detail Proses
         </a>
     </div>
@@ -16,6 +23,7 @@
 <div class="card max-w-5xl">
     <form id="formMasterKegiatan" method="POST" action="<?= base_url('adminsurvei/master-kegiatan-detail-proses/store') ?>">
         <?= csrf_field() ?>
+        
         <!-- Info -->
         <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p class="text-sm text-blue-700">
@@ -26,11 +34,14 @@
         
         <!-- Pilih Kegiatan Detail -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kegiatan Detail<span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Pilih Kegiatan Detail<span class="text-red-500">*</span>
+            </label>
             <select name="kegiatan_detail" class="input-field" required>
                 <option value="">-- Pilih Kegiatan Detail --</option>
                 <?php foreach ($kegiatanDetailList as $item): ?>
-                    <option value="<?= esc($item['id_kegiatan_detail']) ?>" <?= old('kegiatan_detail') == $item['id_kegiatan_detail'] ? 'selected' : '' ?>>
+                    <option value="<?= esc($item['id_kegiatan_detail']) ?>" 
+                            <?= (old('kegiatan_detail') == $item['id_kegiatan_detail'] || $kegiatanDetailFilter == $item['id_kegiatan_detail']) ? 'selected' : '' ?>>
                         <?= esc($item['nama_kegiatan_detail']) ?>
                     </option>
                 <?php endforeach; ?>
@@ -39,61 +50,72 @@
 
         <!-- Nama Kegiatan Detail Proses -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kegiatan Detail Proses <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Nama Kegiatan Detail Proses <span class="text-red-500">*</span>
+            </label>
             <input type="text" name="nama_proses" value="<?= old('nama_proses') ?>" class="input-field" required>
         </div>
 
         <!-- Tanggal -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai<span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Mulai<span class="text-red-500">*</span>
+                </label>
                 <input type="date" id="tanggal_mulai" name="tanggal_mulai" value="<?= old('tanggal_mulai') ?>" class="input-field" required>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai<span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Selesai<span class="text-red-500">*</span>
+                </label>
                 <input type="date" id="tanggal_selesai" name="tanggal_selesai" value="<?= old('tanggal_selesai') ?>" class="input-field" required>
             </div>
         </div>
 
         <!-- Satuan -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Satuan<span class="text-red-500">*</span></label>
-            <select name="satuan" class="input-field" required>
-                <option value="">-- Pilih Satuan --</option>
-                <option value="unit" <?= old('satuan') == 'unit' ? 'selected' : '' ?>>Unit</option>
-                <option value="orang" <?= old('satuan') == 'orang' ? 'selected' : '' ?>>Orang</option>
-                <option value="dokumen" <?= old('satuan') == 'dokumen' ? 'selected' : '' ?>>Dokumen</option>
-                <option value="paket" <?= old('satuan') == 'paket' ? 'selected' : '' ?>>Paket</option>
-                <option value="kegiatan" <?= old('satuan') == 'kegiatan' ? 'selected' : '' ?>>Kegiatan</option>
-            </select>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Satuan<span class="text-red-500">*</span>
+            </label>
+            <input type="text" name="satuan" value="<?= old('satuan') ?>" class="input-field" required>
         </div>  
 
         <!-- Keterangan -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan<span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Keterangan<span class="text-red-500">*</span>
+            </label>
             <textarea name="keterangan" rows="3" class="input-field resize-none" required><?= old('keterangan') ?></textarea>
         </div>
 
         <!-- Periode -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Periode<span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Periode<span class="text-red-500">*</span>
+            </label>
             <input type="text" name="periode" value="<?= old('periode') ?>" class="input-field" required>
         </div>
 
         <!-- Target -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Target<span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Target<span class="text-red-500">*</span>
+            </label>
             <input type="number" name="target" value="<?= old('target') ?>" class="input-field" min="0" required>
         </div>
 
         <!-- Target Hari Pertama & Selesai -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Target Hari Pertama<span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Target Hari Pertama (Dalam Persen %)<span class="text-red-500">*</span>
+                </label>
                 <input type="number" name="persentase_target_awal" value="<?= old('persentase_target_awal') ?>" class="input-field" min="0" required>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Target Tanggal Selesai<span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Target Tanggal Selesai<span class="text-red-500">*</span>
+                </label>
                 <input type="date" id="tanggal_selesai_target" name="tanggal_selesai_target" value="<?= old('tanggal_selesai_target') ?>" class="input-field" required>
             </div>
         </div>

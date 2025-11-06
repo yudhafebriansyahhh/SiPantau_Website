@@ -137,7 +137,7 @@ const options = {
               font-size:12px; 
               line-height:1.5; 
               background:#f9fafb; 
-              padding:6px 8px; 
+              padding:6px 12px; 
               border-radius:6px;
               border:1px solid #e5e7eb;
               box-shadow:inset 0 0 3px rgba(0,0,0,0.05);
@@ -151,7 +151,7 @@ const options = {
                 <span style="font-weight:600; color:#0f172a;">${targetHarian}</span>
               </div>
               <div style="display:flex; justify-content:space-between;">
-                <span>📈 Persen Kumulatif</span>
+                <span>📈 Persen Kumulatif </span>
                 <span style="font-weight:600; color:#0f172a;">${persenKum}%</span>
               </div>
             </div>`;

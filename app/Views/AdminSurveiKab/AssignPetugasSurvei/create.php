@@ -218,7 +218,6 @@ function loadSisaTargetWilayah(idKegiatanWilayah) {
                 } else {
                     loadAvailablePML(idKegiatanWilayah);
                     document.getElementById('pmlSection').style.display = 'block';
-                    // Reset sections below
                     document.getElementById('targetPMLSection').style.display = 'none';
                     document.getElementById('pclSection').style.display = 'none';
                     selectedPML = null;
@@ -251,7 +250,6 @@ function loadSisaTargetWilayah(idKegiatanWilayah) {
 function loadAvailablePML(idKegiatanWilayah) {
     const container = document.getElementById('pmlSelectContainer');
     
-    // Show loading
     container.innerHTML = `
         <div class="text-center text-gray-500 py-4">
             <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
@@ -267,11 +265,9 @@ function loadAvailablePML(idKegiatanWilayah) {
             [csrfName]: csrfHash
         },
         success: function(response) {
-            // Update CSRF token
             csrfHash = response.csrf_hash || csrfHash;
             
             if (response.success && response.data.length > 0) {
-                // Create select component HTML
                 const selectHtml = `
                     <select name="pml_sobat_id" id="pmlSelect" class="select2-pml" style="width: 100%" onchange="handlePMLChange()">
                         <option value="">Pilih PML...</option>
@@ -283,7 +279,6 @@ function loadAvailablePML(idKegiatanWilayah) {
                 
                 container.innerHTML = selectHtml;
                 
-                // Initialize Select2
                 $('.select2-pml').select2({
                     placeholder: 'Cari dan pilih PML...',
                     allowClear: true,
@@ -322,14 +317,11 @@ function handlePMLChange() {
     if (selectedPML) {
         document.getElementById('targetPMLSection').style.display = 'block';
         
-        // Set max target dan placeholder
         const targetInput = document.getElementById('pmlTarget');
         targetInput.max = sisaTargetWilayah;
         targetInput.placeholder = `Maksimal sisa target: ${sisaTargetWilayah.toLocaleString()}`;
         
-        // Update info sisa target
         updateSisaTargetInfo();
-        
         $('#pmlTarget').focus();
     } else {
         document.getElementById('targetPMLSection').style.display = 'none';
@@ -362,7 +354,6 @@ function updateSisaTarget() {
     const pmlTargetInput = document.getElementById('pmlTarget');
     targetPML = parseInt(pmlTargetInput.value) || 0;
     
-    // Validasi tidak melebihi sisa target wilayah
     if (targetPML > sisaTargetWilayah) {
         Swal.fire({
             icon: 'error',
@@ -379,7 +370,7 @@ function updateSisaTarget() {
         document.getElementById('pclSection').style.display = 'block';
         document.getElementById('sisaTargetPML').style.display = 'block';
         document.getElementById('sisaTargetValue').textContent = targetPML;
-        loadAvailablePCL();
+        loadAvailablePCL(); // Load PCL dengan filter kegiatan dan PML
         updateTargetInfo();
     } else {
         document.getElementById('pclSection').style.display = 'none';
@@ -391,23 +382,30 @@ function updateSisaTarget() {
     updateSubmitButton();
 }
 
-// Load available PCL
+// Load available PCL - FIXED: kirim id_kegiatan_wilayah dan pml_sobat_id
 function loadAvailablePCL() {
-    if (!selectedPML) return;
+    if (!selectedPML || !selectedKegiatan) {
+        console.error('selectedPML atau selectedKegiatan belum diisi');
+        return;
+    }
     
     $.ajax({
         url: '<?= base_url('adminsurvei-kab/assign-petugas/get-available-pcl') ?>',
         method: 'POST',
         data: {
-            id_pml: selectedPML,
+            id_kegiatan_wilayah: selectedKegiatan, // WAJIB
+            pml_sobat_id: selectedPML, // Exclude PML yang baru dipilih
             [csrfName]: csrfHash
         },
         success: function(response) {
-            // Update CSRF token
             csrfHash = response.csrf_hash || csrfHash;
             
             if (response.success) {
                 availablePCL = response.data || [];
+                console.log('Available PCL loaded:', availablePCL.length);
+            } else {
+                console.error('Error loading PCL:', response.error);
+                availablePCL = [];
             }
         },
         error: function(xhr, status, error) {
@@ -417,13 +415,33 @@ function loadAvailablePCL() {
     });
 }
 
-// Add PCL row
+// Add PCL row - UPDATED
 function addPCLRow() {
+    if (!selectedKegiatan) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pilih Kegiatan Dulu',
+            text: 'Silakan pilih kegiatan survei terlebih dahulu',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+
+    if (!selectedPML) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pilih PML Dulu',
+            text: 'Silakan pilih PML terlebih dahulu',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+
     if (availablePCL.length === 0) {
         Swal.fire({
             icon: 'warning',
             title: 'Tidak Ada PCL',
-            text: 'Tidak ada PCL yang tersedia untuk ditambahkan',
+            text: 'Tidak ada PCL yang tersedia untuk kegiatan ini',
             confirmButtonColor: '#3b82f6'
         });
         return;
@@ -442,16 +460,24 @@ function addPCLRow() {
 
     pclCounter++;
     const container = document.getElementById('pclContainer');
-    const pclNumber = document.querySelectorAll('.pcl-row').length + 1; // Hitung jumlah PCL yang ada
+    const pclNumber = document.querySelectorAll('.pcl-row').length + 1;
     
     const row = document.createElement('div');
     row.className = 'pcl-row border border-gray-200 rounded-lg p-4 mb-3';
     row.id = `pclRow${pclCounter}`;
     row.dataset.pclNumber = pclNumber;
     
+    // Filter: Exclude PCL yang sudah dipilih
+    const selectedPCLIds = [];
+    document.querySelectorAll('.pcl-select').forEach(select => {
+        if (select.value) selectedPCLIds.push(select.value);
+    });
+    
     let optionsHTML = '<option value="">Pilih PCL...</option>';
     availablePCL.forEach(pcl => {
-        optionsHTML += `<option value="${pcl.sobat_id}">${escapeHtml(pcl.nama_user)} - ${escapeHtml(pcl.email)}</option>`;
+        if (!selectedPCLIds.includes(pcl.sobat_id.toString())) {
+            optionsHTML += `<option value="${pcl.sobat_id}">${escapeHtml(pcl.nama_user)} - ${escapeHtml(pcl.email)}</option>`;
+        }
     });
     
     row.innerHTML = `
@@ -467,7 +493,8 @@ function addPCLRow() {
                 <select name="pcl[${pclCounter}][sobat_id]" 
                         class="select2-pcl pcl-select" 
                         style="width: 100%"
-                        data-row="${pclCounter}">
+                        data-row="${pclCounter}"
+                        onchange="handlePCLSelectChange()">
                     ${optionsHTML}
                 </select>
             </div>
@@ -497,7 +524,6 @@ function addPCLRow() {
     
     container.appendChild(row);
     
-    // Initialize Select2 for new row
     $(`#pclRow${pclCounter} .select2-pcl`).select2({
         placeholder: 'Cari dan pilih PCL...',
         allowClear: true,
@@ -505,6 +531,40 @@ function addPCLRow() {
     });
     
     updateTargetInfo();
+}
+
+// Handle PCL select change
+function handlePCLSelectChange() {
+    const selectedPCLIds = [];
+    document.querySelectorAll('.pcl-select').forEach(select => {
+        if (select.value) selectedPCLIds.push(select.value);
+    });
+    
+    document.querySelectorAll('.pcl-select').forEach(select => {
+        const currentValue = select.value;
+        const $select = $(select);
+        
+        $select.select2('destroy');
+        select.innerHTML = '<option value="">Pilih PCL...</option>';
+        
+        availablePCL.forEach(pcl => {
+            if (pcl.sobat_id.toString() === currentValue || !selectedPCLIds.includes(pcl.sobat_id.toString())) {
+                const option = new Option(
+                    `${pcl.nama_user} - ${pcl.email}`,
+                    pcl.sobat_id,
+                    false,
+                    pcl.sobat_id.toString() === currentValue
+                );
+                select.add(option);
+            }
+        });
+        
+        $select.select2({
+            placeholder: 'Cari dan pilih PCL...',
+            allowClear: true,
+            width: '100%'
+        });
+    });
 }
 
 // Remove PCL row
@@ -522,19 +582,17 @@ function removePCLRow(id) {
         if (result.isConfirmed) {
             const row = document.getElementById(`pclRow${id}`);
             if (row) {
-                // Destroy Select2 before removing
                 $(row).find('.select2-pcl').select2('destroy');
                 row.remove();
-                
-                // Renumber remaining PCL rows
                 renumberPCLRows();
+                handlePCLSelectChange();
                 updateTargetInfo();
             }
         }
     });
 }
 
-// Renumber PCL rows after deletion
+// Renumber PCL rows
 function renumberPCLRows() {
     const rows = document.querySelectorAll('.pcl-row');
     rows.forEach((row, index) => {
@@ -542,14 +600,10 @@ function renumberPCLRows() {
         row.dataset.pclNumber = number;
         
         const numberBadge = row.querySelector('.pcl-number');
-        if (numberBadge) {
-            numberBadge.textContent = number;
-        }
+        if (numberBadge) numberBadge.textContent = number;
         
         const heading = row.querySelector('h3');
-        if (heading) {
-            heading.textContent = `PCL #${number}`;
-        }
+        if (heading) heading.textContent = `PCL #${number}`;
     });
 }
 
@@ -591,24 +645,20 @@ function updateTargetInfo() {
     document.getElementById('sisaTargetPMLForPCL').textContent = sisaTarget;
     document.getElementById('sisaTargetValue').textContent = sisaTarget;
     
-    // Update max attribute for all PCL target inputs
     document.querySelectorAll('.pcl-target').forEach(input => {
         const currentValue = parseInt(input.value) || 0;
         const otherTargets = totalTargetPCL - currentValue;
         input.max = targetPML - otherTargets;
         
-        // Update info text in parent row
         const row = input.closest('.pcl-row');
         if (row) {
             const infoText = row.querySelector('.text-gray-700');
-            if (infoText) {
-                infoText.textContent = targetPML - otherTargets;
-            }
+            if (infoText) infoText.textContent = targetPML - otherTargets;
         }
     });
 }
 
-// Update submit button state
+// Update submit button
 function updateSubmitButton() {
     const submitBtn = document.getElementById('submitBtn');
     const hasKegiatan = selectedKegiatan !== null && selectedKegiatan !== '';
@@ -624,7 +674,6 @@ function resetForm() {
     document.getElementById('targetPMLSection').style.display = 'none';
     document.getElementById('pclSection').style.display = 'none';
     
-    // Destroy all Select2 instances
     $('.select2-pml').select2('destroy');
     $('.select2-pcl').select2('destroy');
     
@@ -647,7 +696,7 @@ function resetForm() {
     updateSubmitButton();
 }
 
-// Helper function to escape HTML
+// Helper function
 function escapeHtml(text) {
     const map = {
         '&': '&amp;',
@@ -685,7 +734,6 @@ document.getElementById('assignForm').addEventListener('submit', function(e) {
         return false;
     }
     
-    // Show loading
     Swal.fire({
         title: 'Menyimpan...',
         text: 'Mohon tunggu sebentar',
@@ -696,9 +744,8 @@ document.getElementById('assignForm').addEventListener('submit', function(e) {
     });
 });
 
-// Initialize on document ready
+// Initialize
 $(document).ready(function() {
-    // Initialize first select component if it uses Select2
     if ($('#kegiatanSurvei').length && !$('#kegiatanSurvei').data('select2')) {
         $('#kegiatanSurvei').select2({
             placeholder: 'Cari dan pilih kegiatan survei...',

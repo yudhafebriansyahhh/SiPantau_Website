@@ -16,26 +16,72 @@
 
 <!-- Main Card -->
 <div class="card">
-    <!-- Search and Add Button -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <!-- Search Box -->
-        <div class="relative w-full sm:w-96">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
+    <!-- Filter dan Search -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+        <!-- Filter Kegiatan Detail -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
+            <form method="GET" action="<?= base_url('adminsurvei/master-kegiatan-detail-proses') ?>" class="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+                <div class="relative w-full sm:w-80">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-filter text-gray-400"></i>
+                    </div>
+                    <select name="kegiatan_detail" 
+                            class="input-field w-full pl-10" 
+                            onchange="this.form.submit()">
+                        <option value="">Semua Kegiatan Detail</option>
+                        <?php foreach ($kegiatanDetailList as $item): ?>
+                            <option value="<?= esc($item['id_kegiatan_detail']) ?>" 
+                                    <?= ($kegiatanDetailFilter == $item['id_kegiatan_detail']) ? 'selected' : '' ?>>
+                                <?= esc($item['nama_kegiatan_detail']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <?php if ($kegiatanDetailFilter): ?>
+                    <a href="<?= base_url('adminsurvei/master-kegiatan-detail-proses/clear-filter') ?>" 
+                       class="btn-secondary whitespace-nowrap">
+                        <i class="fas fa-times mr-2"></i>Clear Filter
+                    </a>
+                <?php endif; ?>
+            </form>
+
+            <!-- Search Box -->
+            <div class="relative w-full sm:w-96">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" 
+                    class="input-field w-full pl-10" 
+                    placeholder="Cari kegiatan detail atau satuan..."
+                    onkeyup="searchTable()">
             </div>
-            <input type="text" id="searchInput" 
-                class="input-field w-full pl-10" 
-                placeholder="Cari kegiatan detail atau satuan..."
-                onkeyup="searchTable()">
         </div>
 
         <!-- Add Button -->
         <a href="<?= base_url('adminsurvei/master-kegiatan-detail-proses/create') ?>" 
-        class="btn-primary whitespace-nowrap w-full sm:w-auto text-center">
+           class="btn-primary whitespace-nowrap w-full lg:w-auto text-center">
             <i class="fas fa-plus mr-2"></i>
             Tambah Kegiatan
         </a>
     </div>
+
+    <!-- Filter Info -->
+    <?php if ($kegiatanDetailFilter): ?>
+        <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm text-blue-700">
+                <i class="fas fa-info-circle"></i>
+                <span>Filter aktif: 
+                    <strong>
+                        <?php 
+                        $selectedKegiatan = array_filter($kegiatanDetailList, fn($item) => $item['id_kegiatan_detail'] == $kegiatanDetailFilter);
+                        echo !empty($selectedKegiatan) ? esc(reset($selectedKegiatan)['nama_kegiatan_detail']) : '-';
+                        ?>
+                    </strong>
+                </span>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Table -->
     <div class="overflow-x-auto">
@@ -68,31 +114,40 @@
                             <td class="px-4 py-4 text-center"><span class="badge badge-info"><?= esc($detail['periode']) ?></span></td>
                             <td class="px-4 py-4 text-center text-gray-900 font-medium"><?= esc($detail['target']) ?></td>
                             <td class="px-4 py-4 text-center">
-                                <a href="<?= base_url('adminsurvei/master-kegiatan-detail-proses/edit/' . $detail['id_kegiatan_detail_proses']) ?>" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i class="fas fa-edit"></i></a>
-                                <button onclick="confirmDelete(<?= $detail['id_kegiatan_detail_proses'] ?>, '<?= esc($detail['nama_kegiatan_detail_proses']) ?>')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg"><i class="fas fa-trash"></i></button>
-                                    <input type="hidden" name="_method" value="DELETE">
-
+                                <a href="<?= base_url('adminsurvei/master-kegiatan-detail-proses/edit/' . $detail['id_kegiatan_detail_proses']) ?>" 
+                                   class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="confirmDelete(<?= $detail['id_kegiatan_detail_proses'] ?>, '<?= esc($detail['nama_kegiatan_detail_proses']) ?>')" 
+                                        class="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="10" class="px-4 py-6 text-center text-gray-500">Belum ada data kegiatan detail proses.</td>
+                        <td colspan="10" class="px-4 py-6 text-center text-gray-500">
+                            <?= $kegiatanDetailFilter ? 'Tidak ada data untuk filter yang dipilih.' : 'Belum ada data kegiatan detail proses.' ?>
+                        </td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
+        
         <form id="deleteForm" method="post" style="display:none;">
-    <?= csrf_field() ?>
-    <input type="hidden" name="_method" value="DELETE">
-</form>
-
+            <?= csrf_field() ?>
+            <input type="hidden" name="_method" value="DELETE">
+        </form>
     </div>
 
     <!-- Footer -->
     <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p class="text-sm text-gray-600">
-            Menampilkan <span class="font-medium"><?= isset($kegiatanDetails) ? count($kegiatanDetails) : 0 ?></span> data kegiatan detail proses.
+            Menampilkan <span class="font-medium"><?= isset($kegiatanDetails) ? count($kegiatanDetails) : 0 ?></span> data kegiatan detail proses
+            <?php if ($kegiatanDetailFilter): ?>
+                <span class="text-blue-600">(terfilter)</span>
+            <?php endif; ?>
         </p>
     </div>
 </div>
@@ -130,7 +185,6 @@ function confirmDelete(id, name) {
         }
     });
 }
-
 
 // Alert sukses setelah tambah/edit/hapus
 <?php if (session()->getFlashdata('success')) : ?>

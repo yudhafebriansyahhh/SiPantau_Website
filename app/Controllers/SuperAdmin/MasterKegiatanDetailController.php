@@ -6,12 +6,14 @@ use App\Controllers\BaseController;
 use App\Models\MasterKegiatanDetailModel;
 use App\Models\MasterKegiatanModel;
 use App\Models\MasterOutputModel;
+use App\Models\MasterKegiatanDetailAdminModel;
 
 class MasterKegiatanDetailController extends BaseController
 {
     protected $masterKegiatanDetailModel;
     protected $masterKegiatanModel;
     protected $masterOutputModel;
+    protected $masterKegiatanDetailAdminModel;
     protected $validation;
 
     public function __construct()
@@ -19,6 +21,7 @@ class MasterKegiatanDetailController extends BaseController
         $this->masterKegiatanDetailModel = new MasterKegiatanDetailModel();
         $this->masterKegiatanModel = new MasterKegiatanModel();
         $this->masterOutputModel = new MasterOutputModel();
+        $this->masterKegiatanDetailAdminModel = new MasterKegiatanDetailAdminModel();
         $this->validation = \Config\Services::validation();
     }
 
@@ -28,10 +31,10 @@ class MasterKegiatanDetailController extends BaseController
     public function index()
     {
         $filterKegiatan = $this->request->getGet('kegiatan');
-        
+
         // Get all master kegiatan untuk filter
         $masterKegiatans = $this->masterKegiatanModel->getWithOutput();
-        
+
         // Get kegiatan detail dengan filter
         if ($filterKegiatan && $filterKegiatan != 'all') {
             $details = $this->masterKegiatanDetailModel->getByKegiatan($filterKegiatan);
@@ -45,6 +48,11 @@ class MasterKegiatanDetailController extends BaseController
             }
         } else {
             $details = $this->masterKegiatanDetailModel->getWithKegiatan();
+        }
+
+        // Get admin untuk setiap kegiatan detail
+        foreach ($details as &$detail) {
+            $detail['admin_list'] = $this->masterKegiatanDetailAdminModel->getAdminByKegiatanDetail($detail['id_kegiatan_detail']);
         }
 
         $data = [
@@ -171,26 +179,26 @@ class MasterKegiatanDetailController extends BaseController
     // Show - Menampilkan detail master kegiatan detail
     // ====================================================================
     public function show($id)
-{
-    $detail = $this->masterKegiatanDetailModel->getWithKegiatanById($id);
+    {
+        $detail = $this->masterKegiatanDetailModel->getWithKegiatanById($id);
 
-    if (!$detail) {
-        return redirect()
-            ->to(base_url('superadmin/master-kegiatan-detail'))
-            ->with('error', 'Data master kegiatan detail tidak ditemukan');
+        if (!$detail) {
+            return redirect()
+                ->to(base_url('superadmin/master-kegiatan-detail'))
+                ->with('error', 'Data master kegiatan detail tidak ditemukan');
+        }
+
+        $detailProses = [];
+
+        $data = [
+            'title'        => 'Detail Kegiatan Detail',
+            'active_menu'  => 'master-kegiatan-detail',
+            'detail'       => $detail,
+            'detailProses' => $detailProses
+        ];
+
+        return view('SuperAdmin/MasterKegiatanDetail/show', $data);
     }
-
-    $detailProses = [];
-
-    $data = [
-        'title'        => 'Detail Kegiatan Detail',
-        'active_menu'  => 'master-kegiatan-detail',
-        'detail'       => $detail,
-        'detailProses' => $detailProses
-    ];
-
-    return view('SuperAdmin/MasterKegiatanDetail/show', $data);
-}
 
     // ====================================================================
     // Edit - Menampilkan form edit master kegiatan detail
@@ -341,5 +349,18 @@ class MasterKegiatanDetailController extends BaseController
                 'message' => 'Gagal menghapus data master kegiatan detail'
             ]);
         }
+    }
+
+    // ====================================================================
+    // Get Admins - AJAX endpoint untuk mengambil daftar admin
+    // ====================================================================
+    public function getAdmins($id)
+    {
+        $admins = $this->masterKegiatanDetailAdminModel->getAdminByKegiatanDetail($id);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'admins' => $admins
+        ]);
     }
 }

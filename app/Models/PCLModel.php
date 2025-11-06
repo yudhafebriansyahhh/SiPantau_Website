@@ -40,54 +40,146 @@ class PCLModel extends Model
      * Get PCL dengan detail lengkap
      */
     public function getPCLWithDetails($idPCL)
-{
-    return $this->db->table('pcl p')
-        ->select('p.*, 
-                 u.nama_user AS nama_pcl, u.email, u.hp, 
-                 kab.nama_kabupaten, 
-                 pml.target AS target_pml, 
-                 u_pml.nama_user AS nama_pml, 
-                 kw.id_kegiatan_wilayah, kw.id_kabupaten, 
-                 mkdp.nama_kegiatan_detail_proses, 
-                 mkdp.tanggal_mulai, mkdp.tanggal_selesai, 
-                 mkdp.tanggal_selesai_target, mkdp.persentase_target_awal, 
-                 mk.nama_kegiatan')
-        ->join('sipantau_user u', 'p.sobat_id = u.sobat_id')
-        ->join('master_kabupaten kab', 'u.id_kabupaten = kab.id_kabupaten', 'left')
-        ->join('pml', 'p.id_pml = pml.id_pml')
-        ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
-        ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
-        ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
-        ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
-        ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
-        ->where('p.id_pcl', $idPCL)
-        ->get()
-        ->getRowArray();
-}
-
+    {
+        return $this->db->table('pcl p')
+            ->select('p.*, 
+                     u.nama_user AS nama_pcl, u.email, u.hp, 
+                     kab.nama_kabupaten, 
+                     pml.target AS target_pml, 
+                     u_pml.nama_user AS nama_pml, 
+                     kw.id_kegiatan_wilayah, kw.id_kabupaten, 
+                     mkdp.nama_kegiatan_detail_proses, 
+                     mkdp.tanggal_mulai, mkdp.tanggal_selesai, 
+                     mkdp.tanggal_selesai_target, mkdp.persentase_target_awal, 
+                     mk.nama_kegiatan')
+            ->join('sipantau_user u', 'p.sobat_id = u.sobat_id')
+            ->join('master_kabupaten kab', 'u.id_kabupaten = kab.id_kabupaten', 'left')
+            ->join('pml', 'p.id_pml = pml.id_pml')
+            ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
+            ->where('p.id_pcl', $idPCL)
+            ->get()
+            ->getRowArray();
+    }
 
     /**
      * Get user yang bisa dijadikan PCL (belum di-assign untuk PML tertentu)
      */
-    public function getAvailablePCL($idKabupaten, $idPML)
+    public function getAvailablePCL()
     {
-        return $this->db->table('sipantau_user u')
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Invalid request']);
+        }
+
+        $sobatId = session()->get('sobat_id');
+        $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+            ->select('ask.*, u.id_kabupaten')
+            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+            ->where('ask.sobat_id', $sobatId)
+            ->get()
+            ->getRowArray();
+
+        if (!$admin) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => 'Unauthorized',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        $idPML = $this->request->getPost('id_pml');
+        $pmlSobatId = $this->request->getPost('pml_sobat_id'); // PML yang dipilih di form
+        $idKegiatanWilayah = $this->request->getPost('id_kegiatan_wilayah'); // WAJIB ADA
+
+        // VALIDASI: id_kegiatan_wilayah harus ada
+        if (!$idKegiatanWilayah) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => 'ID Kegiatan Wilayah diperlukan',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        // Cek akses admin ke kegiatan ini
+        $isAssigned = $this->kegiatanWilayahAdminModel->isAssigned($admin['id_admin_kabupaten'], $idKegiatanWilayah);
+        if (!$isAssigned) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => 'Anda tidak memiliki akses ke kegiatan ini',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        // Get available PCL dengan filter lengkap
+        $users = $this->pclModel->getAvailablePCLForKegiatan(
+            $admin['id_kabupaten'],
+            $idKegiatanWilayah,
+            $idPML,
+            $pmlSobatId // Exclude PML yang baru dipilih di form
+        );
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $users,
+            'csrf_hash' => csrf_hash()
+        ]);
+    }
+
+    /**
+     * Get Available PCL untuk kegiatan tertentu
+     * Exclude: PML yang dipilih, admin yang terlibat di kegiatan ini, dan user yang sudah terlibat (PML/PCL) di kegiatan ini
+     * FIXED METHOD - sekarang sudah filter admin yang di-assign ke kegiatan
+     */
+    public function getAvailablePCLForKegiatan($idKabupaten, $idKegiatanWilayah, $idPML = null, $pmlSobatId = null)
+    {
+        $builder = $this->db->table('sipantau_user u')
             ->select('u.sobat_id, u.nama_user, u.email, u.hp')
             ->where('u.id_kabupaten', $idKabupaten)
             ->where('u.is_active', 1)
-            ->where('u.sobat_id NOT IN (
-                SELECT sobat_id FROM pcl 
-                WHERE id_pml = ' . $idPML . '
-            )')
-            ->where('u.sobat_id NOT IN (
-                SELECT sobat_id FROM pml
-            )')
-            ->where('u.sobat_id NOT IN (
-                SELECT sobat_id FROM admin_survei_kabupaten
-            )')
-            ->orderBy('u.nama_user', 'ASC')
-            ->get()
-            ->getResultArray();
+            ->orderBy('u.nama_user', 'ASC');
+
+        // Exclude PML yang dipilih
+        if ($pmlSobatId) {
+            $builder->where('u.sobat_id !=', $pmlSobatId);
+        }
+
+        // Exclude user yang sudah menjadi PML di kegiatan ini
+        $builder->whereNotIn('u.sobat_id', function ($subquery) use ($idKegiatanWilayah) {
+            return $subquery->select('sobat_id')
+                ->from('pml')
+                ->where('id_kegiatan_wilayah', $idKegiatanWilayah);
+        });
+
+        // Exclude user yang sudah menjadi PCL di kegiatan ini (kecuali untuk PML yang sedang diedit)
+        if ($idPML) {
+            $builder->whereNotIn('u.sobat_id', function ($subquery) use ($idKegiatanWilayah, $idPML) {
+                return $subquery->select('pcl.sobat_id')
+                    ->from('pcl')
+                    ->join('pml', 'pml.id_pml = pcl.id_pml')
+                    ->where('pml.id_kegiatan_wilayah', $idKegiatanWilayah)
+                    ->where('pcl.id_pml !=', $idPML);
+            });
+        } else {
+            $builder->whereNotIn('u.sobat_id', function ($subquery) use ($idKegiatanWilayah) {
+                return $subquery->select('pcl.sobat_id')
+                    ->from('pcl')
+                    ->join('pml', 'pml.id_pml = pcl.id_pml')
+                    ->where('pml.id_kegiatan_wilayah', $idKegiatanWilayah);
+            });
+        }
+
+        // **PERBAIKAN UTAMA**: Exclude admin kabupaten yang meng-handle kegiatan ini
+        $builder->whereNotIn('u.sobat_id', function ($subquery) use ($idKegiatanWilayah) {
+            return $subquery->select('ask.sobat_id')
+                ->from('admin_survei_kabupaten ask')
+                ->join('kegiatan_wilayah_admin kwa', 'kwa.id_admin_kabupaten = ask.id_admin_kabupaten')
+                ->where('kwa.id_kegiatan_wilayah', $idKegiatanWilayah);
+        });
+
+        return $builder->get()->getResultArray();
     }
 
     /**
@@ -129,16 +221,8 @@ class PCLModel extends Model
             ->getResultArray();
     }
 
-    // ============================================================
-    // METHODS UNTUK GENERATE KURVA S DAN VALIDASI TARGET
-    // ============================================================
-
     /**
      * Get total target PCL yang sudah di-assign ke PML tertentu
-     * 
-     * @param int $idPML ID PML yang akan dicek
-     * @param int|null $excludePCLId ID PCL yang akan dikecualikan (untuk edit)
-     * @return int Total target PCL
      */
     public function getTotalTargetByPML($idPML, $excludePCLId = null)
     {
@@ -156,14 +240,9 @@ class PCLModel extends Model
 
     /**
      * Get sisa target PML yang belum di-assign ke PCL
-     * 
-     * @param int $idPML ID PML
-     * @param int|null $excludePCLId ID PCL yang akan dikecualikan (untuk edit)
-     * @return int Sisa target yang tersedia
      */
     public function getSisaTargetPML($idPML, $excludePCLId = null)
     {
-        // Get target PML
         $pml = $this->db->table('pml')
             ->select('target')
             ->where('id_pml', $idPML)
@@ -181,17 +260,12 @@ class PCLModel extends Model
     }
 
     /**
-     * Validasi apakah target PCL valid (tidak melebihi sisa target PML)
-     * 
-     * @param int $idPML ID PML
-     * @param int $targetPCL Target yang akan di-assign ke PCL
-     * @param int|null $excludePCLId ID PCL yang akan dikecualikan (untuk edit)
-     * @return array ['valid' => bool, 'message' => string, 'sisa_target' => int]
+     * Validasi apakah target PCL valid
      */
     public function validateTargetPCL($idPML, $targetPCL, $excludePCLId = null)
     {
         $sisaTarget = $this->getSisaTargetPML($idPML, $excludePCLId);
-        
+
         if ($targetPCL > $sisaTarget) {
             return [
                 'valid' => false,
@@ -209,9 +283,6 @@ class PCLModel extends Model
 
     /**
      * Get detail kegiatan untuk generate Kurva S
-     * 
-     * @param int $idPML ID PML
-     * @return array|null Detail kegiatan (tanggal mulai, selesai, dll)
      */
     public function getKegiatanDetailForKurva($idPML)
     {
@@ -228,25 +299,19 @@ class PCLModel extends Model
 
     /**
      * Delete PCL beserta Kurva Petugas-nya
-     * 
-     * @param int $idPCL ID PCL yang akan dihapus
-     * @return bool Success status
      */
     public function deletePCLWithKurva($idPCL)
     {
         $kurvaModel = new \App\Models\KurvaPetugasModel();
-        
+
         $this->db->transStart();
-        
+
         try {
-            // Delete kurva petugas first (jika tidak ada FK CASCADE)
             $kurvaModel->deleteByPCL($idPCL);
-            
-            // Delete PCL
             $this->delete($idPCL);
-            
+
             $this->db->transComplete();
-            
+
             return $this->db->transStatus();
         } catch (\Exception $e) {
             $this->db->transRollback();
@@ -257,38 +322,29 @@ class PCLModel extends Model
 
     /**
      * Update PCL dan regenerate Kurva S jika target berubah
-     * 
-     * @param int $idPCL ID PCL
-     * @param array $data Data yang akan diupdate
-     * @return bool Success status
      */
     public function updatePCLWithKurva($idPCL, $data)
     {
         $existingPCL = $this->find($idPCL);
-        
+
         if (!$existingPCL) {
             return false;
         }
 
         $this->db->transStart();
-        
+
         try {
-            // Update PCL data
             $this->update($idPCL, $data);
-            
-            // Regenerate Kurva S jika target berubah
+
             if (isset($data['target']) && $data['target'] != $existingPCL['target']) {
                 $kurvaModel = new \App\Models\KurvaPetugasModel();
-                
-                // Delete old kurva
                 $kurvaModel->deleteByPCL($idPCL);
-                
-                // Generate new kurva (akan dipanggil dari controller)
+
                 log_message('info', "Target PCL berubah dari {$existingPCL['target']} ke {$data['target']}, regenerate Kurva S diperlukan");
             }
-            
+
             $this->db->transComplete();
-            
+
             return $this->db->transStatus();
         } catch (\Exception $e) {
             $this->db->transRollback();
@@ -299,21 +355,16 @@ class PCLModel extends Model
 
     /**
      * Batch insert PCL dengan validasi total target
-     * 
-     * @param int $idPML ID PML
-     * @param array $pclDataArray Array of PCL data
-     * @return array ['success' => bool, 'message' => string, 'inserted_ids' => array]
      */
     public function batchInsertPCL($idPML, $pclDataArray)
     {
-        // Validasi total target
         $totalTarget = 0;
         foreach ($pclDataArray as $pcl) {
             $totalTarget += (int) $pcl['target'];
         }
 
         $validation = $this->validateTargetPCL($idPML, $totalTarget);
-        
+
         if (!$validation['valid']) {
             return [
                 'success' => false,
@@ -323,21 +374,21 @@ class PCLModel extends Model
         }
 
         $this->db->transStart();
-        
+
         try {
             $insertedIds = [];
-            
+
             foreach ($pclDataArray as $pclData) {
                 $pclData['id_pml'] = $idPML;
                 $pclData['status_approval'] = 0;
                 $pclData['tanggal_approval'] = null;
-                
+
                 $insertedId = $this->insert($pclData);
                 $insertedIds[] = $insertedId;
             }
-            
+
             $this->db->transComplete();
-            
+
             if ($this->db->transStatus() === false) {
                 return [
                     'success' => false,
@@ -345,7 +396,7 @@ class PCLModel extends Model
                     'inserted_ids' => []
                 ];
             }
-            
+
             return [
                 'success' => true,
                 'message' => 'Berhasil menyimpan ' . count($insertedIds) . ' PCL',
@@ -354,7 +405,7 @@ class PCLModel extends Model
         } catch (\Exception $e) {
             $this->db->transRollback();
             log_message('error', 'Error batch insert PCL: ' . $e->getMessage());
-            
+
             return [
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
@@ -365,19 +416,15 @@ class PCLModel extends Model
 
     /**
      * Get statistik target vs realisasi PCL
-     * 
-     * @param int $idPCL ID PCL
-     * @return array Statistik target dan realisasi
      */
     public function getTargetStatistics($idPCL)
     {
         $pcl = $this->find($idPCL);
-        
+
         if (!$pcl) {
             return null;
         }
 
-        // Get realisasi terakhir
         $realisasi = $this->db->table('pantau_progress')
             ->select('MAX(jumlah_realisasi_kumulatif) as realisasi_kumulatif')
             ->where('id_pcl', $idPCL)

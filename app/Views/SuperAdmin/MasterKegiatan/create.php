@@ -46,7 +46,7 @@
                     <?php if (isset($masterOutputs) && !empty($masterOutputs)): ?>
                         <?php foreach ($masterOutputs as $output): ?>
                             <option value="<?= $output['id_output'] ?>" <?= old('id_output') == $output['id_output'] ? 'selected' : '' ?>>
-                                <?= esc($output['nama_output']) ?> (<?= esc($output['alias']) ?>)
+                                <?= esc($output['nama_output']) ?>
                             </option>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -87,23 +87,6 @@
             <?php endif; ?>
         </div>
 
-        <!-- Fungsi -->
-        <div class="mb-6">
-            <label for="fungsi" class="block text-sm font-medium text-gray-700 mb-2">
-                Fungsi <span class="text-red-500">*</span>
-            </label>
-            <textarea id="fungsi" 
-                      name="fungsi" 
-                      rows="4" 
-                      class="input-field resize-none <?= session('errors.fungsi') ? 'border-red-500' : '' ?>" 
-                      required><?= old('fungsi') ?></textarea>
-            <?php if (session('errors.fungsi')): ?>
-                <p class="mt-1 text-xs text-red-500"><?= session('errors.fungsi') ?></p>
-            <?php else: ?>
-                <p class="mt-1 text-xs text-gray-500">Jelaskan fungsi atau tujuan dari kegiatan ini</p>
-            <?php endif; ?>
-        </div>
-
         <!-- Keterangan -->
         <div class="mb-6">
             <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-2">
@@ -116,38 +99,49 @@
             <p class="mt-1 text-xs text-gray-500">Tambahkan keterangan atau detail tambahan kegiatan (opsional)</p>
         </div>
 
-        <!-- Pelaksana -->
-        <div class="mb-6">
-            <label for="pelaksana" class="block text-sm font-medium text-gray-700 mb-2">
-                Pelaksana
-            </label>
-            <input type="text" 
-                   id="pelaksana" 
-                   name="pelaksana" 
-                   class="input-field <?= session('errors.pelaksana') ? 'border-red-500' : '' ?>" 
-                   value="<?= old('pelaksana') ?>">
-            <?php if (session('errors.pelaksana')): ?>
-                <p class="mt-1 text-xs text-red-500"><?= session('errors.pelaksana') ?></p>
-            <?php else: ?>
-                <p class="mt-1 text-xs text-gray-500">Nama instansi atau tim pelaksana kegiatan (opsional)</p>
-            <?php endif; ?>
-        </div>
-
         <!-- Periode -->
         <div class="mb-6">
             <label for="periode" class="block text-sm font-medium text-gray-700 mb-2">
                 Periode <span class="text-red-500">*</span>
             </label>
-            <input type="text" 
+            <select 
                    id="periode" 
                    name="periode" 
                    class="input-field <?= session('errors.periode') ? 'border-red-500' : '' ?>" 
                    value="<?= old('periode') ?>"
                    required>
+                <option value="">-- Pilih Periode --</option>
+                <option value="Tahunan" <?= old('periode') == 'Tahunan' ? 'selected' : '' ?>>Tahunan</option>
+                <option value="Semesteran" <?= old('periode') == 'Semesteran' ? 'selected' : '' ?>>Semesteran</option>
+                <option value="Triwulanan" <?= old('periode') == 'Triwulanan' ? 'selected' : '' ?>>Triwulanan</option>
+                <option value="Bulanan" <?= old('periode') == 'Bulanan' ? 'selected' : '' ?>>Bulanan</option>
+                <option value="Lainnya" <?= old('periode') == 'Lainnya' ? 'selected' : '' ?>>Lainnya</option>
+            </select>
             <?php if (session('errors.periode')): ?>
                 <p class="mt-1 text-xs text-red-500"><?= session('errors.periode') ?></p>
             <?php else: ?>
                 <p class="mt-1 text-xs text-gray-500">Masukkan periode pelaksanaan kegiatan (tahun, triwulan, semester, atau bulan)</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- Pelaksana -->
+        <div class="mb-6">
+            <label for="pelaksana" class="block text-sm font-medium text-gray-700 mb-2">
+                Pelaksana
+            </label>
+            <select 
+                   id="pelaksana" 
+                   name="pelaksana" 
+                   class="input-field <?= session('errors.pelaksana') ? 'border-red-500' : '' ?>" 
+                   value="<?= old('pelaksana') ?>">
+                <option value="">-- Pilih Pelaksana --</option>
+                <option value="Provinsi" <?= old('pelaksana') == 'Provinsi' ? 'selected' : '' ?>>Provinsi</option>
+                <option value="Kabupaten" <?= old('pelaksana') == 'Kabupaten' ? 'selected' : '' ?>>Kabupaten</option>
+            </select>
+            <?php if (session('errors.pelaksana')): ?>
+                <p class="mt-1 text-xs text-red-500"><?= session('errors.pelaksana') ?></p>
+            <?php else: ?>
+                <p class="mt-1 text-xs text-gray-500">Tim pelaksana kegiatan</p>
             <?php endif; ?>
         </div>
 
@@ -188,7 +182,6 @@ document.getElementById('formMasterKegiatan').addEventListener('submit', functio
     // Validasi form
     const idOutput = document.getElementById('id_output').value.trim();
     const namaKegiatan = document.getElementById('nama_kegiatan').value.trim();
-    const fungsi = document.getElementById('fungsi').value.trim();
     const periode = document.getElementById('periode').value.trim();
     
     if (!idOutput) {
@@ -205,7 +198,7 @@ document.getElementById('formMasterKegiatan').addEventListener('submit', functio
         return;
     }
     
-    if (!namaKegiatan || !fungsi || !periode) {
+    if (!namaKegiatan || !periode) {
         Swal.fire({
             icon: 'error',
             title: 'Form Tidak Lengkap',
@@ -225,20 +218,6 @@ document.getElementById('formMasterKegiatan').addEventListener('submit', functio
             icon: 'error',
             title: 'Nama Kegiatan Terlalu Pendek',
             text: 'Nama kegiatan minimal 5 karakter',
-            confirmButtonColor: '#3b82f6',
-            customClass: {
-                popup: 'rounded-xl',
-                confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-            }
-        });
-        return;
-    }
-    
-    if (fungsi.length < 10) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Fungsi Terlalu Pendek',
-            text: 'Fungsi minimal 10 karakter',
             confirmButtonColor: '#3b82f6',
             customClass: {
                 popup: 'rounded-xl',
@@ -320,14 +299,14 @@ function resetForm() {
 }
 
 // Real-time character counter untuk textarea
-const textareas = ['fungsi', 'keterangan'];
+const textareas = ['keterangan'];
 textareas.forEach(id => {
     const textarea = document.getElementById(id);
     textarea.addEventListener('input', function() {
         const length = this.value.length;
         const hint = this.nextElementSibling;
         
-        if (id === 'fungsi' && length < 10 && length > 0) {
+        if (id === 'keterangan' && length < 10 && length > 0) {
             hint.classList.add('text-red-500');
             hint.classList.remove('text-gray-500');
         } else {
