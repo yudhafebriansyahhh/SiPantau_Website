@@ -57,6 +57,7 @@ class KegiatanController extends BaseController
                 $dataKegiatan = $pmlModel->select('
                         pml.id_pml, pml.target, pml.status_approval,
                         mk.nama_kegiatan, mkdp.nama_kegiatan_detail_proses,
+                        kw.id_kegiatan_detail_proses,
                         mkdp.tanggal_mulai, mkdp.tanggal_selesai,
                         kab.nama_kabupaten
                     ')
@@ -84,6 +85,7 @@ class KegiatanController extends BaseController
             if ($isPCL) {
                 $dataKegiatan = $pclModel->select('
                         pcl.id_pcl, pcl.target, pcl.status_approval,
+                        kw.id_kegiatan_detail_proses,
                         mk.nama_kegiatan, mkdp.nama_kegiatan_detail_proses,
                         mkdp.tanggal_mulai, mkdp.tanggal_selesai,
                         kab.nama_kabupaten,

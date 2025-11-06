@@ -20,6 +20,12 @@ class PantauProgress extends Migration
                 'constraint' => 11,
                 'unsigned' => true
             ],
+            'jumlah_realisasi_absolut' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'default' => 0
+            ],
             'jumlah_realisasi_kumulatif' => [
                 'type' => 'INT',
                 'constraint' => 11,

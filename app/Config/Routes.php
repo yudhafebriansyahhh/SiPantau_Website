@@ -185,4 +185,8 @@ $routes->group('pemantau', ['filter' => 'role:4'], static function ($routes) {
         $routes->post('pelaporan', 'PelaporanController::create');
         $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
         $routes->get('kegiatan', 'KegiatanController::index');
+        $routes->get('kecamatan', 'KecamatanController::index');
+        $routes->get('desa', 'DesaController::index');
+        $routes->post('progres', 'PantauProgressController::create');
+        $routes->get('progres', 'PantauProgressController::index');
     });
