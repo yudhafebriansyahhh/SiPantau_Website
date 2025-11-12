@@ -86,6 +86,24 @@
                     <p class="mt-1 text-xs text-gray-500">Tidak dapat diubah</p>
                 </div>
             </div>
+
+            <div class="grid grid-cols-1 gap-4 mt-4">
+                <!-- Pegawai/Mitra -->
+                <div>
+                    <label for="is_pegawai" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pegawai/Mitra <span class="text-red-500">*</span>
+                    </label>
+                    <?php $selectedIsPegawai = (string) old('is_pegawai', (string) $user['is_pegawai']); ?>
+                    <select 
+                        id="is_pegawai" 
+                        name="is_pegawai" 
+                        class="input-field <?= session('errors.is_pegawai') ? 'border-red-500' : '' ?>" required>
+                        <option value="" disabled <?= $selectedIsPegawai === '' ? 'selected' : '' ?>>-- Pilih Status --</option>
+                        <option value="1" <?= $selectedIsPegawai === '1' ? 'selected' : '' ?>>Pegawai</option>
+                        <option value="0" <?= $selectedIsPegawai === '0' ? 'selected' : '' ?>>Mitra</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <!-- Divider -->
@@ -243,6 +261,7 @@ const originalValues = {
     email: '<?= esc($user['email']) ?>',
     hp: '<?= esc($user['hp']) ?>',
     id_kabupaten: '<?= $user['id_kabupaten'] ?>',
+    is_pegawai: '<?= (string) $user['is_pegawai'] ?>', 
     roles: <?= json_encode($user['role_ids']) ?>
 };
 
@@ -291,6 +310,7 @@ document.getElementById('formPengguna').addEventListener('submit', function(e) {
     const hp = document.getElementById('hp').value.trim();
     const kabupaten = document.getElementById('id_kabupaten').value;
     const roles = document.querySelectorAll('input[name="roles[]"]:checked');
+    const isPegawai = document.getElementById('is_pegawai').value; 
     const changePassword = document.getElementById('changePassword').checked;
     const password = document.getElementById('password').value;
     const passwordConfirm = document.getElementById('password_confirm').value;
@@ -321,6 +341,7 @@ document.getElementById('formPengguna').addEventListener('submit', function(e) {
         email !== originalValues.email || 
         hp !== originalValues.hp ||
         kabupaten !== originalValues.id_kabupaten.toString() ||
+        isPegawai !== originalValues.is_pegawai ||  
         JSON.stringify(selectedRoles.sort()) !== JSON.stringify(originalValues.roles.sort()) ||
         changePassword;
     

@@ -7,6 +7,9 @@ use App\Models\MasterKegiatanDetailModel;
 use App\Models\MasterKegiatanModel;
 use App\Models\MasterOutputModel;
 use App\Models\MasterKegiatanDetailAdminModel;
+use App\Models\MasterKegiatanDetailProsesModel;
+use App\Models\MasterKegiatanWilayahModel;
+use App\Models\KurvaSProvinsiModel;
 
 class MasterKegiatanDetailController extends BaseController
 {
@@ -14,7 +17,10 @@ class MasterKegiatanDetailController extends BaseController
     protected $masterKegiatanModel;
     protected $masterOutputModel;
     protected $masterKegiatanDetailAdminModel;
+    protected $masterKegiatanDetailProsesModel;
+    protected $masterKegiatanWilayahModel;
     protected $validation;
+    protected $db;
 
     public function __construct()
     {
@@ -22,7 +28,10 @@ class MasterKegiatanDetailController extends BaseController
         $this->masterKegiatanModel = new MasterKegiatanModel();
         $this->masterOutputModel = new MasterOutputModel();
         $this->masterKegiatanDetailAdminModel = new MasterKegiatanDetailAdminModel();
+        $this->masterKegiatanDetailProsesModel = new MasterKegiatanDetailProsesModel();
+        $this->masterKegiatanWilayahModel = new MasterKegiatanWilayahModel();
         $this->validation = \Config\Services::validation();
+        $this->db = \Config\Database::connect();
     }
 
     // ====================================================================
@@ -56,11 +65,11 @@ class MasterKegiatanDetailController extends BaseController
         }
 
         $data = [
-            'title'            => 'Kelola Master Kegiatan Detail',
-            'active_menu'      => 'master-kegiatan-detail',
-            'details'          => $details,
-            'masterKegiatans'  => $masterKegiatans,
-            'filterKegiatan'   => $filterKegiatan ?? 'all'
+            'title' => 'Kelola Master Kegiatan Detail',
+            'active_menu' => 'master-kegiatan-detail',
+            'details' => $details,
+            'masterKegiatans' => $masterKegiatans,
+            'filterKegiatan' => $filterKegiatan ?? 'all'
         ];
 
         return view('SuperAdmin/MasterKegiatanDetail/index', $data);
@@ -75,11 +84,11 @@ class MasterKegiatanDetailController extends BaseController
         $masterKegiatans = $this->masterKegiatanModel->getWithOutput();
 
         $data = [
-            'title'            => 'Tambah Master Kegiatan Detail',
-            'active_menu'      => 'master-kegiatan-detail',
-            'validation'       => $this->validation,
-            'masterKegiatans'  => $masterKegiatans,
-            'idKegiatan'       => $idKegiatan
+            'title' => 'Tambah Master Kegiatan Detail',
+            'active_menu' => 'master-kegiatan-detail',
+            'validation' => $this->validation,
+            'masterKegiatans' => $masterKegiatans,
+            'idKegiatan' => $idKegiatan
         ];
 
         return view('SuperAdmin/MasterKegiatanDetail/create', $data);
@@ -92,55 +101,55 @@ class MasterKegiatanDetailController extends BaseController
     {
         $rules = [
             'id_kegiatan' => [
-                'rules'  => 'required|numeric',
+                'rules' => 'required|numeric',
                 'errors' => [
                     'required' => 'Master kegiatan harus dipilih',
-                    'numeric'  => 'Master kegiatan tidak valid'
+                    'numeric' => 'Master kegiatan tidak valid'
                 ]
             ],
             'nama_kegiatan_detail' => [
-                'rules'  => 'required|max_length[255]',
+                'rules' => 'required|max_length[255]',
                 'errors' => [
-                    'required'   => 'Nama kegiatan detail harus diisi',
+                    'required' => 'Nama kegiatan detail harus diisi',
                     'max_length' => 'Nama kegiatan detail maksimal 255 karakter'
                 ]
             ],
             'satuan' => [
-                'rules'  => 'required|max_length[100]',
+                'rules' => 'required|max_length[100]',
                 'errors' => [
-                    'required'   => 'Satuan harus diisi',
+                    'required' => 'Satuan harus diisi',
                     'max_length' => 'Satuan maksimal 100 karakter'
                 ]
             ],
             'periode' => [
-                'rules'  => 'required|max_length[50]',
+                'rules' => 'required|max_length[50]',
                 'errors' => [
-                    'required'   => 'Periode harus diisi',
+                    'required' => 'Periode harus diisi',
                     'max_length' => 'Periode maksimal 50 karakter'
                 ]
             ],
             'tahun' => [
-                'rules'  => 'required|numeric|exact_length[4]',
+                'rules' => 'required|numeric|exact_length[4]',
                 'errors' => [
-                    'required'     => 'Tahun harus diisi',
-                    'numeric'      => 'Tahun harus berupa angka',
+                    'required' => 'Tahun harus diisi',
+                    'numeric' => 'Tahun harus berupa angka',
                     'exact_length' => 'Tahun harus 4 digit'
                 ]
             ],
             'tanggal_mulai' => [
-                'rules'  => 'permit_empty|valid_date',
+                'rules' => 'permit_empty|valid_date',
                 'errors' => [
                     'valid_date' => 'Format tanggal mulai tidak valid'
                 ]
             ],
             'tanggal_selesai' => [
-                'rules'  => 'permit_empty|valid_date',
+                'rules' => 'permit_empty|valid_date',
                 'errors' => [
                     'valid_date' => 'Format tanggal selesai tidak valid'
                 ]
             ],
             'keterangan' => [
-                'rules'  => 'permit_empty',
+                'rules' => 'permit_empty',
                 'errors' => []
             ]
         ];
@@ -153,14 +162,14 @@ class MasterKegiatanDetailController extends BaseController
         }
 
         $data = [
-            'id_kegiatan'          => $this->request->getPost('id_kegiatan'),
+            'id_kegiatan' => $this->request->getPost('id_kegiatan'),
             'nama_kegiatan_detail' => $this->request->getPost('nama_kegiatan_detail'),
-            'satuan'               => $this->request->getPost('satuan'),
-            'periode'              => $this->request->getPost('periode'),
-            'tahun'                => $this->request->getPost('tahun'),
-            'tanggal_mulai'        => $this->request->getPost('tanggal_mulai') ?: null,
-            'tanggal_selesai'      => $this->request->getPost('tanggal_selesai') ?: null,
-            'keterangan'           => $this->request->getPost('keterangan')
+            'satuan' => $this->request->getPost('satuan'),
+            'periode' => $this->request->getPost('periode'),
+            'tahun' => $this->request->getPost('tahun'),
+            'tanggal_mulai' => $this->request->getPost('tanggal_mulai') ?: null,
+            'tanggal_selesai' => $this->request->getPost('tanggal_selesai') ?: null,
+            'keterangan' => $this->request->getPost('keterangan')
         ];
 
         if ($this->masterKegiatanDetailModel->insert($data)) {
@@ -188,12 +197,16 @@ class MasterKegiatanDetailController extends BaseController
                 ->with('error', 'Data master kegiatan detail tidak ditemukan');
         }
 
-        $detailProses = [];
+        // Get detail proses yang terkait dengan kegiatan detail ini
+        $detailProses = $this->masterKegiatanDetailProsesModel
+            ->where('id_kegiatan_detail', $id)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
 
         $data = [
-            'title'        => 'Detail Kegiatan Detail',
-            'active_menu'  => 'master-kegiatan-detail',
-            'detail'       => $detail,
+            'title' => 'Detail Kegiatan Detail',
+            'active_menu' => 'master-kegiatan-detail',
+            'detail' => $detail,
             'detailProses' => $detailProses
         ];
 
@@ -216,11 +229,11 @@ class MasterKegiatanDetailController extends BaseController
         $masterKegiatans = $this->masterKegiatanModel->getWithOutput();
 
         $data = [
-            'title'            => 'Edit Master Kegiatan Detail',
-            'active_menu'      => 'master-kegiatan-detail',
-            'detail'           => $detail,
-            'validation'       => $this->validation,
-            'masterKegiatans'  => $masterKegiatans
+            'title' => 'Edit Master Kegiatan Detail',
+            'active_menu' => 'master-kegiatan-detail',
+            'detail' => $detail,
+            'validation' => $this->validation,
+            'masterKegiatans' => $masterKegiatans
         ];
 
         return view('SuperAdmin/MasterKegiatanDetail/edit', $data);
@@ -241,55 +254,55 @@ class MasterKegiatanDetailController extends BaseController
 
         $rules = [
             'id_kegiatan' => [
-                'rules'  => 'required|numeric',
+                'rules' => 'required|numeric',
                 'errors' => [
                     'required' => 'Master kegiatan harus dipilih',
-                    'numeric'  => 'Master kegiatan tidak valid'
+                    'numeric' => 'Master kegiatan tidak valid'
                 ]
             ],
             'nama_kegiatan_detail' => [
-                'rules'  => 'required|max_length[255]',
+                'rules' => 'required|max_length[255]',
                 'errors' => [
-                    'required'   => 'Nama kegiatan detail harus diisi',
+                    'required' => 'Nama kegiatan detail harus diisi',
                     'max_length' => 'Nama kegiatan detail maksimal 255 karakter'
                 ]
             ],
             'satuan' => [
-                'rules'  => 'required|max_length[100]',
+                'rules' => 'required|max_length[100]',
                 'errors' => [
-                    'required'   => 'Satuan harus diisi',
+                    'required' => 'Satuan harus diisi',
                     'max_length' => 'Satuan maksimal 100 karakter'
                 ]
             ],
             'periode' => [
-                'rules'  => 'required|max_length[50]',
+                'rules' => 'required|max_length[50]',
                 'errors' => [
-                    'required'   => 'Periode harus diisi',
+                    'required' => 'Periode harus diisi',
                     'max_length' => 'Periode maksimal 50 karakter'
                 ]
             ],
             'tahun' => [
-                'rules'  => 'required|numeric|exact_length[4]',
+                'rules' => 'required|numeric|exact_length[4]',
                 'errors' => [
-                    'required'     => 'Tahun harus diisi',
-                    'numeric'      => 'Tahun harus berupa angka',
+                    'required' => 'Tahun harus diisi',
+                    'numeric' => 'Tahun harus berupa angka',
                     'exact_length' => 'Tahun harus 4 digit'
                 ]
             ],
             'tanggal_mulai' => [
-                'rules'  => 'permit_empty|valid_date',
+                'rules' => 'permit_empty|valid_date',
                 'errors' => [
                     'valid_date' => 'Format tanggal mulai tidak valid'
                 ]
             ],
             'tanggal_selesai' => [
-                'rules'  => 'permit_empty|valid_date',
+                'rules' => 'permit_empty|valid_date',
                 'errors' => [
                     'valid_date' => 'Format tanggal selesai tidak valid'
                 ]
             ],
             'keterangan' => [
-                'rules'  => 'permit_empty',
+                'rules' => 'permit_empty',
                 'errors' => []
             ]
         ];
@@ -302,14 +315,14 @@ class MasterKegiatanDetailController extends BaseController
         }
 
         $data = [
-            'id_kegiatan'          => $this->request->getPost('id_kegiatan'),
+            'id_kegiatan' => $this->request->getPost('id_kegiatan'),
             'nama_kegiatan_detail' => $this->request->getPost('nama_kegiatan_detail'),
-            'satuan'               => $this->request->getPost('satuan'),
-            'periode'              => $this->request->getPost('periode'),
-            'tahun'                => $this->request->getPost('tahun'),
-            'tanggal_mulai'        => $this->request->getPost('tanggal_mulai') ?: null,
-            'tanggal_selesai'      => $this->request->getPost('tanggal_selesai') ?: null,
-            'keterangan'           => $this->request->getPost('keterangan')
+            'satuan' => $this->request->getPost('satuan'),
+            'periode' => $this->request->getPost('periode'),
+            'tahun' => $this->request->getPost('tahun'),
+            'tanggal_mulai' => $this->request->getPost('tanggal_mulai') ?: null,
+            'tanggal_selesai' => $this->request->getPost('tanggal_selesai') ?: null,
+            'keterangan' => $this->request->getPost('keterangan')
         ];
 
         if ($this->masterKegiatanDetailModel->update($id, $data)) {
@@ -329,12 +342,32 @@ class MasterKegiatanDetailController extends BaseController
     // ====================================================================
     public function delete($id)
     {
+        // Pastikan request adalah AJAX/DELETE
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid request method'
+            ]);
+        }
+
         $detail = $this->masterKegiatanDetailModel->find($id);
 
         if (!$detail) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Data master kegiatan detail tidak ditemukan'
+            ]);
+        }
+
+        // Cek apakah ada kegiatan detail proses yang terkait
+        $hasProses = $this->masterKegiatanDetailProsesModel
+            ->where('id_kegiatan_detail', $id)
+            ->countAllResults();
+
+        if ($hasProses > 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Tidak dapat menghapus kegiatan detail karena masih memiliki ' . $hasProses . ' proses terkait. Hapus proses terlebih dahulu.'
             ]);
         }
 
@@ -362,5 +395,225 @@ class MasterKegiatanDetailController extends BaseController
             'success' => true,
             'admins' => $admins
         ]);
+    }
+
+    // ====================================================================
+    // Show Kegiatan Wilayah - PERBAIKAN untuk Super Admin
+    // ====================================================================
+    public function showKegiatanWilayah($idKegiatanDetailProses)
+    {
+        // Get detail proses dengan informasi lengkap
+        $detailProses = $this->db->table('master_kegiatan_detail_proses mkdp')
+            ->select('mkdp.*, mkd.nama_kegiatan_detail, mkd.satuan as satuan_detail, 
+                      mkg.nama_kegiatan, mkd.periode as periode_detail, mkd.id_kegiatan_detail')
+            ->join('master_kegiatan_detail mkd', 'mkd.id_kegiatan_detail = mkdp.id_kegiatan_detail')
+            ->join('master_kegiatan mkg', 'mkg.id_kegiatan = mkd.id_kegiatan')
+            ->where('mkdp.id_kegiatan_detail_proses', $idKegiatanDetailProses)
+            ->get()
+            ->getRowArray();
+
+        if (!$detailProses) {
+            return redirect()
+                ->to(base_url('superadmin/master-kegiatan-detail'))
+                ->with('error', 'Data kegiatan detail proses tidak ditemukan');
+        }
+
+        // Get kegiatan wilayah yang terkait
+        $kegiatanWilayahRaw = $this->db->table('kegiatan_wilayah kw')
+            ->select('kw.*, mk.nama_kabupaten, mk.id_kabupaten')
+            ->join('master_kabupaten mk', 'mk.id_kabupaten = kw.id_kabupaten')
+            ->where('kw.id_kegiatan_detail_proses', $idKegiatanDetailProses)
+            ->orderBy('mk.nama_kabupaten', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Hitung realisasi untuk setiap wilayah
+        $kegiatanWilayah = [];
+        $totalTarget = 0;
+        $totalRealisasi = 0;
+
+        foreach ($kegiatanWilayahRaw as $kg) {
+            $target = (int)$kg['target_wilayah'];
+
+            // Hitung realisasi dari pantau_progress
+            $realisasiData = $this->db->table('pantau_progress pp')
+                ->select('COALESCE(SUM(pp.jumlah_realisasi_kumulatif), 0) as total_realisasi', false)
+                ->join('pcl', 'pp.id_pcl = pcl.id_pcl')
+                ->join('pml', 'pcl.id_pml = pml.id_pml')
+                ->where('pml.id_kegiatan_wilayah', $kg['id_kegiatan_wilayah'])
+                ->groupBy('pp.id_pcl')
+                ->get()
+                ->getResultArray();
+
+            $realisasi = 0;
+            foreach ($realisasiData as $item) {
+                $realisasi += (int)$item['total_realisasi'];
+            }
+
+            // Hitung progress
+            $progress = $target > 0 ? min(100, ($realisasi / $target) * 100) : 0;
+
+            // Set warna berdasarkan progress
+            if ($progress >= 80) {
+                $progressColor = '#10b981'; // green
+            } elseif ($progress >= 50) {
+                $progressColor = '#3b82f6'; // blue
+            } elseif ($progress >= 25) {
+                $progressColor = '#f59e0b'; // orange
+            } else {
+                $progressColor = '#ef4444'; // red
+            }
+
+            $kg['realisasi'] = $realisasi;
+            $kg['progress'] = round($progress, 1);
+            $kg['progress_color'] = $progressColor;
+
+            $kegiatanWilayah[] = $kg;
+
+            $totalTarget += $target;
+            $totalRealisasi += $realisasi;
+        }
+
+        // Hitung progress rata-rata
+        $avgProgress = $totalTarget > 0 ? ($totalRealisasi / $totalTarget) * 100 : 0;
+
+        $data = [
+            'title' => 'Daftar Kegiatan Wilayah',
+            'active_menu' => 'master-kegiatan-detail',
+            'detailProses' => $detailProses,
+            'kegiatanWilayah' => $kegiatanWilayah,
+            'totalTarget' => $totalTarget,
+            'totalRealisasi' => $totalRealisasi,
+            'avgProgress' => round($avgProgress, 1)
+        ];
+
+        return view('SuperAdmin/MasterKegiatanDetail/kegiatan_wilayah', $data);
+    }
+
+    // ====================================================================
+    // ENDPOINT BARU: Get Kurva S Provinsi untuk Super Admin
+    // ====================================================================
+    public function getKurvaProvinsi()
+    {
+        $idProses = $this->request->getGet('id_kegiatan_detail_proses');
+        
+        if (!$idProses) {
+            return $this->response->setJSON([
+                'labels' => [],
+                'targetPersen' => [],
+                'targetAbsolut' => [],
+                'targetHarian' => [],
+                'realisasiAbsolut' => [],
+                'realisasiPersen' => []
+            ]);
+        }
+
+        $kurvaSModel = new KurvaSProvinsiModel();
+
+        // Get data kurva S target
+        $records = $kurvaSModel
+            ->select('tanggal_target, target_persen_kumulatif, target_kumulatif_absolut, target_harian_absolut')
+            ->where('id_kegiatan_detail_proses', $idProses)
+            ->orderBy('tanggal_target', 'ASC')
+            ->findAll();
+
+        // Get total target dari detail proses
+        $detailProses = $this->masterKegiatanDetailProsesModel->find($idProses);
+        $totalTarget = $detailProses ? (int)$detailProses['target'] : 0;
+
+        // Get data realisasi kumulatif per tanggal
+        $realisasiData = $this->db->query("
+            SELECT 
+                DATE(pp.created_at) as tanggal_realisasi,
+                SUM(pp.jumlah_realisasi_kumulatif) as total_realisasi_harian
+            FROM pantau_progress pp
+            JOIN pcl ON pp.id_pcl = pcl.id_pcl
+            JOIN pml ON pcl.id_pml = pml.id_pml
+            JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+            WHERE kw.id_kegiatan_detail_proses = ?
+            GROUP BY DATE(pp.created_at)
+            ORDER BY DATE(pp.created_at) ASC
+        ", [$idProses])->getResultArray();
+
+        return $this->response->setJSON($this->formatKurvaDataWithRealisasi($records, $realisasiData, $totalTarget));
+    }
+
+    // ====================================================================
+    // Helper: format JSON kurva dengan realisasi
+    // ====================================================================
+    private function formatKurvaDataWithRealisasi($records, $realisasiData, $totalTarget)
+    {
+        if (empty($records)) {
+            return [
+                'labels' => [],
+                'targetPersen' => [],
+                'targetAbsolut' => [],
+                'targetHarian' => [],
+                'realisasiAbsolut' => [],
+                'realisasiPersen' => []
+            ];
+        }
+
+        // Filter duplikat target berdasarkan tanggal_target
+        $unique = [];
+        foreach ($records as $row) {
+            $tgl = $row['tanggal_target'];
+            if (!isset($unique[$tgl])) {
+                $unique[$tgl] = $row;
+            }
+        }
+
+        // Urutkan berdasarkan tanggal
+        ksort($unique);
+
+        // Proses data realisasi menjadi array dengan key tanggal
+        $realisasiByDate = [];
+        foreach ($realisasiData as $real) {
+            $realisasiByDate[$real['tanggal_realisasi']] = (int)$real['total_realisasi_harian'];
+        }
+
+        $labels = [];
+        $targetPersen = [];
+        $targetAbsolut = [];
+        $targetHarian = [];
+        $realisasiAbsolut = [];
+        $realisasiPersen = [];
+
+        $realisasiKumulatif = 0;
+
+        foreach ($unique as $row) {
+            $tanggal = $row['tanggal_target'];
+            $labels[] = date('d M', strtotime($tanggal));
+            $targetPersen[] = (float) $row['target_persen_kumulatif'];
+            $targetAbsolut[] = (int) $row['target_kumulatif_absolut'];
+            $targetHarian[] = (int) $row['target_harian_absolut'];
+
+            // Tambahkan realisasi harian ke kumulatif jika ada
+            if (isset($realisasiByDate[$tanggal])) {
+                $realisasiKumulatif += $realisasiByDate[$tanggal];
+            }
+
+            $realisasiAbsolut[] = $realisasiKumulatif;
+            
+            // Hitung persen realisasi
+            $realisasiPersenValue = $totalTarget > 0 ? ($realisasiKumulatif / $totalTarget) * 100 : 0;
+            $realisasiPersen[] = round($realisasiPersenValue, 2);
+        }
+
+        // Pastikan target kumulatif tidak menurun
+        for ($i = 1; $i < count($targetAbsolut); $i++) {
+            if ($targetAbsolut[$i] < $targetAbsolut[$i - 1]) {
+                $targetAbsolut[$i] = $targetAbsolut[$i - 1];
+            }
+        }
+
+        return [
+            'labels' => array_values($labels),
+            'targetPersen' => array_values($targetPersen),
+            'targetAbsolut' => array_values($targetAbsolut),
+            'targetHarian' => array_values($targetHarian),
+            'realisasiAbsolut' => array_values($realisasiAbsolut),
+            'realisasiPersen' => array_values($realisasiPersen)
+        ];
     }
 }

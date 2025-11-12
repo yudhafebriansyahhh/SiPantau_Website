@@ -58,9 +58,7 @@ class KelolaPenggunaController extends BaseController
         return view('SuperAdmin/KelolaPengguna/index', $data);
     }
 
-    /**
-     * Get user role names termasuk role tambahan dari tabel admin
-     */
+    // Get user role names termasuk role tambahan dari tabel admin
     private function getUserRoleNames($sobatId, $roleJson)
     {
         $roleNames = [];
@@ -131,7 +129,8 @@ class KelolaPenggunaController extends BaseController
             'email' => 'required|valid_email|is_unique[sipantau_user.email]',
             'hp' => 'required|numeric|min_length[10]|max_length[20]',
             'id_kabupaten' => 'required|numeric',
-            'roles' => 'required'
+            'roles' => 'required',
+            'is_pegawai' => 'required',
         ];
 
         if (!$this->validate($rules)) {
@@ -154,7 +153,8 @@ class KelolaPenggunaController extends BaseController
             'hp' => $this->request->getPost('hp'),
             'id_kabupaten' => $this->request->getPost('id_kabupaten'),
             'role' => json_encode($roleIds), // Sesuai nama kolom
-            'password' => $sobatId, // Password = Sobat ID
+            'password' => $sobatId, // Password = Sobat ID,
+            'is_pegawai' => $this->request->getPost('is_pegawai'),
             'is_active' => 1
         ];
 
@@ -191,7 +191,8 @@ class KelolaPenggunaController extends BaseController
             'email' => "required|valid_email|is_unique[sipantau_user.email,sobat_id,{$id}]",
             'hp' => 'required|numeric|min_length[10]|max_length[20]',
             'id_kabupaten' => 'required|numeric',
-            'roles' => 'required'
+            'roles' => 'required',
+            'is_pegawai' => 'required',
         ];
 
         $password = $this->request->getPost('password');
@@ -217,7 +218,8 @@ class KelolaPenggunaController extends BaseController
             'email' => $this->request->getPost('email'),
             'hp' => $this->request->getPost('hp'),
             'id_kabupaten' => $this->request->getPost('id_kabupaten'),
-            'role' => json_encode($roleIds) // Sesuai nama kolom
+            'role' => json_encode($roleIds), 
+            'is_pegawai' => $this->request->getPost('is_pegawai'),
         ];
 
         if (!empty($password)) {
@@ -270,33 +272,35 @@ class KelolaPenggunaController extends BaseController
             'C1' => 'Email',
             'D1' => 'No HP',
             'E1' => 'ID Kabupaten/Kota',
-            'F1' => 'Role (pisahkan dengan koma)'
+            'F1' => 'Pegawai/Mitra (1=Pegawai, 0=Mitra)',
+            'G1' => 'Role (pisahkan dengan koma)'
         ];
-
         foreach ($headers as $cell => $value) {
             $sheet1->setCellValue($cell, $value);
         }
 
-        $sheet1->getStyle('A1:F1')->applyFromArray($headerStyle);
+        $sheet1->getStyle('A1:G1')->applyFromArray($headerStyle);
 
-        foreach (['A' => 15, 'B' => 25, 'C' => 30, 'D' => 15, 'E' => 20, 'F' => 35] as $col => $width) {
+        foreach (['A' => 15, 'B' => 25, 'C' => 30, 'D' => 15, 'E' => 20, 'F' => 35, 'G' => 35] as $col => $width) {
             $sheet1->getColumnDimension($col)->setWidth($width);
         }
 
-        // Pastikan kolom No HP jadi teks
-        $sheet1->getStyle('D')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        // Ubah kolom sebagai teks
+        $sheet1->getStyle('A:G')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
 
         // Contoh data
         $sheet1->setCellValue('A2', '3201010101');
         $sheet1->setCellValue('B2', 'Ahmad Hidayat');
         $sheet1->setCellValue('C2', 'ahmad@bps.go.id');
         $sheet1->setCellValue('D2', '081234567890');
-        $sheet1->setCellValue('E2', '1401'); // contoh ID kabupaten
-        $sheet1->setCellValue('F2', '2,3');  // contoh ID role
-        $sheet1->setCellValue('G2', '// Contoh');  // contoh ID role
-        $sheet1->setCellValue('G3', '// Catatan: Pisahkan banyak role dengan koma, tanpa spasi');
+        $sheet1->setCellValue('E2', '1401');     // contoh ID kabupaten
+        $sheet1->setCellValue('F2', '1');        // 1=Pegawai, 0=Mitra
+        $sheet1->setCellValue('G2', '2,3');      // contoh ID role
+        // Catatan
+        $sheet1->setCellValue('H2', '// Contoh');
+        $sheet1->setCellValue('H3', '// Catatan: Pisahkan banyak role dengan koma, tanpa spasi');
 
-        $sheet1->getStyle('A1:F2')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet1->getStyle('A1:G2')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
         // === SHEET 2: Legenda ===
         $sheet2 = $spreadsheet->createSheet();
@@ -309,24 +313,24 @@ class KelolaPenggunaController extends BaseController
         $sheet2->setCellValue('A3', '1. Gunakan ID Kabupaten/Kota sesuai tabel di bawah.');
         $sheet2->setCellValue('A4', '2. Gunakan ID Role sesuai tabel role di bawah.');
         $sheet2->setCellValue('A5', '3. Pisahkan banyak role dengan koma (contoh: 2,3).');
+        $sheet2->setCellValue('A6', '4. Kolom Pegawai/Mitra: isi 1 untuk Pegawai, 0 untuk Mitra.');
 
-        // === Daftar Kabupaten ===
-        $sheet2->setCellValue('A7', 'Daftar Kabupaten/Kota');
-        $sheet2->getStyle('A7')->getFont()->setBold(true);
-
-        $sheet2->setCellValue('A8', 'ID Kabupaten');
-        $sheet2->setCellValue('B8', 'Nama Kabupaten');
-        $sheet2->getStyle('A8:B8')->applyFromArray($headerStyle);
+        // Daftar Kabupaten
+        $sheet2->setCellValue('A8', 'Daftar Kabupaten/Kota');
+        $sheet2->getStyle('A8')->getFont()->setBold(true);
+        $sheet2->setCellValue('A9', 'ID Kabupaten');
+        $sheet2->setCellValue('B9', 'Nama Kabupaten');
+        $sheet2->getStyle('A9:B9')->applyFromArray($headerStyle);
 
         $kabupatenList = $this->getKabupatenList();
-        $rowKab = 9;
+        $rowKab = 10;
         foreach ($kabupatenList as $kab) {
             $sheet2->setCellValue("A{$rowKab}", $kab['id_kabupaten']);
             $sheet2->setCellValue("B{$rowKab}", $kab['nama_kabupaten']);
             $rowKab++;
         }
 
-        // === Daftar Role ===
+        // Daftar Role
         $rowRoleHeader = $rowKab + 2;
         $sheet2->setCellValue("A{$rowRoleHeader}", 'Daftar Role');
         $sheet2->getStyle("A{$rowRoleHeader}")->getFont()->setBold(true);
@@ -347,7 +351,6 @@ class KelolaPenggunaController extends BaseController
             $sheet2->getColumnDimension($col)->setWidth($width);
         }
 
-        // Output file
         $filename = 'Template_Import_Pengguna_' . date('YmdHis') . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -359,10 +362,10 @@ class KelolaPenggunaController extends BaseController
     }
 
 
+
     public function import()
     {
         $file = $this->request->getFile('file');
-
         if (!$file || !$file->isValid()) {
             return redirect()->back()->with('error', 'File tidak valid');
         }
@@ -376,6 +379,7 @@ class KelolaPenggunaController extends BaseController
         $sheet = $spreadsheet->getActiveSheet();
         $data = $sheet->toArray();
 
+        // Buang baris header
         array_shift($data);
 
         $imported = 0;
@@ -383,7 +387,7 @@ class KelolaPenggunaController extends BaseController
         $errors = [];
 
         $validKabupaten = $this->getKabupatenMap();
-        $validRoleIds = $this->getValidRoleIds(); 
+        $validRoleIds = $this->getValidRoleIds();
 
         $this->db->transStart();
 
@@ -392,8 +396,8 @@ class KelolaPenggunaController extends BaseController
 
             $rowNumber = $index + 2;
 
-            // Validasi data wajib
-            if (empty($row[0]) || empty($row[1]) || empty($row[2]) || empty($row[3]) || empty($row[4]) || empty($row[5])) {
+            // Kolom wajib: A..G (index 0..6)
+            if (empty($row[0]) || empty($row[1]) || empty($row[2]) || empty($row[3]) || empty($row[4]) || $row[5] === null || empty($row[6])) {
                 $errors[] = "Baris {$rowNumber}: Data tidak lengkap";
                 $skipped++;
                 continue;
@@ -401,30 +405,37 @@ class KelolaPenggunaController extends BaseController
 
             $idKabupaten = trim($row[4]);
 
-            // Validasi ID kabupaten
+            // Validasi kabupaten
             if (!isset($validKabupaten[$idKabupaten])) {
                 $errors[] = "Baris {$rowNumber}: ID Kabupaten '{$idKabupaten}' tidak ditemukan";
                 $skipped++;
                 continue;
             }
 
-            // Proses roles - UBAH DI SINI
-            // Hapus spasi dan split berdasarkan koma
-            $roleInput = str_replace(' ', '', trim($row[5]));
-            $roleIds = array_map('intval', explode(',', $roleInput));
-
-            // Filter role ID yang valid
-            $validRoleIdsForUser = array_filter($roleIds, function ($id) use ($validRoleIds) {
-                return in_array($id, $validRoleIds);
-            });
-
-            if (empty($validRoleIdsForUser)) {
-                $errors[] = "Baris {$rowNumber}: Role ID tidak valid: {$row[5]}";
+            // Ambil & validasi is_pegawai (F)
+            $isPegawai = trim((string)$row[5]);
+            if (!in_array($isPegawai, ['0','1'], true)) {
+                $errors[] = "Baris {$rowNumber}: Nilai Pegawai/Mitra harus 1 (Pegawai) atau 0 (Mitra)";
                 $skipped++;
                 continue;
             }
 
-            // Cek duplikat user
+            //  Ambil roles dari kolom G (bukan F)
+            $roleInput = str_replace(' ', '', trim($row[6]));
+            $roleIds = array_filter(array_map('intval', explode(',', $roleInput)), static fn($v) => $v !== 0);
+
+            // Filter role valid
+            $validRoleIdsForUser = array_values(array_filter($roleIds, function ($id) use ($validRoleIds) {
+                return in_array($id, $validRoleIds, true);
+            }));
+
+            if (empty($validRoleIdsForUser)) {
+                $errors[] = "Baris {$rowNumber}: Role ID tidak valid: {$row[6]}";
+                $skipped++;
+                continue;
+            }
+
+            // Cek duplikat
             if ($this->userModel->where('email', $row[2])->first()) {
                 $errors[] = "Baris {$rowNumber}: Email {$row[2]} sudah terdaftar";
                 $skipped++;
@@ -437,16 +448,17 @@ class KelolaPenggunaController extends BaseController
                 continue;
             }
 
-            // Insert user baru
+            // Insert user
             $userData = [
-                'sobat_id'      => $row[0],
-                'nama_user'     => $row[1],
-                'email'         => $row[2],
-                'hp'            => $row[3],
+                'sobat_id'      => trim($row[0]),
+                'nama_user'     => trim($row[1]),
+                'email'         => trim($row[2]),
+                'hp'            => trim($row[3]),
                 'id_kabupaten'  => $idKabupaten,
-                'role'          => json_encode(array_values($validRoleIdsForUser)),
-                'password'      => $row[0],
-                'is_active'     => 1
+                'role'          => json_encode($validRoleIdsForUser),
+                'password'      => trim($row[0]),
+                'is_active'     => 1,
+                'is_pegawai'    => (int)$isPegawai,
             ];
 
             $this->userModel->insert($userData);
@@ -470,12 +482,11 @@ class KelolaPenggunaController extends BaseController
     }
 
 
+
     public function export()
     {
-        // Get users with details
         $users = $this->userModel->getUsersWithDetails();
 
-        // Tambahkan role tambahan untuk setiap user
         foreach ($users as &$user) {
             $roleNames = $this->getUserRoleNames($user['sobat_id'], $user['role']);
             $user['roles_display'] = implode(', ', $roleNames);
@@ -491,21 +502,27 @@ class KelolaPenggunaController extends BaseController
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]]
         ];
 
-        $headers = ['No', 'Sobat ID', 'Nama Lengkap', 'Email', 'No HP', 'Kabupaten/Kota', 'Roles', 'Status', 'Tanggal Dibuat'];
+        $headers = [
+            'No', 'Sobat ID', 'Nama Lengkap', 'Email', 'No HP',
+            'Kabupaten/Kota', 'Roles', 'Pegawai/Mitra', 'Status', 'Tanggal Dibuat'
+        ];
         $column = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($column . '1', $header);
             $column++;
         }
 
-        $sheet->getStyle('A1:I1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
 
-        foreach (['A' => 5, 'B' => 15, 'C' => 25, 'D' => 30, 'E' => 15, 'F' => 20, 'G' => 35, 'H' => 10, 'I' => 20] as $col => $width) {
+        foreach ([
+            'A' => 5, 'B' => 15, 'C' => 25, 'D' => 30, 'E' => 15,
+            'F' => 20, 'G' => 35, 'H' => 18, 'I' => 10, 'J' => 20
+        ] as $col => $width) {
             $sheet->getColumnDimension($col)->setWidth($width);
         }
 
         $row = 2;
-        $no = 1;
+        $no  = 1;
         foreach ($users as $user) {
             $sheet->setCellValue('A' . $row, $no);
             $sheet->setCellValue('B' . $row, $user['sobat_id']);
@@ -514,15 +531,15 @@ class KelolaPenggunaController extends BaseController
             $sheet->setCellValue('E' . $row, $user['hp']);
             $sheet->setCellValue('F' . $row, $user['nama_kabupaten'] ?? '-');
             $sheet->setCellValue('G' . $row, $user['roles_display'] ?? '-');
-            $sheet->setCellValue('H' . $row, $user['is_active'] ? 'Aktif' : 'Nonaktif');
-            $sheet->setCellValue('I' . $row, $user['created_at']);
+            $sheet->setCellValue('H' . $row, ((string)$user['is_pegawai'] === '1') ? 'Pegawai' : 'Mitra');
+            $sheet->setCellValue('I' . $row, $user['is_active'] ? 'Aktif' : 'Nonaktif');
+            $sheet->setCellValue('J' . $row, $user['created_at']);
 
             $row++;
             $no++;
         }
 
         $filename = 'Data_Pengguna_' . date('YmdHis') . '.xlsx';
-
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');
@@ -531,6 +548,7 @@ class KelolaPenggunaController extends BaseController
         $writer->save('php://output');
         exit;
     }
+
 
     private function getKabupatenList()
     {

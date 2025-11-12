@@ -22,9 +22,7 @@ class MasterKegiatanController extends BaseController
         $this->validation = \Config\Services::validation();
     }
 
-    // ====================================================================
     // Index - Menampilkan halaman daftar master kegiatan
-    // ====================================================================
     public function index()
     {
         $filterOutput = $this->request->getGet('output');
@@ -50,9 +48,7 @@ class MasterKegiatanController extends BaseController
         return view('SuperAdmin/MasterKegiatan/index', $data);
     }
 
-    // ====================================================================
     // Create - Menampilkan form tambah master kegiatan
-    // ====================================================================
     public function create()
     {
         $masterOutputs = $this->masterOutputModel->orderBy('nama_output', 'ASC')->findAll();
@@ -67,9 +63,7 @@ class MasterKegiatanController extends BaseController
         return view('SuperAdmin/MasterKegiatan/create', $data);
     }
 
-    // ====================================================================
     // Store - Menyimpan data master kegiatan baru
-    // ====================================================================
     public function store()
     {
         $rules = [
@@ -134,9 +128,7 @@ class MasterKegiatanController extends BaseController
         }
     }
 
-    // ====================================================================
     // Show - Menampilkan detail master kegiatan
-    // ====================================================================
     public function show($id)
     {
         $kegiatan = $this->masterKegiatanModel->getWithOutputById($id);
@@ -160,9 +152,7 @@ class MasterKegiatanController extends BaseController
         return view('SuperAdmin/MasterKegiatan/show', $data);
     }
 
-    // ====================================================================
     // Edit - Menampilkan form edit master kegiatan
-    // ====================================================================
     public function edit($id)
     {
         $kegiatan = $this->masterKegiatanModel->find($id);
@@ -186,9 +176,7 @@ class MasterKegiatanController extends BaseController
         return view('SuperAdmin/MasterKegiatan/edit', $data);
     }
 
-    // ====================================================================
     // Update - Memperbarui data master kegiatan
-    // ====================================================================
     public function update($id)
     {
         $kegiatan = $this->masterKegiatanModel->find($id);
@@ -261,9 +249,7 @@ class MasterKegiatanController extends BaseController
         }
     }
 
-    // ====================================================================
     // Delete - Menghapus data master kegiatan
-    // ====================================================================
     public function delete($id)
     {
         $kegiatan = $this->masterKegiatanModel->find($id);

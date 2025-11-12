@@ -8,60 +8,26 @@
 </div>
 
 <!-- Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    
-    <!-- Total Pengguna -->
-    <div class="card hover:shadow-md transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Total Pengguna</p>
-                <h3 class="text-3xl font-bold text-gray-900">200</h3>
-            </div>
-            <div class="w-14 h-14 bg-blue-50 rounded-lg flex items-center justify-center">
-                <i class="fas fa-users text-2xl text-[#1e88e5]"></i>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Total Kegiatan -->
-    <div class="card hover:shadow-md transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Total Kegiatan</p>
-                <h3 class="text-3xl font-bold text-gray-900">200</h3>
-            </div>
-            <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center">
-                <i class="fas fa-clipboard-list text-2xl text-[#43a047]"></i>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <?php
+    $statsConfig = [
+        ['Total Kegiatan', $stats['total_kegiatan'], 'fas fa-clipboard-list', 'bg-green-50', '#43a047'],
+        ['Kegiatan Aktif', $stats['kegiatan_aktif'], 'fas fa-chart-line', 'bg-orange-50', '#fb8c00'],
+        ['Target Tercapai', $stats['target_tercapai'] . '%', 'fas fa-bullseye', 'bg-purple-50', '#8e24aa'],
+    ];
+    foreach ($statsConfig as [$label, $value, $icon, $bg, $color]): ?>
+        <div class="card hover:shadow-md transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1"><?= esc($label) ?></p>
+                    <h3 class="text-3xl font-bold text-gray-900"><?= esc($value) ?></h3>
+                </div>
+                <div class="w-14 h-14 <?= $bg ?> rounded-lg flex items-center justify-center">
+                    <i class="<?= $icon ?> text-2xl" style="color: <?= $color ?>;"></i>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Kegiatan Aktif -->
-    <div class="card hover:shadow-md transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Kegiatan Aktif</p>
-                <h3 class="text-3xl font-bold text-gray-900">45</h3>
-                
-            </div>
-            <div class="w-14 h-14 bg-orange-50 rounded-lg flex items-center justify-center">
-                <i class="fas fa-chart-line text-2xl text-[#fb8c00]"></i>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Target Tercapai -->
-    <div class="card hover:shadow-md transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Target Tercapai</p>
-                <h3 class="text-3xl font-bold text-gray-900">78%</h3>
-            </div>
-            <div class="w-14 h-14 bg-purple-50 rounded-lg flex items-center justify-center">
-                <i class="fas fa-bullseye text-2xl text-[#8e24aa]"></i>
-            </div>
-        </div>
-    </div>
+    <?php endforeach ?>
 </div>
 
 <!-- Charts Section -->
@@ -71,82 +37,64 @@
     <div class="lg:col-span-2 card">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
             <div>
-                <h3 class="text-lg font-semibold text-gray-900">Kurva S - Target vs Aktual</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Kurva S - Target vs Realisasi</h3>
                 <p class="text-sm text-gray-600">Progres Kumulatif Kegiatan</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <select id="filterKegiatan" class="input-field w-auto text-sm" onchange="updateChart()">
-                    <option value="sunsenas">SUNSENAS 2025</option>
-                    <option value="sakernas">SAKERNAS 2025</option>
-                    <option value="susenas">SUSENAS 2025</option>
-                </select>
-                <select id="filterWilayah" class="input-field w-auto text-sm" onchange="updateChart()">
-                    <option value="all">Semua Wilayah</option>
-                    <option value="pekanbaru">Kota Pekanbaru</option>
-                    <option value="dumai">Kota Dumai</option>
-                    <option value="kampar">Kab. Kampar</option>
-                    <option value="rohul">Kab. Rokan Hulu</option>
-                    <option value="rohil">Kab. Rokan Hilir</option>
-                    <option value="siak">Kab. Siak</option>
-                    <option value="bengkalis">Kab. Bengkalis</option>
-                    <option value="indragiri_hulu">Kab. Indragiri Hulu</option>
-                    <option value="indragiri_hilir">Kab. Indragiri Hilir</option>
-                    <option value="pelalawan">Kab. Pelalawan</option>
-                    <option value="kuansing">Kab. Kuantan Singingi</option>
-                    <option value="kepulauan_meranti">Kab. Kepulauan Meranti</option>
+                <select id="filterKegiatan" class="input-field w-full sm:w-auto text-sm" onchange="updateChart()">
+                    <option value="">-- Pilih Kegiatan --</option>
+                    <?php foreach ($kegiatanList as $item): ?>
+                        <option value="<?= esc($item['id_kegiatan_detail_proses']) ?>">
+                            <?= esc($item['nama_kegiatan_detail_proses']) ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
         
-        <!-- Chart Info Stats -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div class="bg-blue-50 rounded-lg p-3">
-                <p class="text-xs text-[#1e88e5] mb-1">Target</p>
-                <p class="text-lg font-bold text-[#1565c0]" id="statTarget">1000</p>
-            </div>
-            <div class="bg-red-50 rounded-lg p-3">
-                <p class="text-xs text-[#e53935] mb-1">Aktual</p>
-                <p class="text-lg font-bold text-[#c62828]" id="statAktual">950</p>
-            </div>
-            <div class="bg-green-50 rounded-lg p-3">
-                <p class="text-xs text-[#43a047] mb-1">Pencapaian</p>
-                <p class="text-lg font-bold text-[#2e7d32]" id="statPersentase">95%</p>
-            </div>
-            <div class="bg-orange-50 rounded-lg p-3">
-                <p class="text-xs text-[#fb8c00] mb-1">Selisih</p>
-                <p class="text-lg font-bold text-[#ef6c00]" id="statSelisih">-50</p>
+        <div id="chartLoadingState" class="flex justify-center items-center py-16">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-gray-600">Memuat data...</p>
             </div>
         </div>
         
-        <div id="kegiatanChart"></div>
+        <div id="kegiatanChart" style="display: none;"></div>
+        
+        <div id="chartPlaceholder" class="flex justify-center items-center py-16" style="display: none;">
+            <p class="text-gray-400">Pilih kegiatan untuk menampilkan kurva S</p>
+        </div>
+        
+        <div id="chartErrorState" class="text-center py-16" style="display: none;">
+            <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+            <p class="text-gray-600">Gagal memuat data. Silakan refresh halaman.</p>
+        </div>
     </div>
     
     <!-- Progress Kegiatan -->
     <div class="card">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">Progres Kegiatan Sedang Berjalan</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Progres Kegiatan</h3>
         <div class="space-y-4">
-            <?php 
-            $kegiatanList = [
-                ['nama' => 'SUNSENAS 2025', 'progress' => 95, 'color' => 'blue'],
-                ['nama' => 'SAKERNAS 2025', 'progress' => 78, 'color' => 'green'],
-                ['nama' => 'SUSENAS 2025', 'progress' => 62, 'color' => 'yellow'],
-                ['nama' => 'SP2025', 'progress' => 45, 'color' => 'purple'],
-                ['nama' => 'VHTL 2025', 'progress' => 30, 'color' => 'red'],
-                ['nama' => 'SKDI 2025', 'progress' => 20, 'color' => 'indigo']
-            ];
-            
-            foreach($kegiatanList as $kegiatan): 
-            ?>
-            <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-900"><?= $kegiatan['nama'] ?></span>
-                    <span class="text-sm font-semibold text-<?= $kegiatan['color'] ?>-600"><?= $kegiatan['progress'] ?>%</span>
+            <?php if (!empty($progressKegiatan)): ?>
+                <?php foreach ($progressKegiatan as $index => $prog): ?>
+                    <div class="<?= $index < count($progressKegiatan) - 1 ? 'pb-4 border-b border-gray-100' : 'pb-4' ?>">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-900"><?= esc($prog['nama']) ?></span>
+                            <span class="text-sm font-semibold" style="color: <?= $prog['color'] ?>;"><?= $prog['progress'] ?>%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full transition-all duration-500" 
+                                 style="width: 0%; background-color: <?= $prog['color'] ?>;" 
+                                 data-width="<?= $prog['progress'] ?>"></div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="text-center py-8">
+                    <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
+                    <p class="text-gray-500 text-sm">Belum ada data kegiatan</p>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-<?= $kegiatan['color'] ?>-600 h-2 rounded-full" style="width: <?= $kegiatan['progress'] ?>%"></div>
-                </div>
-            </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -158,30 +106,11 @@
             <h3 class="text-lg font-semibold text-gray-900">Data Petugas</h3>
             <p class="text-sm text-gray-600 mt-1">Monitoring progres petugas lapangan</p>
         </div>
-        <div class="flex flex-wrap gap-2 mt-4 sm:mt-0">
-            <select class="input-field w-auto text-sm">
-                <option>Month</option>
-                <option>January</option>
-                <option>February</option>
-            </select>
-            <select class="input-field w-auto text-sm">
-                <option>Kegiatan</option>
-                <option>SUNSENAS 2025</option>
-            </select>
-            <select class="input-field w-auto text-sm">
-                <option>Kabupaten/Kota</option>
-                <option>Pekanbaru</option>
-            </select>
-            <select class="input-field w-auto text-sm">
-                <option>All</option>
-                <option>Active</option>
-            </select>
-        </div>
     </div>
     
     <!-- Table -->
     <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full" id="petugasTable">
             <thead>
                 <tr class="border-b border-gray-200">
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -195,85 +124,11 @@
                     </th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-blue-600 rounded-full items-center justify-center mr-3 hidden md:flex mobile-hide-avatar">
-                                <span class="text-white text-sm font-medium">GM</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">George R.R Martin</p>
-                                <p class="text-xs text-gray-500">PCL - Pekanbaru</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-warning">Belum Lapor</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center">
-                            <div class="flex-1 mr-3">
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 50%"></div>
-                                </div>
-                            </div>
-                            <span class="text-sm font-semibold text-gray-900">50</span>
-                        </div>
-                    </td>
-                </tr>
-                
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-green-600 rounded-full items-center justify-center mr-3 hidden md:flex mobile-hide-avatar">
-                                <span class="text-white text-sm font-medium">MS</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">Markus Suzak</p>
-                                <p class="text-xs text-gray-500">PCL - Kampar</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-success">Sudah Lapor</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center">
-                            <div class="flex-1 mr-3">
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-600 h-2 rounded-full" style="width: 75%"></div>
-                                </div>
-                            </div>
-                            <span class="text-sm font-semibold text-gray-900">75</span>
-                        </div>
-                    </td>
-                </tr>
-                
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-4 py-4">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-purple-600 rounded-full items-center justify-center mr-3 hidden md:flex mobile-hide-avatar">
-                                <span class="text-white text-sm font-medium">AW</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">Ankur Warikoo</p>
-                                <p class="text-xs text-gray-500">PCL - Dumai</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-4 py-4">
-                        <span class="badge badge-success">Sudah Lapor</span>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex items-center">
-                            <div class="flex-1 mr-3">
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
-                                </div>
-                            </div>
-                            <span class="text-sm font-semibold text-gray-900">100</span>
-                        </div>
+            <tbody class="divide-y divide-gray-100" id="petugasTableBody">
+                <tr>
+                    <td colspan="3" class="px-4 py-12 text-center">
+                        <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
+                        <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
                     </td>
                 </tr>
             </tbody>
@@ -285,226 +140,62 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js"></script>
 
 <script>
-// ============================================
-// KONFIGURASI KEGIATAN (Input dari Admin)
-// ============================================
-const kegiatanConfig = {
-    sunsenas: {
-        nama: 'SUNSENAS 2025',
-        targetTotal: 1000,        // Target total provinsi
-        targetAwalPersen: 5,      // Target awal (%)
-        tanggalMulai: 2,          // Tanggal mulai (2 September)
-        tanggalSelesai: 25,       // Tanggal target 100% (25 September)
-        // Pembagian target per wilayah
-        wilayah: {
-            all: 1000,
-            pekanbaru: 120,
-            dumai: 80,
-            kampar: 100,
-            rohul: 70,
-            rohil: 65,
-            siak: 75,
-            bengkalis: 90,
-            indragiri_hulu: 60,
-            indragiri_hilir: 70,
-            pelalawan: 50,
-            kuansing: 45,
-            kepulauan_meranti: 40
-        }
-    },
-    sakernas: {
-        nama: 'SAKERNAS 2025',
-        targetTotal: 1500,
-        targetAwalPersen: 3,
-        tanggalMulai: 1,
-        tanggalSelesai: 28,
-        wilayah: {
-            all: 1500,
-            pekanbaru: 180,
-            dumai: 120,
-            kampar: 150,
-            rohul: 105,
-            rohil: 98,
-            siak: 113,
-            bengkalis: 135,
-            indragiri_hulu: 90,
-            indragiri_hilir: 105,
-            pelalawan: 75,
-            kuansing: 68,
-            kepulauan_meranti: 60
-        }
-    },
-    susenas: {
-        nama: 'SUSENAS 2025',
-        targetTotal: 1200,
-        targetAwalPersen: 4,
-        tanggalMulai: 3,
-        tanggalSelesai: 27,
-        wilayah: {
-            all: 1200,
-            pekanbaru: 144,
-            dumai: 96,
-            kampar: 120,
-            rohul: 84,
-            rohil: 78,
-            siak: 90,
-            bengkalis: 108,
-            indragiri_hulu: 72,
-            indragiri_hilir: 84,
-            pelalawan: 60,
-            kuansing: 54,
-            kepulauan_meranti: 48
-        }
-    }
-};
-
-// ============================================
-// FUNGSI GENERATE KURVA S DINAMIS
-// ============================================
-function generateDynamicSCurve(config, wilayah) {
-    const targetTotal = config.wilayah[wilayah];
-    const targetAwal = Math.round(targetTotal * (config.targetAwalPersen / 100));
-    const tanggalMulai = config.tanggalMulai;
-    const tanggalSelesai = config.tanggalSelesai;
-    
-    const curve = [];
-    const labels = [];
-    
-    // Generate untuk 30 hari September
-    for (let day = 1; day <= 30; day++) {
-        labels.push(`${day} Sep`);
-        
-        if (day < tanggalMulai) {
-            // Sebelum mulai: 0
-            curve.push(0);
-        } else if (day >= tanggalSelesai) {
-            // Setelah target: 100%
-            curve.push(targetTotal);
-        } else {
-            // Di antara: gunakan kurva S logistic
-            const totalDays = tanggalSelesai - tanggalMulai;
-            const currentDay = day - tanggalMulai;
-            const progress = currentDay / totalDays;
-            
-            // Sigmoid function untuk kurva S
-            const k = 8; // Kecuraman kurva
-            const x0 = 0.5; // Titik tengah
-            const sigmoid = 1 / (1 + Math.exp(-k * (progress - x0)));
-            
-            // Scale dari targetAwal ke targetTotal
-            const value = targetAwal + (targetTotal - targetAwal) * sigmoid;
-            curve.push(Math.round(value));
-        }
-    }
-    
-    return { labels, target: curve };
-}
-
-// ============================================
-// FUNGSI GENERATE DATA AKTUAL (Kumulatif)
-// ============================================
-function generateAktualData(targetCurve, config, wilayah) {
-    const tanggalMulai = config.tanggalMulai;
-    const aktual = [];
-    let lastValue = 0;
-    
-    for (let day = 1; day <= 30; day++) {
-        if (day < tanggalMulai) {
-            // Sebelum mulai
-            aktual.push(0);
-        } else {
-            // Simulasi laporan harian dengan kemungkinan stagnan
-            const targetHariIni = targetCurve[day - 1];
-            const targetKemarin = day > 1 ? targetCurve[day - 2] : 0;
-            const targetIncrement = targetHariIni - targetKemarin;
-            
-            // 70% kemungkinan ada laporan, 30% stagnan
-            const adaLaporan = Math.random() > 0.3;
-            
-            if (adaLaporan && targetIncrement > 0) {
-                // Ada laporan: 85-98% dari target increment
-                const achievementRate = 0.85 + Math.random() * 0.13;
-                const increment = Math.round(targetIncrement * achievementRate);
-                lastValue = lastValue + increment;
-            }
-            // Else: stagnan (lastValue tidak berubah)
-            
-            // Pastikan tidak melebihi target
-            lastValue = Math.min(lastValue, targetHariIni);
-            aktual.push(lastValue);
-        }
-    }
-    
-    return aktual;
-}
-
-// ============================================
-// GENERATE DATA UNTUK SEMUA KEGIATAN
-// ============================================
-const dataKegiatan = {};
-
-Object.keys(kegiatanConfig).forEach(kegiatanKey => {
-    const config = kegiatanConfig[kegiatanKey];
-    dataKegiatan[kegiatanKey] = {};
-    
-    Object.keys(config.wilayah).forEach(wilayah => {
-        const { labels, target } = generateDynamicSCurve(config, wilayah);
-        const aktual = generateAktualData(target, config, wilayah);
-        
-        dataKegiatan[kegiatanKey][wilayah] = {
-            labels,
-            target,
-            aktual
-        };
-    });
-});
-
-// ============================================
-// APEXCHARTS INSTANCE
-// ============================================
 let chartInstance = null;
-
-// Update statistics
-function updateStats(targetData, aktualData) {
-    const target = targetData[targetData.length - 1];
-    const aktual = aktualData[aktualData.length - 1];
-    const persentase = target > 0 ? Math.round((aktual / target) * 100) : 0;
-    const selisih = aktual - target;
-    
-    document.getElementById('statTarget').textContent = target.toLocaleString('id-ID');
-    document.getElementById('statAktual').textContent = aktual.toLocaleString('id-ID');
-    document.getElementById('statPersentase').textContent = persentase + '%';
-    document.getElementById('statSelisih').textContent = (selisih >= 0 ? '+' : '') + selisih.toLocaleString('id-ID');
-    
-    // Update color based on achievement
-    const persentaseEl = document.getElementById('statPersentase');
-    const selisihEl = document.getElementById('statSelisih');
-    
-    if (persentase >= 90) {
-        persentaseEl.className = 'text-lg font-bold text-[#2e7d32]';
-    } else if (persentase >= 70) {
-        persentaseEl.className = 'text-lg font-bold text-[#ef6c00]';
-    } else {
-        persentaseEl.className = 'text-lg font-bold text-[#c62828]';
-    }
-    
-    if (selisih >= 0) {
-        selisihEl.className = 'text-lg font-bold text-[#2e7d32]';
-    } else {
-        selisihEl.className = 'text-lg font-bold text-[#c62828]';
-    }
-}
+const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
+const baseKurvaS = "<?= base_url('adminsurvei-kab/get-kurva-s') ?>";
+const basePetugas = "<?= base_url('adminsurvei-kab/get-petugas') ?>";
 
 // Update Chart
-function updateChart() {
+async function updateChart() {
     const kegiatan = document.getElementById('filterKegiatan').value;
-    const wilayah = document.getElementById('filterWilayah').value;
     
-    const data = dataKegiatan[kegiatan][wilayah];
-    const config = kegiatanConfig[kegiatan];
+    if (!kegiatan) {
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+        document.getElementById('chartLoadingState').style.display = 'none';
+        document.getElementById('chartPlaceholder').style.display = 'flex';
+        document.getElementById('kegiatanChart').style.display = 'none';
+        document.getElementById('chartErrorState').style.display = 'none';
+        
+        // Reset petugas
+        loadPetugas();
+        return;
+    }
     
-    // Update stats
-    updateStats(data.target, data.aktual);
+    try {
+        document.getElementById('chartLoadingState').style.display = 'flex';
+        document.getElementById('chartPlaceholder').style.display = 'none';
+        document.getElementById('kegiatanChart').style.display = 'none';
+        document.getElementById('chartErrorState').style.display = 'none';
+        
+        const response = await fetch(`${baseKurvaS}?id_kegiatan_detail_proses=${kegiatan}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('chartLoadingState').style.display = 'none';
+            document.getElementById('kegiatanChart').style.display = 'block';
+            
+            renderChart(result.data);
+            loadPetugas();
+        } else {
+            throw new Error(result.message || 'Failed to load data');
+        }
+    } catch (e) {
+        console.error('Error loading chart:', e);
+        document.getElementById('chartLoadingState').style.display = 'none';
+        document.getElementById('chartErrorState').style.display = 'block';
+    }
+}
+
+// Render Chart
+function renderChart(data) {
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+    
+    const isMobile = window.innerWidth < 640;
     
     const options = {
         series: [
@@ -514,17 +205,17 @@ function updateChart() {
                 type: 'area'
             },
             {
-                name: 'Aktual (Kumulatif)',
-                data: data.aktual,
+                name: 'Realisasi (Kumulatif)',
+                data: data.realisasi,
                 type: 'area'
             }
         ],
         chart: {
-            height: 380,
+            height: isMobile ? 300 : 380,
             type: 'area',
             fontFamily: 'Poppins, sans-serif',
             toolbar: {
-                show: true,
+                show: !isMobile,
                 tools: {
                     download: true,
                     selection: false,
@@ -537,19 +228,7 @@ function updateChart() {
             },
             animations: {
                 enabled: true,
-                speed: 800,
-                animateGradually: {
-                    enabled: true,
-                    delay: 150
-                }
-            },
-            dropShadow: {
-                enabled: true,
-                top: 2,
-                left: 0,
-                blur: 4,
-                opacity: 0.1,
-                color: ['#1e88e5', '#e53935']
+                speed: 800
             }
         },
         colors: ['#1e88e5', '#e53935'],
@@ -557,7 +236,7 @@ function updateChart() {
             enabled: false
         },
         stroke: {
-            width: [3, 3],
+            width: isMobile ? [2, 2] : [3, 3],
             curve: 'smooth',
             dashArray: [0, 5]
         },
@@ -576,40 +255,38 @@ function updateChart() {
         },
         markers: {
             size: 0,
-            colors: ['#1e88e5', '#e53935'],
-            strokeColors: '#fff',
-            strokeWidth: 2,
             hover: {
-                size: 7,
-                sizeOffset: 3
+                size: isMobile ? 5 : 7
             }
         },
         xaxis: {
             categories: data.labels,
             title: {
-                text: 'Tanggal (September 2025)',
+                text: 'Tanggal',
                 style: {
-                    fontSize: '12px',
+                    fontSize: isMobile ? '11px' : '12px',
                     fontWeight: 600
                 }
             },
             labels: {
-                rotate: -45,
-                rotateAlways: false,
+                rotate: isMobile ? -45 : 0,
                 style: {
-                    fontSize: '11px'
+                    fontSize: isMobile ? '10px' : '11px'
                 }
             }
         },
         yaxis: {
             title: {
-                text: 'Jumlah Survei (Kumulatif)',
+                text: isMobile ? '' : 'Jumlah',
                 style: {
                     fontSize: '12px',
                     fontWeight: 600
                 }
             },
             labels: {
+                style: {
+                    fontSize: isMobile ? '9px' : '11px'
+                },
                 formatter: function(value) {
                     return Math.round(value).toLocaleString('id-ID');
                 }
@@ -622,78 +299,40 @@ function updateChart() {
                 formatter: function(value) {
                     return value.toLocaleString('id-ID');
                 }
-            },
-            custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                const target = series[0][dataPointIndex];
-                const aktual = series[1][dataPointIndex];
-                const persentase = target > 0 ? ((aktual / target) * 100).toFixed(1) : 0;
-                const selisih = aktual - target;
-                
-                return `
-                    <div class="px-3 py-2 bg-gray-900 text-white rounded-lg shadow-lg">
-                        <div class="font-semibold mb-1">${data.labels[dataPointIndex]}</div>
-                        <div class="text-sm space-y-1">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 bg-[#1e88e5] rounded-full"></span>
-                                <span>Target: ${target.toLocaleString('id-ID')}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 bg-[#e53935] rounded-full"></span>
-                                <span>Aktual: ${aktual.toLocaleString('id-ID')}</span>
-                            </div>
-                            <div class="border-t border-gray-700 pt-1 mt-1">
-                                <div>Pencapaian: ${persentase}%</div>
-                                <div>Selisih: ${selisih >= 0 ? '+' : ''}${selisih.toLocaleString('id-ID')}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
             }
         },
         legend: {
-            position: 'top',
-            horizontalAlign: 'left',
-            markers: {
-                width: 12,
-                height: 12,
-                radius: 12
-            }
+            position: isMobile ? 'bottom' : 'top',
+            horizontalAlign: isMobile ? 'center' : 'left',
+            fontSize: isMobile ? '11px' : '13px'
         },
         grid: {
             borderColor: '#f3f4f6',
-            strokeDashArray: 3,
-            xaxis: {
-                lines: {
-                    show: false
-                }
-            },
-            yaxis: {
-                lines: {
-                    show: true
-                }
-            }
+            strokeDashArray: 3
         },
         annotations: {
-            xaxis: [
+            xaxis: isMobile ? [] : [
                 {
-                    x: `${config.tanggalMulai} Sep`,
+                    x: data.config.tanggal_mulai,
                     borderColor: '#43a047',
                     label: {
                         text: 'Mulai',
                         style: {
                             color: '#fff',
-                            background: '#43a047'
+                            background: '#43a047',
+                            fontSize: '10px'
                         }
                     }
                 },
                 {
-                    x: `${config.tanggalSelesai} Sep`,
+                    x: data.config.tanggal_selesai,
                     borderColor: '#e53935',
                     label: {
-                        text: 'Target 100%',
+                        text: 'Selesai',
                         style: {
                             color: '#fff',
-                            background: '#e53935'
+                            background: '#e53935',
+                            fontSize: '10px'
                         }
                     }
                 }
@@ -701,19 +340,115 @@ function updateChart() {
         }
     };
     
-    // Destroy previous chart if exists
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-    
-    // Create new chart
     chartInstance = new ApexCharts(document.querySelector("#kegiatanChart"), options);
     chartInstance.render();
 }
 
-// Initialize chart on page load
+// Load Petugas
+async function loadPetugas() {
+    const kegiatanId = document.getElementById('filterKegiatan').value;
+    
+    if (!kegiatanId) {
+        document.getElementById('petugasTableBody').innerHTML = `
+            <tr>
+                <td colspan="3" class="px-4 py-12 text-center">
+                    <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
+                    <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${basePetugas}?id_kegiatan_detail_proses=${kegiatanId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderPetugasTable(result.data);
+        }
+    } catch (e) {
+        console.error('Error loading petugas:', e);
+    }
+}
+
+// Render Petugas Table
+function renderPetugasTable(data) {
+    const tbody = document.getElementById('petugasTableBody');
+    
+    if (data.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="px-4 py-12 text-center">
+                    <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
+                    <p class="text-gray-500">Belum ada data petugas</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
+    
+    tbody.innerHTML = data.map((p, index) => `
+        <tr class="hover:bg-gray-50 transition-colors duration-150">
+            <td class="px-4 py-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full items-center justify-center mr-3 hidden md:flex" 
+                         style="background-color: ${colors[index % colors.length]};">
+                        <span class="text-white text-sm font-medium">${p.nama_user.substring(0, 2).toUpperCase()}</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">${p.nama_user}</p>
+                        <p class="text-xs text-gray-500">${p.role} - ${p.nama_kabupaten}</p>
+                    </div>
+                </div>
+            </td>
+            <td class="px-4 py-4">
+                <span class="badge ${p.status_class}">${p.status}</span>
+            </td>
+            <td class="px-4 py-4">
+                <div class="flex items-center">
+                    <div class="flex-1 mr-3">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full transition-all duration-300" 
+                                 style="width: ${p.progress}%; background-color: ${colors[index % colors.length]};"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">${p.progress}%</span>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Window resize handler
+let resizeTimer;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+        if (chartInstance) {
+            updateChart();
+        }
+    }, 250);
+});
+
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    updateChart();
+    if (defaultKegiatan) {
+        document.getElementById('filterKegiatan').value = defaultKegiatan;
+        updateChart();
+    } else {
+        document.getElementById('chartLoadingState').style.display = 'none';
+        document.getElementById('chartPlaceholder').style.display = 'flex';
+    }
+    
+    // Animate progress bars
+    setTimeout(() => {
+        document.querySelectorAll('[data-width]').forEach(bar => {
+            bar.style.width = bar.dataset.width + '%';
+        });
+    }, 400);
 });
 </script>
 

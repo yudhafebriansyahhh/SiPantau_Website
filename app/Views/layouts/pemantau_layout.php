@@ -47,12 +47,6 @@
                         <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
-                    
-                    <!-- Calendar (tidak diarahkan ke pemantau/) -->
-                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
-                        <i class="far fa-calendar-alt w-5"></i>
-                        <span class="ml-3">Calendar</span>
-                    </a>
 
                     <!-- Kegiatan Detail Proses -->
                     <a href="<?= base_url('pemantau/detail-proses') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'detail-proses' ? 'active' : '' ?>">

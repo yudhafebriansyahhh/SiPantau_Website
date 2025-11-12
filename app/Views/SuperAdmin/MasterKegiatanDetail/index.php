@@ -62,28 +62,28 @@
         <table class="w-full" id="kegiatanDetailTable">
             <thead>
                 <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-16 border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-16 border-r border-gray-200">
                         No
                     </th>
-                    <th class="px-4 py-3 text-left text-xs text-center font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Master Kegiatan
                     </th>
-                    <th class="px-4 py-3 text-left text-xs text-center font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Nama Kegiatan Detail
                     </th>
-                    <th class="px-4 py-3 text-left text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">
                         Satuan
                     </th>
-                    <th class="px-4 py-3 text-left text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">
                         Periode
                     </th>
-                    <th class="px-4 py-3 text-left text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-24 border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-24 border-r border-gray-200">
                         Tahun
                     </th>
-                    <th class="px-4 py-3 text-left text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-64 border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-64 border-r border-gray-200">
                         Admin
                     </th>
-                    <th class="px-4 py-3 text-center text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">
+                    <th class="px-4 py-3 text-xs text-center font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">
                         Aksi
                     </th>
                 </tr>
@@ -368,7 +368,7 @@ function confirmDelete(id, name) {
 }
 
 // ====================================================================
-// Delete Data
+// Delete Data - FIX: URL yang benar
 // ====================================================================
 function deleteData(id, name) {
     Swal.fire({
@@ -382,7 +382,8 @@ function deleteData(id, name) {
         }
     });
 
-    fetch(`<?= base_url('superadmin/master-kegiatan-detail/show/') ?>${id}`, {
+    // FIX: Gunakan URL yang benar sesuai route
+    fetch(`<?= base_url('superadmin/master-kegiatan-detail/') ?>${id}`, {
         method: 'DELETE',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',

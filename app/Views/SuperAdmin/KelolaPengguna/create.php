@@ -113,6 +113,24 @@
                            required>
                 </div>
             </div>
+
+            <div class="grid grid-cols-1 gap-4 mt-4">
+                <!-- Pegawai/Mitra -->
+                <div>
+                    <label for="is_pegawai" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pegawai/Mitra <span class="text-red-500">*</span>
+                    </label>
+                    <select 
+                        id="is_pegawai" 
+                        name="is_pegawai" 
+                        class="input-field <?= session('errors.is_pegawai') ? 'border-red-500' : '' ?>" 
+                        value="<?= old('is_pegawai') ?>">
+                        <option value="">-- Pilih Pegawai/Mitra --</option>
+                        <option value="1" <?= old('is_pegawai') == '1' ? 'selected' : '' ?>>Pegawai</option>
+                        <option value="0" <?= old('is_pegawai') == '0' ? 'selected' : '' ?>>Mitra</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <!-- Divider -->

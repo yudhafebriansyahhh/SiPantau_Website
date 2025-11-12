@@ -15,7 +15,9 @@ $routes->get('logout', 'Auth\LoginController::logout');
 
 // Multi-Role Routes
 $routes->get('login/select-role', 'Auth\LoginController::selectRole');
+$routes->get('login/switch-role', 'Auth\LoginController::switchRole');
 $routes->post('login/process-role-selection', 'Auth\LoginController::processRoleSelection');
+$routes->post('login/process-switch-role', 'Auth\LoginController::processSwitchRole');
 
 // ================== HALAMAN TIDAK BERIZIN ==================
 $routes->get('unauthorized', 'ErrorController::unauthorized');
@@ -23,6 +25,9 @@ $routes->get('unauthorized', 'ErrorController::unauthorized');
 // ================== SUPER ADMIN (id_role = 1) ==================
 $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     $routes->get('/', 'SuperAdmin\DashboardController::index');
+    $routes->get('get-kurva-s', 'SuperAdmin\DashboardController::getKurvaS');
+    $routes->get('get-kegiatan-wilayah', 'SuperAdmin\DashboardController::getKegiatanWilayah');
+    $routes->get('get-petugas', 'SuperAdmin\DashboardController::getPetugas');
 
     // Master Output Routes
     $routes->get('master-output', 'SuperAdmin\MasterOutputController::index');
@@ -53,6 +58,9 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     $routes->delete('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::delete/$1');
     $routes->get('master-kegiatan-detail/by-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getByKegiatan/$1');
     $routes->get('master-kegiatan-detail/get-admins/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getAdmins/$1');
+    $routes->get('master-kegiatan-detail/kegiatan-wilayah/(:num)', 
+    'SuperAdmin\MasterKegiatanDetailController::showKegiatanWilayah/$1');
+     $routes->get('master-kegiatan-detail/kurva-provinsi', 'SuperAdmin\MasterKegiatanDetailController::getKurvaProvinsi');
 
     // Kelola Pengguna Routes
     $routes->group('kelola-pengguna', static function ($routes) {
@@ -94,6 +102,7 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
     $routes->get('kurva-provinsi', 'AdminProv\DashboardController::getKurvaProvinsi');
     $routes->get('kurva-kabupaten', 'AdminProv\DashboardController::getKurvaKabupaten');
     $routes->get('kegiatan-wilayah', 'AdminProv\DashboardController::getKegiatanWilayah');
+    $routes->get('get-petugas', 'AdminProv\DashboardController::getPetugas');
 
     // Master Kegiatan Detail Proses
     $routes->group('master-kegiatan-detail-proses', static function ($routes) {
@@ -137,6 +146,8 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
 // ================== ADMIN SURVEI KABUPATEN (id_role = 3) ==================
 $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($routes) {
     $routes->get('/', 'AdminKab\DashboardController::index');
+    $routes->get('get-kurva-s', 'AdminKab\DashboardController::getKurvaS');
+    $routes->get('get-petugas', 'AdminKab\DashboardController::getPetugas');
     // Assign Admin Survei Kabupaten
     $routes->group('assign-petugas', static function ($routes) {
         $routes->get('/', 'AdminKab\AssignPetugasController::index');

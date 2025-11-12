@@ -47,12 +47,6 @@
                         <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
-                    
-                    <!-- Calendar (tidak ditambahkan prefix) -->
-                    <a href="<?= base_url('comingsoon') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'calendar' ? 'active' : '' ?>">
-                        <i class="far fa-calendar-alt w-5"></i>
-                        <span class="ml-3">Calendar</span>
-                    </a>
 
                     <!-- Kelola Pengguna -->
                     <a href="<?= base_url('adminsurvei-kab/assign-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
@@ -101,31 +95,79 @@
                         <div class="relative">
                             <button onclick="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                                 <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">SA</span>
+                                    <?php 
+                                    $namaUser = session()->get('nama_user') ?? 'User';
+                                    $initials = '';
+                                    $nameParts = explode(' ', $namaUser);
+                                    if (count($nameParts) >= 2) {
+                                        $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
+                                    } else {
+                                        $initials = strtoupper(substr($namaUser, 0, 2));
+                                    }
+                                    ?>
+                                    <span class="text-white text-sm font-medium"><?= $initials ?></span>
                                 </div>
                                 <div class="hidden sm:block text-left">
-                                    <p class="text-sm font-medium text-gray-900">Admin</p>
-                                    <p class="text-xs text-gray-500">Admin Survei Kab</p>
+                                    <p class="text-sm font-medium text-gray-900"><?= esc($namaUser) ?></p>
+                                    <p class="text-xs text-gray-500">
+                                        <?php
+                                        $roleType = session()->get('role_type');
+                                        $roleName = '';
+                                        
+                                        switch ($roleType) {
+                                            case 'admin_provinsi':
+                                                $roleName = 'Admin Survei Provinsi';
+                                                break;
+                                            case 'pemantau_provinsi':
+                                                $roleName = 'Pemantau Provinsi';
+                                                break;
+                                            case 'admin_kabupaten':
+                                                $roleName = 'Admin Survei Kabupaten';
+                                                break;
+                                            case 'pemantau_kabupaten':
+                                                $roleName = 'Pemantau Kabupaten';
+                                                break;
+                                            default:
+                                                $role = session()->get('role');
+                                                if ($role == 1) {
+                                                    $roleName = 'Super Admin';
+                                                } elseif ($role == 4) {
+                                                    $roleName = 'Pemantau Pusat';
+                                                } else {
+                                                    $roleName = 'User';
+                                                }
+                                        }
+                                        echo esc($roleName);
+                                        ?>
+                                    </p>
                                 </div>
-                                <!-- <i class="fas fa-chevron-down text-xs text-gray-400"></i> -->
+                                <i class="fas fa-chevron-down text-xs text-gray-500 hidden sm:block"></i>
                             </button>
-                            
+
                             <!-- Dropdown -->
                             <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                                <a href="<?= base_url('adminsurvei-kab/profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="far fa-user w-5"></i>
-                                    <span class="ml-2">Profile</span>
-                                </a>
-                                <a href="<?= base_url('adminsurvei-kab/settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="fas fa-cog w-5"></i>
-                                    <span class="ml-2">Settings</span>
+                                <div class="px-4 py-3 border-b border-gray-200">
+                                    <p class="text-sm font-medium text-gray-900"><?= esc($namaUser) ?></p>
+                                    <p class="text-xs text-gray-500"><?= esc(session()->get('email') ?? '-') ?></p>
+                                </div>
+                                
+                                <?php 
+                                // Tampilkan opsi switch role jika user punya multi-role
+                                $allRoles = session()->get('all_roles');
+                                if ($allRoles && (is_array($allRoles) && count($allRoles) > 1)) : 
+                                ?>
+                                <a href="<?= base_url('login/switch-role') ?>" class="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-exchange-alt w-5"></i>
+                                    <span class="ml-2">Switch Role</span>
                                 </a>
                                 <div class="border-t border-gray-200 my-1"></div>
+                                <?php endif; ?>
+                                
                                 <a href="<?= base_url('logout') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
-                            </div>
+                            </div>  
                         </div>
                     </div>
                 </div>

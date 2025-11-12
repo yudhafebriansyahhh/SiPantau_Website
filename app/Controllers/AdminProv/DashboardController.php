@@ -7,6 +7,8 @@ use App\Models\KurvaSkabModel;
 use App\Models\MasterKegiatanDetailProsesModel;
 use App\Models\MasterKegiatanWilayahModel;
 use App\Models\MasterKegiatanDetailAdminModel;
+use App\Models\MasterKegiatanDetailModel;
+use App\Models\PantauProgressModel;
 use CodeIgniter\Controller;
 
 class DashboardController extends Controller
@@ -25,6 +27,22 @@ class DashboardController extends Controller
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
         
+        // Jika id_admin_provinsi tidak ada di session, coba ambil dari database
+        if (!$idAdminProvinsi && $roleType == 'admin_provinsi') {
+            $sobatId = session()->get('sobat_id');
+            if ($sobatId) {
+                $adminProv = $this->db->table('admin_survei_provinsi')
+                    ->where('sobat_id', $sobatId)
+                    ->get()
+                    ->getRowArray();
+                
+                if ($adminProv) {
+                    $idAdminProvinsi = $adminProv['id_admin_provinsi'];
+                    session()->set('id_admin_provinsi', $idAdminProvinsi);
+                }
+            }
+        }
+        
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
         
@@ -33,38 +51,189 @@ class DashboardController extends Controller
                 ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        $prosesModel = new MasterKegiatanDetailProsesModel();
+        // Set default values
+        $stats = [
+            'total_kegiatan' => 0,
+            'kegiatan_aktif' => 0,
+            'target_tercapai' => 0
+        ];
+        $progressKegiatan = [];
+        $kegiatanList = [];
+        $latestKegiatanId = '';
 
-        // Dropdown kegiatan proses - filter berdasarkan assignment
-        if ($isSuperAdmin) {
-            // Super Admin melihat semua
-            $kegiatanList = $prosesModel
-                ->select('id_kegiatan_detail_proses, nama_kegiatan_detail_proses')
-                ->orderBy('id_kegiatan_detail_proses', 'DESC')
-                ->findAll();
-        } else {
-            // Admin Provinsi hanya melihat yang di-assign
-            $kegiatanList = $this->db->table('master_kegiatan_detail_proses kdp')
-                ->select('kdp.id_kegiatan_detail_proses, kdp.nama_kegiatan_detail_proses')
-                ->join('master_kegiatan_detail_admin mkda', 'mkda.id_kegiatan_detail = kdp.id_kegiatan_detail')
-                ->where('mkda.id_admin_provinsi', $idAdminProvinsi)
-                ->orderBy('kdp.id_kegiatan_detail_proses', 'DESC')
-                ->get()
-                ->getResultArray();
+        // Only get data if we have valid admin ID
+        if ($idAdminProvinsi) {
+            // Get statistik dashboard
+            $stats = $this->getDashboardStats($idAdminProvinsi);
+
+            $prosesModel = new MasterKegiatanDetailProsesModel();
+
+            // Dropdown kegiatan proses - filter berdasarkan assignment
+            if ($isSuperAdmin) {
+                $kegiatanList = $prosesModel
+                    ->select('id_kegiatan_detail_proses, nama_kegiatan_detail_proses')
+                    ->orderBy('id_kegiatan_detail_proses', 'DESC')
+                    ->findAll();
+            } else {
+                $kegiatanList = $this->db->table('master_kegiatan_detail_proses kdp')
+                    ->select('kdp.id_kegiatan_detail_proses, kdp.nama_kegiatan_detail_proses')
+                    ->join('master_kegiatan_detail_admin mkda', 'mkda.id_kegiatan_detail = kdp.id_kegiatan_detail')
+                    ->where('mkda.id_admin_provinsi', $idAdminProvinsi)
+                    ->orderBy('kdp.id_kegiatan_detail_proses', 'DESC')
+                    ->get()
+                    ->getResultArray();
+            }
+
+            $latest = !empty($kegiatanList) ? $kegiatanList[0] : null;
+            $latestKegiatanId = $latest ? $latest['id_kegiatan_detail_proses'] : '';
+
+            // Get progress kegiatan yang sedang berjalan
+            $progressKegiatan = $this->getProgressKegiatanBerjalan($idAdminProvinsi);
         }
-
-        $latest = !empty($kegiatanList) ? $kegiatanList[0] : null;
-        $latestKegiatanId = $latest ? $latest['id_kegiatan_detail_proses'] : '';
 
         $data = [
             'title' => 'Dashboard',
             'active_menu' => 'dashboard',
+            'stats' => $stats,
             'kegiatanList' => $kegiatanList,
             'latestKegiatanId' => $latestKegiatanId,
-            'isSuperAdmin' => $isSuperAdmin
+            'isSuperAdmin' => $isSuperAdmin,
+            'progressKegiatan' => $progressKegiatan,
+            'kegiatanDetailProses' => $kegiatanList
         ];
 
         return view('AdminSurveiProv/dashboard', $data);
+    }
+
+    // ======================================================
+    // GET DASHBOARD STATS
+    // ======================================================
+    private function getDashboardStats($idAdminProvinsi)
+    {
+        // Total Kegiatan (yang di-assign)
+        $totalKegiatan = $this->db->table('master_kegiatan_detail_admin')
+            ->where('id_admin_provinsi', $idAdminProvinsi)
+            ->countAllResults();
+
+        // Kegiatan Aktif
+        $today = date('Y-m-d');
+        $kegiatanAktif = $this->db->query("
+            SELECT COUNT(*) as total
+            FROM master_kegiatan_detail_proses kdp
+            JOIN master_kegiatan_detail_admin mkda ON mkda.id_kegiatan_detail = kdp.id_kegiatan_detail
+            WHERE mkda.id_admin_provinsi = ?
+            AND kdp.tanggal_mulai <= ?
+            AND kdp.tanggal_selesai >= ?
+        ", [$idAdminProvinsi, $today, $today])->getRowArray();
+
+        // Target Tercapai
+        $targetTercapai = $this->calculateOverallProgress($idAdminProvinsi);
+
+        return [
+            'total_kegiatan' => $totalKegiatan ?? 0,
+            'kegiatan_aktif' => (int)($kegiatanAktif['total'] ?? 0),
+            'target_tercapai' => round($targetTercapai, 0)
+        ];
+    }
+
+    // ======================================================
+    // CALCULATE OVERALL PROGRESS
+    // ======================================================
+    private function calculateOverallProgress($idAdminProvinsi)
+    {
+        $prosesList = $this->db->query("
+            SELECT kdp.id_kegiatan_detail_proses, kdp.target
+            FROM master_kegiatan_detail_proses kdp
+            JOIN master_kegiatan_detail_admin mkda ON mkda.id_kegiatan_detail = kdp.id_kegiatan_detail
+            WHERE mkda.id_admin_provinsi = ?
+            AND kdp.target > 0
+        ", [$idAdminProvinsi])->getResultArray();
+
+        if (empty($prosesList)) {
+            return 0;
+        }
+
+        $totalProgress = 0;
+        $countKegiatan = 0;
+
+        foreach ($prosesList as $proses) {
+            $targetTotal = (int)$proses['target'];
+            $realisasiTotal = $this->getRealisasiByProses($proses['id_kegiatan_detail_proses']);
+            
+            if ($targetTotal > 0) {
+                $progress = ($realisasiTotal / $targetTotal) * 100;
+                $totalProgress += min(100, $progress);
+                $countKegiatan++;
+            }
+        }
+
+        return $countKegiatan > 0 ? ($totalProgress / $countKegiatan) : 0;
+    }
+
+    // ======================================================
+    // GET REALISASI BY PROSES
+    // ======================================================
+    private function getRealisasiByProses($idProses)
+    {
+        $result = $this->db->query("
+            SELECT COALESCE(SUM(pp.jumlah_realisasi_kumulatif), 0) as total_realisasi
+            FROM pantau_progress pp
+            JOIN pcl ON pp.id_pcl = pcl.id_pcl
+            JOIN pml ON pcl.id_pml = pml.id_pml
+            JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+            WHERE kw.id_kegiatan_detail_proses = ?
+        ", [$idProses])->getRowArray();
+
+        return (int)($result['total_realisasi'] ?? 0);
+    }
+
+    // ======================================================
+    // GET PROGRESS KEGIATAN BERJALAN
+    // ======================================================
+    private function getProgressKegiatanBerjalan($idAdminProvinsi)
+    {
+        $kegiatanDetails = $this->db->query("
+            SELECT mkd.*, mk.nama_kegiatan
+            FROM master_kegiatan_detail mkd
+            JOIN master_kegiatan mk ON mk.id_kegiatan = mkd.id_kegiatan
+            JOIN master_kegiatan_detail_admin mkda ON mkda.id_kegiatan_detail = mkd.id_kegiatan_detail
+            WHERE mkda.id_admin_provinsi = ?
+            ORDER BY mkd.created_at DESC
+            LIMIT 4
+        ", [$idAdminProvinsi])->getResultArray();
+
+        $progressData = [];
+        $colors = ['#1e88e5', '#43a047', '#fdd835', '#8e24aa', '#e53935', '#5e35b1'];
+        $colorIndex = 0;
+
+        foreach ($kegiatanDetails as $detail) {
+            $prosesList = $this->db->query("
+                SELECT * FROM master_kegiatan_detail_proses
+                WHERE id_kegiatan_detail = ?
+            ", [$detail['id_kegiatan_detail']])->getResultArray();
+
+            $totalTarget = 0;
+            $totalRealisasi = 0;
+
+            foreach ($prosesList as $proses) {
+                $totalTarget += (int)$proses['target'];
+                $totalRealisasi += $this->getRealisasiByProses($proses['id_kegiatan_detail_proses']);
+            }
+
+            if ($totalTarget > 0) {
+                $progress = ($totalRealisasi / $totalTarget) * 100;
+                
+                $progressData[] = [
+                    'nama' => $detail['nama_kegiatan_detail'],
+                    'progress' => min(100, round($progress, 0)),
+                    'color' => $colors[$colorIndex % count($colors)]
+                ];
+                
+                $colorIndex++;
+            }
+        }
+
+        return $progressData;
     }
 
     // ======================================================
@@ -74,7 +243,6 @@ class DashboardController extends Controller
     {
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
         
-        // Get role dan admin ID dari session
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
@@ -84,7 +252,6 @@ class DashboardController extends Controller
         
         // Validasi akses untuk Admin Provinsi
         if ($isAdminProvinsi && $idProses) {
-            // Check apakah kegiatan ini di-assign ke admin ini
             $prosesModel = new MasterKegiatanDetailProsesModel();
             $proses = $prosesModel->find($idProses);
             
@@ -107,7 +274,6 @@ class DashboardController extends Controller
         }
         
         $model = new KurvaSProvinsiModel();
-
         $builder = $model
             ->select('tanggal_target, target_persen_kumulatif, target_kumulatif_absolut, target_harian_absolut')
             ->orderBy('tanggal_target', 'ASC');
@@ -115,7 +281,6 @@ class DashboardController extends Controller
         if ($idProses) {
             $builder->where('id_kegiatan_detail_proses', $idProses);
         } else {
-            // Get latest kegiatan yang accessible
             $prosesModel = new MasterKegiatanDetailProsesModel();
             if ($isSuperAdmin) {
                 $latest = $prosesModel->orderBy('id_kegiatan_detail_proses', 'DESC')->first();
@@ -137,13 +302,12 @@ class DashboardController extends Controller
     }
 
     // ======================================================
-    // 🔹 Kegiatan Wilayah Dropdown (kabupaten)
+    // KEGIATAN WILAYAH DROPDOWN
     // ======================================================
     public function getKegiatanWilayah()
     {
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
         
-        // Get role dan admin ID dari session
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
@@ -151,7 +315,6 @@ class DashboardController extends Controller
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
         
-        // Validasi akses untuk Admin Provinsi
         if ($isAdminProvinsi && $idProses) {
             $prosesModel = new MasterKegiatanDetailProsesModel();
             $proses = $prosesModel->find($idProses);
@@ -170,7 +333,6 @@ class DashboardController extends Controller
         }
         
         $wilayahModel = new MasterKegiatanWilayahModel();
-
         $records = $wilayahModel
             ->select('kegiatan_wilayah.id_kegiatan_wilayah, master_kabupaten.nama_kabupaten')
             ->join('master_kabupaten', 'master_kabupaten.id_kabupaten = kegiatan_wilayah.id_kabupaten', 'left')
@@ -181,13 +343,12 @@ class DashboardController extends Controller
     }
 
     // ======================================================
-    // 🔹 Kurva S Kabupaten (berdasarkan kegiatan_wilayah)
+    // KURVA S KABUPATEN
     // ======================================================
     public function getKurvaKabupaten()
     {
         $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
         
-        // Get role dan admin ID dari session
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
@@ -195,9 +356,7 @@ class DashboardController extends Controller
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
         
-        // Validasi akses untuk Admin Provinsi
         if ($isAdminProvinsi && $idWilayah) {
-            // Check apakah kegiatan wilayah ini terkait dengan kegiatan yang di-assign
             $wilayahModel = new MasterKegiatanWilayahModel();
             $wilayah = $wilayahModel->find($idWilayah);
             
@@ -225,7 +384,6 @@ class DashboardController extends Controller
         }
         
         $model = new KurvaSkabModel();
-
         $records = $model
             ->where('id_kegiatan_wilayah', $idWilayah)
             ->orderBy('tanggal_target', 'ASC')
@@ -235,7 +393,7 @@ class DashboardController extends Controller
     }
 
     // ======================================================
-    // 🔹 Helper: format JSON kurva
+    // FORMAT KURVA DATA
     // ======================================================
     private function formatKurvaData($records)
     {
@@ -248,7 +406,6 @@ class DashboardController extends Controller
             ];
         }
 
-        // 🔹 filter duplikat berdasarkan tanggal_target
         $unique = [];
         foreach ($records as $row) {
             $tgl = $row['tanggal_target'];
@@ -257,7 +414,6 @@ class DashboardController extends Controller
             }
         }
 
-        // urutkan berdasarkan tanggal (pastikan rapi)
         ksort($unique);
 
         $labels = $targetPersen = $targetAbsolut = $targetHarian = [];
@@ -268,7 +424,6 @@ class DashboardController extends Controller
             $targetHarian[] = (int) $row['target_harian_absolut'];
         }
 
-        // 🔸 pastikan target kumulatif tidak menurun
         for ($i = 1; $i < count($targetAbsolut); $i++) {
             if ($targetAbsolut[$i] < $targetAbsolut[$i - 1]) {
                 $targetAbsolut[$i] = $targetAbsolut[$i - 1];
@@ -283,75 +438,98 @@ class DashboardController extends Controller
         ];
     }
 
-    public function master_detail_proses()
+    // ======================================================
+    // GET PETUGAS
+    // ======================================================
+    public function getPetugas()
     {
-        $data = [
-            'title' => 'Master Detail Proses',
-            'active_menu' => 'master-kegiatan-detail-proses'
-        ];
-        return view('AdminSurveiProv/MasterKegiatanDetailProses/index', $data);
-    }
+        $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
+        $idProses = $this->request->getGet('id_kegiatan_detail_proses');
+        $idAdminProvinsi = session()->get('id_admin_provinsi');
 
-    public function tambah_detail_proses()
-    {
-        $data = [
-            'title' => 'Master Detail Proses',
-            'active_menu' => 'master-kegiatan-detail-proses'
-        ];
-        return view('AdminSurveiProv/MasterKegiatanDetailProses/create', $data);
-    }
+        // Validasi akses
+        if ($idProses) {
+            $prosesModel = new MasterKegiatanDetailProsesModel();
+            $proses = $prosesModel->find($idProses);
+            
+            if ($proses) {
+                $adminModel = new MasterKegiatanDetailAdminModel();
+                $hasAccess = $adminModel
+                    ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
+                    ->where('id_admin_provinsi', $idAdminProvinsi)
+                    ->first();
+                
+                if (!$hasAccess) {
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'data' => []
+                    ]);
+                }
+            }
+        }
 
-    public function edit_master_output()
-    {
-        $data = [
-            'title' => 'Master Output',
-            'active_menu' => 'master-output'
-        ];
-        return view('AdminSurveiProv/Master Output/edit', $data);
-    }
+        if (!$idWilayah || $idWilayah == 'all') {
+            $petugas = $this->db->query("
+                SELECT 
+                    u.nama_user,
+                    u.sobat_id,
+                    mk.nama_kabupaten,
+                    pcl.target,
+                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi,
+                    'PCL' as role
+                FROM pcl
+                JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
+                JOIN pml ON pcl.id_pml = pml.id_pml
+                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+                JOIN master_kabupaten mk ON kw.id_kabupaten = mk.id_kabupaten
+                LEFT JOIN pantau_progress pp ON pp.id_pcl = pcl.id_pcl
+                WHERE kw.id_kegiatan_detail_proses = ?
+                GROUP BY pcl.id_pcl, u.nama_user, u.sobat_id, mk.nama_kabupaten, pcl.target
+                ORDER BY mk.nama_kabupaten, u.nama_user
+            ", [$idProses])->getResultArray();
+        } else {
+            $petugas = $this->db->query("
+                SELECT 
+                    u.nama_user,
+                    u.sobat_id,
+                    mk.nama_kabupaten,
+                    pcl.target,
+                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi,
+                    'PCL' as role
+                FROM pcl
+                JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
+                JOIN pml ON pcl.id_pml = pml.id_pml
+                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+                JOIN master_kabupaten mk ON kw.id_kabupaten = mk.id_kabupaten
+                LEFT JOIN pantau_progress pp ON pp.id_pcl = pcl.id_pcl
+                WHERE kw.id_kegiatan_wilayah = ?
+                GROUP BY pcl.id_pcl, u.nama_user, u.sobat_id, mk.nama_kabupaten, pcl.target
+                ORDER BY u.nama_user
+            ", [$idWilayah])->getResultArray();
+        }
 
-    public function master_kegiatan_wilayah()
-    {
-        $data = [
-            'title' => 'Master Kegiatan Wilayah',
-            'active_menu' => 'master-kegiatan-wilayah'
-        ];
-        return view('AdminSurveiProv/MasterKegiatanWilayah/index', $data);
-    }
+        foreach ($petugas as &$p) {
+            $target = (int)$p['target'];
+            $realisasi = (int)$p['realisasi'];
+            $progress = $target > 0 ? round(($realisasi / $target) * 100, 0) : 0;
+            
+            $p['progress'] = min(100, $progress);
+            
+            if ($realisasi >= $target) {
+                $p['status'] = 'Sudah Lapor';
+                $p['status_class'] = 'badge-success';
+            } elseif ($progress >= 50) {
+                $p['status'] = 'Sedang Berjalan';
+                $p['status_class'] = 'badge-warning';
+            } else {
+                $p['status'] = 'Belum Lapor';
+                $p['status_class'] = 'badge-warning';
+            }
+        }
 
-    public function tambah_master_kegiatan_wilayah()
-    {
-        $data = [
-            'title' => 'Master Kegiatan Wilayah',
-            'active_menu' => 'master-kegiatan-wilayah'
-        ];
-        return view('AdminSurveiProv/MasterKegiatanWilayah/create', $data);
-    }
-
-    public function edit_master_kegiatan()
-    {
-        $data = [
-            'title' => 'Master Kegiatan',
-            'active_menu' => 'master-kegiatan'
-        ];
-        return view('SuperAdmin/Master Kegiatan/edit', $data);
-    }
-
-    public function AssignAdminSurveiKab()
-    {
-        $data = [
-            'title' => 'Assign Petugas Survei',
-            'active_menu' => 'assign-admin-kab'
-        ];
-        return view('AdminSurveiProv/AssignAdminSurveiKab/index', $data);
-    }
-
-    public function tambah_AssignAdminSurveiKab()
-    {
-        $data = [
-            'title' => 'Assign Petugas Survei',
-            'active_menu' => 'assign-admin-kab/create'
-        ];
-        return view('AdminSurveiProv/AssignAdminSurveiKab/create', $data);
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $petugas
+        ]);
     }
 }

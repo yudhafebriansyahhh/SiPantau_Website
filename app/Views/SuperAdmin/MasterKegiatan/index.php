@@ -59,23 +59,23 @@
     <div class="overflow-x-auto">
         <table class="w-full" id="masterKegiatanTable">
             <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-16">
                         No
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Nama Kegiatan
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Master Output
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Fungsi
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-32">
                         Periode
                     </th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-32">
                         Aksi
                     </th>
                 </tr>
@@ -94,26 +94,26 @@
                 <?php else: ?>
                     <?php $no = 1; ?>
                     <?php foreach ($kegiatans as $kegiatan): ?>
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-4 py-4 text-sm text-gray-900"><?= $no++ ?></td>
-                            <td class="px-4 py-4">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150 border-r border-gray-200">
+                            <td class="px-4 py-4 text-sm text-gray-900 border-r border-gray-200"><?= $no++ ?></td>
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <p class="text-sm font-medium text-gray-900"><?= esc($kegiatan['nama_kegiatan']) ?></p>
                                 <?php if (!empty($kegiatan['pelaksana'])): ?>
                                     <p class="text-xs text-gray-500 mt-1">Pelaksana: <?= esc($kegiatan['pelaksana']) ?></p>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                     <?= esc($kegiatan['nama_output'] ?? 'Tidak ada') ?>
                                 </span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <p class="text-sm text-gray-600 line-clamp-2"><?= esc($kegiatan['fungsi']) ?></p>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <span class="badge badge-info"><?= esc($kegiatan['periode']) ?></span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <div class="flex items-center justify-center space-x-2">
                                     <a href="<?= base_url('superadmin/master-kegiatan/show/' . $kegiatan['id_kegiatan']) ?>" 
                                        class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
