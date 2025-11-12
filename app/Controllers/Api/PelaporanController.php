@@ -141,7 +141,7 @@ class PelaporanController extends BaseController
             return $this->failValidationErrors('id_pcl, kegiatan, dan resume wajib diisi.');
         }
 
-        // 🔎 Verifikasi bahwa id_pcl memang milik user yang login
+        // 🔎 Verifikasi id_pcl milik user login
         $pclModel = new \App\Models\PCLModel();
         $pcl = $pclModel
             ->where('id_pcl', $data['id_pcl'])
@@ -152,26 +152,37 @@ class PelaporanController extends BaseController
             return $this->failUnauthorized('id_pcl tidak valid atau bukan milik user ini.');
         }
 
-        // 📸 Proses upload gambar (jika ada)
+        // 📸 Proses upload & kompresi gambar
         $imagePath = '';
         if ($image && $image->isValid() && !$image->hasMoved()) {
 
-            // Path folder upload di public
             $uploadDir = FCPATH . 'uploads/laporan/';
-
-            // Buat folder jika belum ada
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
 
-            // Buat nama unik dan pindahkan file
             $newName = $image->getRandomName();
-            $image->move($uploadDir, $newName);
+            $tempPath = $image->getTempName();
+            $finalPath = $uploadDir . $newName;
 
-            // Simpan path relatif agar bisa diakses oleh frontend
+            // Kompres adaptif hingga <= 100KB
+            $quality = 90; // mulai dari kualitas tinggi
+            $maxSize = 100 * 1024; // 100 KB
+            $imageService = \Config\Services::image()->withFile($tempPath);
+
+            // Simpan sementara dulu
+            $imageService->save($finalPath, $quality);
+
+            // Turunkan kualitas sampai ukuran file <= 100KB
+            while (filesize($finalPath) > $maxSize && $quality > 10) {
+                $quality -= 5;
+                $imageService->save($finalPath, $quality);
+            }
+
+            // Simpan path relatif untuk database
             $imagePath = 'uploads/laporan/' . $newName;
 
-            log_message('info', 'File uploaded successfully: ' . $imagePath);
+            log_message('info', 'File dikompres ke ' . round(filesize($finalPath) / 1024, 2) . 'KB pada kualitas ' . $quality);
         } else {
             log_message('warning', 'Tidak ada file image yang diupload atau tidak valid.');
         }
@@ -194,7 +205,7 @@ class PelaporanController extends BaseController
 
         return $this->respondCreated([
             'status' => 'success',
-            'message' => 'Pelaporan berhasil disimpan',
+            'message' => 'Pelaporan berhasil disimpan (≤100KB).',
             'data' => $insertData
         ]);
 
@@ -206,8 +217,10 @@ class PelaporanController extends BaseController
 }
 
 
+
+
    /**
- * 🔴 DELETE /api/pelaporan/{id}
+ * DELETE /api/pelaporan/{id}
  * Menghapus laporan milik sendiri dan file gambarnya
  */
 public function delete($id = null)
@@ -218,26 +231,18 @@ public function delete($id = null)
     }
 
     try {
+        // ✅ Tetap decode token agar endpoint tidak bisa diakses tanpa login
         $decoded = JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
-        $sobat_id = $decoded->data->sobat_id;
-
-        $pclModel = new PCLModel();
-        $pcl = $pclModel->where('sobat_id', $sobat_id)->first();
-
-        if (!$pcl) {
-            return $this->failUnauthorized('Hanya PCL yang bisa menghapus pelaporan.');
-        }
 
         $transaksiModel = new SipantauTransaksiModel();
         $laporan = $transaksiModel->find($id);
 
-        if (!$laporan || $laporan['id_pcl'] != $pcl['id_pcl']) {
-            return $this->failForbidden('Laporan tidak ditemukan atau bukan milik Anda.');
+        if (!$laporan) {
+            return $this->failNotFound('Laporan tidak ditemukan');
         }
 
-        // 🧹 Hapus file gambar dari direktori publik
+        // 🧹 Hapus file gambar jika ada
         if (!empty($laporan['imagepath'])) {
-            // Pastikan path mengarah ke public/
             $filePath = FCPATH . $laporan['imagepath'];
 
             if (file_exists($filePath)) {
@@ -262,5 +267,6 @@ public function delete($id = null)
         return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
     }
 }
+        
 
 }

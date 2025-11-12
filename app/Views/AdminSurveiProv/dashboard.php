@@ -35,9 +35,9 @@
   <div class="lg:col-span-2 card">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
       <div>
-        <h3 class="text-lg font-semibold text-gray-900">Kurva S – Target Kumulatif</h3>
+        <h3 class="text-lg font-semibold text-gray-900">Kurva S - Target vs Aktual</h3>
         <p class="text-sm text-gray-600">Pilih kegiatan dan kabupaten untuk melihat grafik</p>
-      </div>
+      </div> 
 
       <div class="flex flex-col sm:flex-row gap-2">
         <!-- Dropdown Kegiatan -->
