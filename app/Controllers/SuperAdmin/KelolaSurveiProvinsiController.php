@@ -34,9 +34,7 @@ class KelolaSurveiProvinsiController extends BaseController
         $this->db = \Config\Database::connect();
     }
 
-    /**
-     * Halaman index - daftar admin dengan kegiatan mereka
-     */
+    // Halaman index - daftar admin dengan kegiatan mereka
     public function index()
     {
         $search = $this->request->getGet('search') ?? '';
@@ -86,9 +84,7 @@ class KelolaSurveiProvinsiController extends BaseController
         return view('SuperAdmin/KelolaAdminSurvey/index', $data);
     }
 
-    /**
-     * Get user role names termasuk role tambahan dari tabel admin
-     */
+    // Get user role names termasuk role tambahan dari tabel admin
     private function getUserRoleNames($sobatId, $roleJson)
     {
         $roleNames = [];
@@ -134,9 +130,7 @@ class KelolaSurveiProvinsiController extends BaseController
         return $roleNames;
     }
 
-    /**
-     * Halaman assign/edit admin survei provinsi ke kegiatan
-     */
+    // Halaman assign/edit admin survei provinsi ke kegiatan
     public function assign($idAdminProvinsi = null)
     {
         $isEdit = !is_null($idAdminProvinsi);
@@ -194,9 +188,7 @@ class KelolaSurveiProvinsiController extends BaseController
         return view('SuperAdmin/KelolaAdminSurvey/assign', $data);
     }
 
-    /**
-     * Process assign admin survei provinsi
-     */
+    // Process assign admin survei provinsi
     public function storeAssign()
     {
         $sobatId = $this->request->getPost('sobat_id');
@@ -264,9 +256,7 @@ class KelolaSurveiProvinsiController extends BaseController
             ->with('success', 'Admin berhasil di-assign ke kegiatan');
     }
 
-    /**
-     * Update assignment admin - Menambah kegiatan baru
-     */
+    // Update assignment admin - Menambah kegiatan baru
     public function update($idAdminProvinsi)
     {
         $idKegiatanDetail = $this->request->getPost('id_kegiatan_detail');
@@ -316,9 +306,7 @@ class KelolaSurveiProvinsiController extends BaseController
             ->with('success', 'Kegiatan berhasil ditambahkan');
     }
 
-    /**
-     * Delete assignment admin dari kegiatan tertentu
-     */
+    // Delete assignment admin dari kegiatan tertentu
     public function deleteAssignment()
     {
         $idAdminProvinsi = $this->request->getPost('id_admin_provinsi');
@@ -369,9 +357,7 @@ class KelolaSurveiProvinsiController extends BaseController
         ]);
     }
 
-    /**
-     * Delete admin completely
-     */
+    //  Delete admin completely
     public function delete($idAdminProvinsi)
     {
         $this->db->transStart();
@@ -401,9 +387,7 @@ class KelolaSurveiProvinsiController extends BaseController
         ]);
     }
 
-    /**
-     * View detail admin dengan daftar kegiatan dan progress
-     */
+    // View detail admin dengan daftar kegiatan dan progress
     public function detail($idAdminProvinsi)
     {
         // Get admin info

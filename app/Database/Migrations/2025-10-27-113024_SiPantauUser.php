@@ -43,6 +43,11 @@ class CreateSipantauUserTable extends Migration
                 'null' => true,
                 'after' => 'hp'
             ],
+            'is_pegawai' => [
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => 1,
+            ],
             'is_active' => [
                 'type' => 'TINYINT',
                 'constraint' => 1,

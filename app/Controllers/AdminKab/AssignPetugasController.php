@@ -38,10 +38,8 @@ class AssignPetugasController extends BaseController
         $this->prosesModel = new MasterKegiatanDetailProsesModel();
     }
 
-    /**
-     * Halaman Index - Daftar Assignment PML
-     * Hanya tampilkan kegiatan yang di-assign ke admin yang login
-     */
+    //  Halaman Index - Daftar Assignment PML
+    //  Hanya tampilkan kegiatan yang di-assign ke admin yang login
     public function index()
     {
         $sobatId = session()->get('sobat_id');
@@ -83,9 +81,7 @@ class AssignPetugasController extends BaseController
         return view('AdminSurveiKab/AssignPetugasSurvei/index', $data);
     }
 
-    /**
-     * Halaman Create - Form Assign PML dan PCL
-     */
+    //  Halaman Create - Form Assign PML dan PCL
     public function create()
     {
         $sobatId = session()->get('sobat_id');
@@ -121,7 +117,6 @@ class AssignPetugasController extends BaseController
         return view('AdminSurveiKab/AssignPetugasSurvei/create', $data);
     }
 
-    // ----------------------- EDIT -----------------------
     public function edit($id_pml)
     {
         $sobatId = session()->get('sobat_id');
@@ -181,7 +176,6 @@ class AssignPetugasController extends BaseController
         ]);
     }
 
-    // ----------------------- UPDATE -----------------------
     public function update($id_pml)
     {
         $sobatId = session()->get('sobat_id');
@@ -272,10 +266,8 @@ class AssignPetugasController extends BaseController
             ->with('success', 'Data assignment berhasil diperbarui dan kurva petugas diperbarui.');
     }
 
-    /**
-     * AJAX: Get Sisa Target Kegiatan Wilayah
-     * Menghitung sisa target dari kegiatan wilayah dikurangi total target PML yang sudah di-assign
-     */
+    //  AJAX: Get Sisa Target Kegiatan Wilayah
+    //  Menghitung sisa target dari kegiatan wilayah dikurangi total target PML yang sudah di-assign
     public function getSisaTargetKegiatanWilayah()
     {
         if (!$this->request->isAJAX()) {
@@ -366,10 +358,8 @@ class AssignPetugasController extends BaseController
         }
     }
 
-    /**
-     * AJAX: Get Available PML
-     * Exclude admin yang sedang login dan user yang sudah terlibat di kegiatan ini
-     */
+    //  AJAX: Get Available PML
+    //  Exclude admin yang sedang login dan user yang sudah terlibat di kegiatan ini
     public function getAvailablePML()
     {
         if (!$this->request->isAJAX()) {
@@ -414,10 +404,8 @@ class AssignPetugasController extends BaseController
         ]);
     }
 
-    /**
-     * AJAX: Get Available PCL
-     * Exclude PML yang dipilih dan admin yang terlibat di kegiatan ini
-     */
+    //  AJAX: Get Available PCL
+    //  Exclude PML yang dipilih dan admin yang terlibat di kegiatan ini
     public function getAvailablePCL()
     {
         if (!$this->request->isAJAX()) {
@@ -471,9 +459,7 @@ class AssignPetugasController extends BaseController
         ]);
     }
 
-    /**
-     * AJAX: Get Sisa Target PML
-     */
+    //  AJAX: Get Sisa Target PML
     public function getSisaTargetPML()
     {
         if (!$this->request->isAJAX()) {
@@ -492,9 +478,7 @@ class AssignPetugasController extends BaseController
         ]);
     }
 
-    /**
-     * Store Assignment - Updated with validation
-     */
+    //  Store Assignment - Updated with validation
     public function store()
     {
         $sobatId = session()->get('sobat_id');
@@ -633,9 +617,7 @@ class AssignPetugasController extends BaseController
         }
     }
 
-    /**
-     * Generate Kurva S untuk PCL
-     */
+    //  Generate Kurva S untuk PCL
     private function generateKurvaPetugas($idPCL, $target, $persenAwal, $tanggalMulai, $tanggal100, $tanggalSelesai)
     {
         $totalTarget = (int) $target;
@@ -736,9 +718,7 @@ class AssignPetugasController extends BaseController
         log_message('info', "Kurva S PCL dibuat untuk id_pcl=$idPCL (total=$totalTarget)");
     }
 
-    /**
-     * Detail PML dan PCL-nya
-     */
+    //  Detail PML dan PCL-nya
     public function detail($idPML)
     {
         $sobatId = session()->get('sobat_id');
@@ -785,9 +765,7 @@ class AssignPetugasController extends BaseController
         return view('AdminSurveiKab/AssignPetugasSurvei/detail', $data);
     }
 
-    /**
-     * Delete PML beserta PCL dan Kurva-nya
-     */
+    //  Delete PML beserta PCL dan Kurva-nya
     public function delete($idPML)
     {
         $sobatId = session()->get('sobat_id');

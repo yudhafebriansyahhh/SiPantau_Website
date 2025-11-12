@@ -49,11 +49,8 @@ class AuthController extends BaseController
             return $this->failNotFound('User tidak ditemukan atau tidak aktif');
         }
 
-        // 🔍 Decode role JSON dan cek apakah punya role id 5 (Petugas Survei)
+        // 🔍 Decode role JSON
         $roleIds = json_decode($user['role'], true) ?? [];
-        if (!in_array(5, $roleIds)) {
-            return $this->failUnauthorized('Akses hanya untuk Petugas Survei');
-        }
 
         // 🔑 Verifikasi password hash
         if (!password_verify($password, $user['password'])) {

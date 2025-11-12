@@ -6,7 +6,7 @@
     <div class="flex items-center text-sm text-gray-600 mb-4">
         <?php
         // Build back URL dengan filter jika ada
-        $backUrl = base_url('adminprov/master-kegiatan-detail-proses');
+        $backUrl = base_url('adminsurvei/master-kegiatan-detail-proses');
         if ($kegiatanDetailFilter) {
             $backUrl .= '?kegiatan_detail=' . $kegiatanDetailFilter;
         }

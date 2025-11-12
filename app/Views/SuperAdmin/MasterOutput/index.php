@@ -40,17 +40,17 @@
     <div class="overflow-x-auto">
         <table class="w-full" id="masterOutputTable">
             <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-16">
                         No
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Nama Output
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Fungsi
                     </th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-32">
                         Aksi
                     </th>
                 </tr>
@@ -66,15 +66,15 @@
                 <?php else: ?>
                     <?php foreach ($outputs as $index => $output): ?>
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-4 py-4 text-sm text-gray-900"><?= $index + 1 ?></td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200 text-sm text-gray-900"><?= $index + 1 ?></td>
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <p class="text-sm font-medium text-gray-900"><?= esc($output['nama_output']) ?></p>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <p class="text-sm text-gray-600 line-clamp-2"><?= esc($output['fungsi']) ?></p>
                             </td>
                             
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <div class="flex items-center justify-center space-x-2">
                                     <a href="<?= base_url('superadmin/master-output/' . $output['id_output'] . '/edit') ?>" 
                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"

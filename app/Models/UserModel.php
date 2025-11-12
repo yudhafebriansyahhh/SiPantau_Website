@@ -14,8 +14,9 @@ class UserModel extends Model
         'email',
         'hp',
         'id_kabupaten',
-        'role', // Sesuai dengan nama kolom di database
+        'role',
         'password',
+        'is_pegawai',
         'is_active',
         'created_at',
         'updated_at'

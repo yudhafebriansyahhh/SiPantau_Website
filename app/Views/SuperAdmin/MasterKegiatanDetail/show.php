@@ -179,7 +179,7 @@
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-4 py-4 text-sm text-gray-900"><?= $index + 1 ?></td>
                             <td class="px-4 py-4">
-                                <a href="<?= base_url('superadmin/master-kegiatan-detail-proses/' . $proses['id_kegiatan_detail_proses']) ?>" 
+                                <a href="<?= base_url('superadmin/master-kegiatan-detail/kegiatan-wilayah/' . $proses['id_kegiatan_detail_proses']) ?>" 
                                    class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
                                     <?= esc($proses['nama_kegiatan_detail_proses']) ?>
                                 </a>

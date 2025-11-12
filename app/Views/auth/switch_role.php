@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilih Role - SiPantau</title>
+    <title>Ganti Role - SiPantau</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -18,11 +18,30 @@
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-center">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-user-circle text-4xl text-blue-600"></i>
+                        <i class="fas fa-exchange-alt text-4xl text-blue-600"></i>
                     </div>
-                    <h1 class="text-2xl font-bold text-white mb-2">Pilih Role</h1>
+                    <h1 class="text-2xl font-bold text-white mb-2">Ganti Role</h1>
                     <p class="text-blue-100 text-sm">
-                        Selamat datang, <strong><?= esc($user['nama_user']) ?></strong>
+                        <?php
+                        $currentTypeName = '';
+                        switch ($current_role_type ?? 'default') {
+                            case 'admin_provinsi':
+                                $currentTypeName = 'Admin Survei Provinsi';
+                                break;
+                            case 'pemantau_provinsi':
+                                $currentTypeName = 'Pemantau Provinsi';
+                                break;
+                            case 'admin_kabupaten':
+                                $currentTypeName = 'Admin Survei Kabupaten';
+                                break;
+                            case 'pemantau_kabupaten':
+                                $currentTypeName = 'Pemantau Kabupaten';
+                                break;
+                            default:
+                                $currentTypeName = 'User';
+                        }
+                        ?>
+                        Role Aktif: <strong><?= $currentTypeName ?></strong>
                     </p>
                 </div>
 
@@ -30,12 +49,12 @@
                 <div class="p-6">
                     
                     <!-- Info Alert -->
-                    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
                         <div class="flex items-start">
-                            <i class="fas fa-info-circle text-blue-600 mt-0.5 mr-3"></i>
-                            <div class="text-sm text-blue-700">
-                                <p class="font-medium mb-1">Anda memiliki beberapa role</p>
-                                <p>Silakan pilih role yang ingin Anda gunakan untuk sesi ini</p>
+                            <i class="fas fa-info-circle text-amber-600 mt-0.5 mr-3"></i>
+                            <div class="text-sm text-amber-700">
+                                <p class="font-medium mb-1">Ganti Role Aktif</p>
+                                <p>Pilih role yang ingin Anda gunakan. Data yang ditampilkan akan menyesuaikan dengan role yang dipilih.</p>
                             </div>
                         </div>
                     </div>
@@ -50,8 +69,17 @@
                     </div>
                     <?php endif; ?>
 
+                    <?php if (session()->getFlashdata('info')): ?>
+                    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                            <p class="text-sm text-blue-700"><?= session()->getFlashdata('info') ?></p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Form -->
-                    <form action="<?= base_url('login/process-role-selection') ?>" method="POST">
+                    <form action="<?= base_url('login/process-switch-role') ?>" method="POST">
                         <?= csrf_field() ?>
 
                         <div class="space-y-3 mb-6">
@@ -77,13 +105,18 @@
                                 }
                                 
                                 $iconData = $roleIcons[$iconKey] ?? ['icon' => 'fa-user', 'color' => 'gray', 'desc' => 'Role user'];
+                                
+                                // Check jika ini adalah role yang sedang aktif
+                                $isActive = ($roleType === $current_role_type);
+                                $borderClass = $isActive ? 'border-' . $iconData['color'] . '-500 bg-' . $iconData['color'] . '-50' : 'border-gray-200';
                             ?>
-                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-<?= $iconData['color'] ?>-500 hover:bg-<?= $iconData['color'] ?>-50 transition-all duration-200 group">
+                            <label class="flex items-center p-4 border-2 <?= $borderClass ?> rounded-xl cursor-pointer hover:border-<?= $iconData['color'] ?>-500 hover:bg-<?= $iconData['color'] ?>-50 transition-all duration-200 group">
                                 <input type="radio" 
                                        name="selected_role" 
                                        value="<?= $roleId ?>" 
                                        data-role-type="<?= $roleType ?>"
                                        class="w-5 h-5 text-<?= $iconData['color'] ?>-600 focus:ring-<?= $iconData['color'] ?>-500 role-radio"
+                                       <?= $isActive ? 'checked' : '' ?>
                                        required>
                                 
                                 <div class="ml-4 flex-1">
@@ -98,9 +131,13 @@
                                     </div>
                                 </div>
                                 
-                                <?php if ($roleType === 'admin_provinsi' || $roleType === 'admin_kabupaten'): ?>
+                                <?php if ($isActive): ?>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mr-2">
+                                    <i class="fas fa-check-circle mr-1"></i>Aktif
+                                </span>
+                                <?php elseif ($roleType === 'admin_provinsi' || $roleType === 'admin_kabupaten'): ?>
                                 <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full mr-2">
-                                    <i class="fas fa-check-circle mr-1"></i>Admin
+                                    <i class="fas fa-shield-alt mr-1"></i>Admin
                                 </span>
                                 <?php endif; ?>
                                 
@@ -110,19 +147,20 @@
                         </div>
 
                         <!-- Hidden input untuk role type -->
-                        <input type="hidden" name="selected_role_type" id="selected_role_type" value="">
+                        <input type="hidden" name="selected_role_type" id="selected_role_type" value="<?= $current_role_type ?>">
 
                         <!-- Buttons -->
                         <div class="flex gap-3">
-                            <a href="<?= base_url('logout') ?>" 
-                               class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center">
+                            <button type="button" 
+                                    onclick="window.history.back()"
+                                    class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center">
                                 <i class="fas fa-arrow-left mr-2"></i>
                                 Batal
-                            </a>
+                            </button>
                             <button type="submit" 
                                     class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl">
-                                Lanjutkan
-                                <i class="fas fa-arrow-right ml-2"></i>
+                                <i class="fas fa-exchange-alt mr-2"></i>
+                                Ganti Role
                             </button>
                         </div>
                     </form>
@@ -146,6 +184,12 @@
                 document.getElementById('selected_role_type').value = roleType;
             });
         });
+
+        // Set initial value untuk role yang sudah checked
+        const checkedRadio = document.querySelector('.role-radio:checked');
+        if (checkedRadio) {
+            document.getElementById('selected_role_type').value = checkedRadio.getAttribute('data-role-type');
+        }
     </script>
 
 </body>

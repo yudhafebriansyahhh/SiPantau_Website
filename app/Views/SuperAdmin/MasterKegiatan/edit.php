@@ -96,13 +96,13 @@
             <label for="periode" class="block text-sm font-medium text-gray-700 mb-2">
                 Periode <span class="text-red-500">*</span>
             </label>
+            <?php $selectedPeriode = old('periode', $kegiatan['periode']); ?>
             <select 
                    id="periode" 
                    name="periode" 
-                   class="input-field <?= session('errors.periode') ? 'border-red-500' : '' ?>" 
-                   value="<?= old('periode') ?>"
+                   class="input-field <?= session('errors.periode') ? 'border-red-500' : '' ?>"
                    required>
-                <option value="">-- Pilih Periode --</option>
+                <option value="" disabled <?= $selectedPeriode === '' ? 'selected' : '' ?>>-- Pilih Status --</option>
                 <option value="Tahunan" <?= old('periode', $kegiatan['periode']) == 'Tahunan' ? 'selected' : '' ?>>Tahunan</option>
                 <option value="Semesteran" <?= old('periode', $kegiatan['periode']) == 'Semesteran' ? 'selected' : '' ?>>Semesteran</option>
                 <option value="Triwulanan" <?= old('periode', $kegiatan['periode']) == 'Triwulanan' ? 'selected' : '' ?>>Triwulanan</option>
@@ -121,11 +121,12 @@
             <label for="pelaksana" class="block text-sm font-medium text-gray-700 mb-2">
                 Pelaksana
             </label>
+            <?php $selectedPelaksana = old('pelaksana', $kegiatan['pelaksana']);?>
             <select 
                 id="pelaksana" 
                 name="pelaksana" 
                 class="input-field <?= session('errors.pelaksana') ? 'border-red-500' : '' ?>">
-                <option value="">-- Pilih Pelaksana --</option>
+                <option value="" disabled <?= $selectedPeriode === '' ? 'selected' : '' ?>>-- Pilih Pelaksana --</option>
                 <option value="Provinsi" <?= old('pelaksana', $kegiatan['pelaksana']) == 'Provinsi' ? 'selected' : '' ?>>Provinsi</option>
                 <option value="Kabupaten" <?= old('pelaksana', $kegiatan['pelaksana']) == 'Kabupaten' ? 'selected' : '' ?>>Kabupaten</option>
             </select>

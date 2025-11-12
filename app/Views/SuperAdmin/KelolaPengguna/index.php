@@ -148,14 +148,15 @@ input:checked + .toggle-slider:before {
     <div class="overflow-x-auto">
         <table class="w-full" id="penggunaTable">
             <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">No</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama & Email</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kab/Kota</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">No HP</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Status</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Aksi</th>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-16 border-r border-gray-200">No</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">Nama & Email</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-40 border-r border-gray-200">Kab/Kota</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">No HP</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">Role</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">Pegawai/Mitra</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32 border-r border-gray-200">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -169,8 +170,8 @@ input:checked + .toggle-slider:before {
                 <?php else: ?>
                     <?php foreach ($users as $index => $user): ?>
                     <tr class="hover:bg-gray-50 transition-colors duration-150">
-                        <td class="px-4 py-4 text-sm text-gray-900"><?= $index + 1 ?></td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 text-sm text-gray-900 border-r border-gray-200"><?= $index + 1 ?></td>
+                        <td class="px-4 py-4 border-r border-gray-200">
                             <div class="flex items-center">
                                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
                                     <span class="text-white text-sm font-medium">
@@ -183,13 +184,13 @@ input:checked + .toggle-slider:before {
                                 </div>
                             </div>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 border-r border-gray-200">
                             <p class="text-sm text-gray-600"><?= esc($user['nama_kabupaten'] ?? '-') ?></p>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 border-r border-gray-200">
                             <p class="text-sm text-gray-600"><?= esc($user['hp']) ?></p>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 border-r border-gray-200">
                             <div class="flex flex-wrap gap-1">
                                 <?php if (!empty($user['role_names'])): ?>
                                     <?php 
@@ -206,7 +207,14 @@ input:checked + .toggle-slider:before {
                                 <?php endif; ?>
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-center">
+                        <td class="px-4 py-4 border-r border-gray-200 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                            <?= $user['is_pegawai'] == '1' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' ?>">
+                            
+                            <?= $user['is_pegawai'] == '1' ? 'Pegawai' : 'Mitra' ?>
+                        </span>
+                        </td>
+                        <td class="px-4 py-4 border-r border-gray-200 text-center">
                             <div class="flex items-center justify-center">
                                 <label class="toggle-switch">
                                     <input type="checkbox" 
@@ -219,7 +227,7 @@ input:checked + .toggle-slider:before {
                                 </span>
                             </div>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 border-r border-gray-200">
                             <div class="flex items-center justify-center space-x-2">
                                 <a href="<?= base_url('superadmin/kelola-pengguna/edit/' . $user['sobat_id']) ?>" 
                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
