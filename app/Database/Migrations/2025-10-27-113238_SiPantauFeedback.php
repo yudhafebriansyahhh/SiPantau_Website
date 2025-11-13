@@ -20,6 +20,14 @@ class SiPantauFeedback extends Migration
                 'constraint' => 11,
                 'unsigned' => true,
             ],
+            'feedback' => [
+                'type' => 'varchar',
+                'constraint' => 255,
+            ],
+            'rating' => [
+                'type' => 'INT',
+                'constraint' => 11,
+            ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,

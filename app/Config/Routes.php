@@ -205,4 +205,6 @@ $routes->group('pemantau', ['filter' => 'role:4'], static function ($routes) {
         $routes->post('progres', 'PantauProgressController::create');
         $routes->get('progres', 'PantauProgressController::index');
         $routes->delete('progres/(:num)', 'PantauProgressController::delete/$1');
+        $routes->get('feedback', 'FeedBackUserController::index');
+        $routes->post('feedback', 'FeedBackUserController::create');
     });
