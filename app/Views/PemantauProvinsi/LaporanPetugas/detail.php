@@ -137,7 +137,7 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">No</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Tanggal</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Waktu</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700">Realisasi Absolut</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700">Realisasi</th>
                             <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700">Realisasi Kumulatif</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Catatan</th>
                         </tr>
