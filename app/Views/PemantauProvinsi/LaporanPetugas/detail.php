@@ -134,12 +134,12 @@
                 <table class="w-full border-collapse">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">No</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Tanggal</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Waktu</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700">Realisasi</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700">Realisasi Kumulatif</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Catatan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border-r border-gray-200 text-gray-700">No</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border-r border-gray-200 text-gray-700">Tanggal</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border-r border-gray-200 text-gray-700">Waktu</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold border-r border-gray-200 text-gray-700">Realisasi</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold border-r border-gray-200 text-gray-700">Realisasi Kumulatif</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border-r border-gray-200 text-gray-700">Catatan</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200" id="pantauTableBody">
