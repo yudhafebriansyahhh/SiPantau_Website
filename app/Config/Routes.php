@@ -197,6 +197,10 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
 
     // ===== Data Petugas (UPDATED) =====
     $routes->get('data-petugas', 'PemantauProv\DataPetugasController::index');
+    // ===== Detail Petugas Routes =====
+    $routes->get('detail-petugas/(:num)', 'PemantauProv\DetailPetugasController::index/$1');
+    $routes->get('detail-petugas/get-pantau-progress', 'PemantauProv\DetailPetugasController::getPantauProgress');
+    $routes->get('detail-petugas/get-laporan-transaksi', 'PemantauProv\DetailPetugasController::getLaporanTransaksi');
 
     $routes->get('laporan-petugas', 'PemantauProv\LaporanPetugasController::index');
     $routes->get('laporan-petugas/export-csv', 'PemantauProv\LaporanPetugasController::exportCSV');

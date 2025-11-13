@@ -142,8 +142,10 @@
                                     <?= $no++ ?>
                                 </td>
                                 <td class="col-nama sticky bg-white px-4 py-3 text-sm border-r border-gray-200">
-                                    <div class="font-medium text-gray-900"><?= esc($petugas['nama_user']) ?></div>
-                                    <div class="text-xs text-gray-500"><?= esc($petugas['nama_kabupaten']) ?></div>
+                                    <a href="<?= base_url('pemantau-provinsi/detail-petugas/' . $petugas['id_pcl']) ?>" class="block hover:bg-gray-50 -mx-4 -my-3 px-4 py-3 transition-colors duration-150">
+                                        <div class="font-medium text-blue-600 hover:text-blue-800 hover:underline"><?= esc($petugas['nama_user']) ?></div>
+                                        <div class="text-xs text-gray-500"><?= esc($petugas['nama_kabupaten']) ?></div>
+                                    </a>
                                 </td>
                                 <?php foreach ($petugas['progress_data'] as $count): ?>
                                     <td class="px-4 py-3 text-center text-sm text-gray-700 border-r border-gray-200 bg-white">
