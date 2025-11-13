@@ -57,12 +57,11 @@
                         <div class="space-y-3 mb-6">
                             <?php 
                             $roleIcons = [
-                                'default_1' => ['icon' => 'fa-crown', 'color' => 'blue', 'desc' => 'Akses penuh sistem'],
+                                'superadmin' => ['icon' => 'fa-crown', 'color' => 'blue', 'desc' => 'Akses penuh sistem'],
                                 'admin_provinsi' => ['icon' => 'fa-user-shield', 'color' => 'indigo', 'desc' => 'Mengelola survei provinsi'],
                                 'pemantau_provinsi' => ['icon' => 'fa-eye', 'color' => 'cyan', 'desc' => 'Melihat data provinsi'],
                                 'admin_kabupaten' => ['icon' => 'fa-user-tie', 'color' => 'purple', 'desc' => 'Mengelola survei kabupaten'],
                                 'pemantau_kabupaten' => ['icon' => 'fa-eye', 'color' => 'teal', 'desc' => 'Melihat data kabupaten'],
-                                'default_4' => ['icon' => 'fa-eye', 'color' => 'green', 'desc' => 'Pemantau pusat']
                             ];
                             
                             foreach ($roles as $role): 
