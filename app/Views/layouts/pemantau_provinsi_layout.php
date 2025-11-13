@@ -43,31 +43,31 @@
             <nav class="flex-1 overflow-y-auto scrollbar-thin py-4 px-3 pb-20">
                 <div class="space-y-1">
                     <!-- Dashboard -->
-                    <a href="<?= base_url('pemantau') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
+                    <a href="<?= base_url('pemantau-provinsi') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
                         <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
 
                     <!-- Kegiatan Detail Proses -->
-                    <a href="<?= base_url('pemantau/detail-proses') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'detail-proses' ? 'active' : '' ?>">
+                    <a href="<?= base_url('pemantau-provinsi/detail-proses') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'detail-proses' ? 'active' : '' ?>">
                         <i class="fas fa-list-check w-5"></i>
                         <span class="ml-3">Kegiatan Detail Proses</span>
                     </a>
 
                     <!-- Kegiatan Wilayah -->
-                    <a href="<?= base_url('pemantau/kegiatan-wilayah-pemantau') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kegiatan-wilayah-pemantau' ? 'active' : '' ?>">
+                    <a href="<?= base_url('pemantau-provinsi/kegiatan-wilayah-list') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'kegiatan-wilayah-pemantau' ? 'active' : '' ?>">
                         <i class="fas fa-map-location-dot w-5"></i>
                         <span class="ml-3">Kegiatan Wilayah</span>
                     </a>
 
                     <!-- Data Petugas -->
-                    <a href="<?= base_url('pemantau/data-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'data-petugas' ? 'active' : '' ?>">
+                    <a href="<?= base_url('pemantau-provinsi/data-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'data-petugas' ? 'active' : '' ?>">
                         <i class="fas fa-id-card w-5"></i>
                         <span class="ml-3">Data Petugas</span>
                     </a>
 
                     <!-- Laporan Petugas -->
-                    <a href="<?= base_url('pemantau/laporan-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'laporan-petugas' ? 'active' : '' ?>">
+                    <a href="<?= base_url('pemantau-provinsi/laporan-petugas') ?>" class="sidebar-link <?= ($active_menu ?? '') == 'laporan-petugas' ? 'active' : '' ?>">
                         <i class="fas fa-file-lines w-5"></i>
                         <span class="ml-3">Laporan Petugas</span>
                     </a>
@@ -92,44 +92,89 @@
             <div class="px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
                     
-                    <!-- Left Section - Mobile Menu Button -->
+                    <!-- Mobile Menu -->
                     <button onclick="toggleSidebar()" class="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     
-                    <!-- Spacer for desktop -->
-                    <div class="hidden lg:block"></div>
-                    
                     <!-- Right Section -->
                     <div class="flex items-center space-x-4 ml-auto">
-                        <!-- User Menu -->
                         <div class="relative">
                             <button onclick="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                                 <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">SA</span>
+                                    <?php 
+                                    $namaUser = session()->get('nama_user') ?? 'User';
+                                    $initials = '';
+                                    $nameParts = explode(' ', $namaUser);
+                                    if (count($nameParts) >= 2) {
+                                        $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
+                                    } else {
+                                        $initials = strtoupper(substr($namaUser, 0, 2));
+                                    }
+                                    ?>
+                                    <span class="text-white text-sm font-medium"><?= $initials ?></span>
                                 </div>
                                 <div class="hidden sm:block text-left">
-                                    <p class="text-sm font-medium text-gray-900">Pemantau</p>
-                                    <p class="text-xs text-gray-500">Pemantau</p>
+                                    <p class="text-sm font-medium text-gray-900"><?= esc($namaUser) ?></p>
+                                    <p class="text-xs text-gray-500">
+                                        <?php
+                                        $roleType = session()->get('role_type');
+                                        $roleName = '';
+                                        
+                                        switch ($roleType) {
+                                            case 'admin_provinsi':
+                                                $roleName = 'Admin Survei Provinsi';
+                                                break;
+                                            case 'pemantau_provinsi':
+                                                $roleName = 'Pemantau Provinsi';
+                                                break;
+                                            case 'admin_kabupaten':
+                                                $roleName = 'Admin Survei Kabupaten';
+                                                break;
+                                            case 'pemantau_kabupaten':
+                                                $roleName = 'Pemantau Kabupaten';
+                                                break;
+                                            default:
+                                                $role = session()->get('role');
+                                                if ($role == 1) {
+                                                    $roleName = 'Super Admin';
+                                                } elseif ($role == 4) {
+                                                    $roleName = 'Pemantau Pusat';
+                                                } else {
+                                                    $roleName = 'User';
+                                                }
+                                        }
+                                        echo esc($roleName);
+                                        ?>
+                                    </p>
                                 </div>
+                                <i class="fas fa-chevron-down text-xs text-gray-500 hidden sm:block"></i>
                             </button>
-                            
+
                             <!-- Dropdown -->
                             <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                                <a href="<?= base_url('pemantau/profile') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="far fa-user w-5"></i>
-                                    <span class="ml-2">Profile</span>
-                                </a>
-                                <a href="<?= base_url('pemantau/settings') ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="fas fa-cog w-5"></i>
-                                    <span class="ml-2">Settings</span>
+                                <div class="px-4 py-3 border-b border-gray-200">
+                                    <p class="text-sm font-medium text-gray-900"><?= esc($namaUser) ?></p>
+                                    <p class="text-xs text-gray-500"><?= esc(session()->get('email') ?? '-') ?></p>
+                                </div>
+                                
+                                <?php 
+                                // Tampilkan opsi switch role jika user punya multi-role
+                                $allRoles = session()->get('all_roles');
+                                if ($allRoles && (is_array($allRoles) && count($allRoles) > 1)) : 
+                                ?>
+                                <a href="<?= base_url('login/switch-role') ?>" class="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-exchange-alt w-5"></i>
+                                    <span class="ml-2">Switch Role</span>
                                 </a>
                                 <div class="border-t border-gray-200 my-1"></div>
+                                <?php endif; ?>
+                                
                                 <a href="<?= base_url('logout') ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                     <i class="fas fa-sign-out-alt w-5"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
-                            </div> 
+                            </div>  
                         </div>
                     </div>
                 </div>

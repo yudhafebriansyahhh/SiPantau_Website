@@ -13,7 +13,7 @@ $routes->get('login', 'Auth\LoginController::index');
 $routes->post('auth/login', 'Auth\LoginController::process');
 $routes->get('logout', 'Auth\LoginController::logout');
 
-// Multi-Role Routes
+// Multi-Role Login
 $routes->get('login/select-role', 'Auth\LoginController::selectRole');
 $routes->get('login/switch-role', 'Auth\LoginController::switchRole');
 $routes->post('login/process-role-selection', 'Auth\LoginController::processRoleSelection');
@@ -22,47 +22,58 @@ $routes->post('login/process-switch-role', 'Auth\LoginController::processSwitchR
 // ================== HALAMAN TIDAK BERIZIN ==================
 $routes->get('unauthorized', 'ErrorController::unauthorized');
 
+ // ================== HALAMAN COMING SOON ==================
+    $routes->get('comingsoon', 'ComingSoon::index');
+
 // ================== SUPER ADMIN (id_role = 1) ==================
 $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
+
+    // ===== Dashboard =====
     $routes->get('/', 'SuperAdmin\DashboardController::index');
     $routes->get('get-kurva-s', 'SuperAdmin\DashboardController::getKurvaS');
     $routes->get('get-kegiatan-wilayah', 'SuperAdmin\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'SuperAdmin\DashboardController::getPetugas');
 
-    // Master Output Routes
-    $routes->get('master-output', 'SuperAdmin\MasterOutputController::index');
-    $routes->get('master-output/create', 'SuperAdmin\MasterOutputController::create');
-    $routes->post('master-output', 'SuperAdmin\MasterOutputController::store');
-    $routes->get('master-output/(:num)/edit', 'SuperAdmin\MasterOutputController::edit/$1');
-    $routes->put('master-output/(:num)', 'SuperAdmin\MasterOutputController::update/$1');
-    $routes->delete('master-output/(:num)', 'SuperAdmin\MasterOutputController::delete/$1');
-    $routes->get('master-output/data', 'SuperAdmin\MasterOutputController::getData');
+    // ===== Master Output =====
+    $routes->group('master-output', static function ($routes) {
+        $routes->get('/', 'SuperAdmin\MasterOutputController::index');
+        $routes->get('create', 'SuperAdmin\MasterOutputController::create');
+        $routes->post('/', 'SuperAdmin\MasterOutputController::store');
+        $routes->get('(:num)/edit', 'SuperAdmin\MasterOutputController::edit/$1');
+        $routes->put('(:num)', 'SuperAdmin\MasterOutputController::update/$1');
+        $routes->delete('(:num)', 'SuperAdmin\MasterOutputController::delete/$1');
+        $routes->get('data', 'SuperAdmin\MasterOutputController::getData');
+    });
 
+    // ===== Master Kegiatan =====
+    $routes->group('master-kegiatan', static function ($routes) {
+        $routes->get('/', 'SuperAdmin\MasterKegiatanController::index');
+        $routes->get('create', 'SuperAdmin\MasterKegiatanController::create');
+        $routes->post('/', 'SuperAdmin\MasterKegiatanController::store');
+        $routes->get('show/(:num)', 'SuperAdmin\MasterKegiatanController::show/$1');
+        $routes->get('edit/(:num)', 'SuperAdmin\MasterKegiatanController::edit/$1');
+        $routes->put('(:num)', 'SuperAdmin\MasterKegiatanController::update/$1');
+        $routes->delete('(:num)', 'SuperAdmin\MasterKegiatanController::delete/$1');
+    });
 
-    // Master Kegiatan Routes
-    $routes->get('master-kegiatan', 'SuperAdmin\MasterKegiatanController::index');
-    $routes->get('master-kegiatan/create', 'SuperAdmin\MasterKegiatanController::create');
-    $routes->post('master-kegiatan', 'SuperAdmin\MasterKegiatanController::store');
-    $routes->get('master-kegiatan/show/(:num)', 'SuperAdmin\MasterKegiatanController::show/$1');
-    $routes->get('master-kegiatan/edit/(:num)', 'SuperAdmin\MasterKegiatanController::edit/$1');
-    $routes->put('master-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanController::update/$1');
-    $routes->delete('master-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanController::delete/$1');
+    // ===== Master Kegiatan Detail =====
+    $routes->group('master-kegiatan-detail', static function ($routes) {
+        $routes->get('/', 'SuperAdmin\MasterKegiatanDetailController::index');
+        $routes->get('create', 'SuperAdmin\MasterKegiatanDetailController::create');
+        $routes->post('/', 'SuperAdmin\MasterKegiatanDetailController::store');
+        $routes->get('show/(:num)', 'SuperAdmin\MasterKegiatanDetailController::show/$1');
+        $routes->get('(:num)/edit', 'SuperAdmin\MasterKegiatanDetailController::edit/$1');
+        $routes->put('(:num)', 'SuperAdmin\MasterKegiatanDetailController::update/$1');
+        $routes->delete('(:num)', 'SuperAdmin\MasterKegiatanDetailController::delete/$1');
 
-    // Master Kegiatan Detail Routes
-    $routes->get('master-kegiatan-detail', 'SuperAdmin\MasterKegiatanDetailController::index');
-    $routes->get('master-kegiatan-detail/create', 'SuperAdmin\MasterKegiatanDetailController::create');
-    $routes->post('master-kegiatan-detail', 'SuperAdmin\MasterKegiatanDetailController::store');
-    $routes->get('master-kegiatan-detail/show/(:num)', 'SuperAdmin\MasterKegiatanDetailController::show/$1');
-    $routes->get('master-kegiatan-detail/(:num)/edit', 'SuperAdmin\MasterKegiatanDetailController::edit/$1');
-    $routes->put('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::update/$1');
-    $routes->delete('master-kegiatan-detail/(:num)', 'SuperAdmin\MasterKegiatanDetailController::delete/$1');
-    $routes->get('master-kegiatan-detail/by-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getByKegiatan/$1');
-    $routes->get('master-kegiatan-detail/get-admins/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getAdmins/$1');
-    $routes->get('master-kegiatan-detail/kegiatan-wilayah/(:num)', 
-    'SuperAdmin\MasterKegiatanDetailController::showKegiatanWilayah/$1');
-     $routes->get('master-kegiatan-detail/kurva-provinsi', 'SuperAdmin\MasterKegiatanDetailController::getKurvaProvinsi');
+        // Additional helper endpoints
+        $routes->get('by-kegiatan/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getByKegiatan/$1');
+        $routes->get('get-admins/(:num)', 'SuperAdmin\MasterKegiatanDetailController::getAdmins/$1');
+        $routes->get('kegiatan-wilayah/(:num)', 'SuperAdmin\MasterKegiatanDetailController::showKegiatanWilayah/$1');
+        $routes->get('kurva-provinsi', 'SuperAdmin\MasterKegiatanDetailController::getKurvaProvinsi');
+    });
 
-    // Kelola Pengguna Routes
+    // ===== Kelola Pengguna =====
     $routes->group('kelola-pengguna', static function ($routes) {
         $routes->get('/', 'SuperAdmin\KelolaPenggunaController::index');
         $routes->get('create', 'SuperAdmin\KelolaPenggunaController::create');
@@ -77,34 +88,33 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
         $routes->get('export', 'SuperAdmin\KelolaPenggunaController::export');
     });
 
-    // Kelola Admin Survei Provinsi Routes
+    // ===== Kelola Admin Survei Provinsi =====
     $routes->group('kelola-admin-surveyprov', static function ($routes) {
         $routes->get('/', 'SuperAdmin\KelolaSurveiProvinsiController::index');
         $routes->get('assign', 'SuperAdmin\KelolaSurveiProvinsiController::assign');
-        $routes->post('store-assign', 'SuperAdmin\KelolaSurveiProvinsiController::storeAssign');
         $routes->get('assign/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::assign/$1');
+        $routes->post('store-assign', 'SuperAdmin\KelolaSurveiProvinsiController::storeAssign');
         $routes->post('update/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::update/$1');
         $routes->post('delete-assignment', 'SuperAdmin\KelolaSurveiProvinsiController::deleteAssignment');
         $routes->delete('delete/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::delete/$1');
 
-        // Detail
+        // Additional helper endpoints
         $routes->get('detail/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::detail/$1');
     });
 
-    $routes->get('comingsoon', 'ComingSoon::index');
 });
 
 // ================== ADMIN SURVEI PROVINSI (id_role = 2) ==================
 $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) {
 
-    // Controller utama
+    // ===== Dashboard =====
     $routes->get('/', 'AdminProv\DashboardController::index');
     $routes->get('kurva-provinsi', 'AdminProv\DashboardController::getKurvaProvinsi');
     $routes->get('kurva-kabupaten', 'AdminProv\DashboardController::getKurvaKabupaten');
     $routes->get('kegiatan-wilayah', 'AdminProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'AdminProv\DashboardController::getPetugas');
 
-    // Master Kegiatan Detail Proses
+    // ===== Master Kegiatan Detail Proses =====
     $routes->group('master-kegiatan-detail-proses', static function ($routes) {
         $routes->get('/', 'AdminProv\MasterKegiatanDetailProsesController::index');
         $routes->get('create', 'AdminProv\MasterKegiatanDetailProsesController::create');
@@ -115,20 +125,20 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->get('clear-filter', 'AdminProv\MasterKegiatanDetailProsesController::clearFilter');
     });
 
-    // Master Kegiatan Wilayah
+    // ===== Master Kegiatan Wilayah =====
     $routes->group('master-kegiatan-wilayah', static function ($routes) {
         $routes->get('/', 'AdminProv\MasterKegiatanWilayahController::index');
         $routes->get('create', 'AdminProv\MasterKegiatanWilayahController::create');
         $routes->post('store', 'AdminProv\MasterKegiatanWilayahController::store');
         $routes->get('edit/(:num)', 'AdminProv\MasterKegiatanWilayahController::edit/$1');
         $routes->post('update/(:num)', 'AdminProv\MasterKegiatanWilayahController::update/$1');
-        $routes->delete('delete/(:num)', 'AdminProv\MasterKegiatanWilayahController::delete/$1');
+        $routes->post('delete/(:num)', 'AdminProv\MasterKegiatanWilayahController::delete/$1');
         $routes->get('sisa-target/(:num)', 'AdminProv\MasterKegiatanWilayahController::getSisaTarget/$1');
         $routes->get('get-kegiatan-detail-proses/(:num)', 'AdminProv\MasterKegiatanWilayahController::getKegiatanDetailProses/$1');
         $routes->get('clear-filter', 'AdminProv\MasterKegiatanWilayahController::clearFilter');
     });
 
-    // Assign Admin Survei Kabupaten
+    // ===== Assign Admin Survei Kabupaten =====
     $routes->group('admin-survei-kab', static function ($routes) {
         $routes->get('/', 'AdminProv\AssignAdminSurveiKabController::index');
         $routes->get('assign', 'AdminProv\AssignAdminSurveiKabController::assign');
@@ -137,72 +147,87 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->post('update/(:num)', 'AdminProv\AssignAdminSurveiKabController::update/$1');
         $routes->post('delete-assignment', 'AdminProv\AssignAdminSurveiKabController::deleteAssignment');
         $routes->post('delete/(:num)', 'AdminProv\AssignAdminSurveiKabController::delete/$1');
+
+        // Additional helper endpoints
         $routes->get('get-kegiatan/(:num)', 'AdminProv\AssignAdminSurveiKabController::getKegiatanByKabupaten/$1');
         $routes->get('get-assigned-kegiatan/(:segment)', 'AdminProv\AssignAdminSurveiKabController::getAssignedKegiatan/$1');
     });
 });
 
-
 // ================== ADMIN SURVEI KABUPATEN (id_role = 3) ==================
 $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($routes) {
+
+    // ===== Dashboard =====
     $routes->get('/', 'AdminKab\DashboardController::index');
     $routes->get('get-kurva-s', 'AdminKab\DashboardController::getKurvaS');
     $routes->get('get-petugas', 'AdminKab\DashboardController::getPetugas');
-    // Assign Admin Survei Kabupaten
+
+    // ===== Assign Petugas =====
     $routes->group('assign-petugas', static function ($routes) {
         $routes->get('/', 'AdminKab\AssignPetugasController::index');
         $routes->get('create', 'AdminKab\AssignPetugasController::create');
         $routes->post('store', 'AdminKab\AssignPetugasController::store');
         $routes->get('detail/(:num)', 'AdminKab\AssignPetugasController::detailPML/$1');
         $routes->post('delete/(:num)', 'AdminKab\AssignPetugasController::delete/$1');
-        $routes->post('get-sisa-target-wilayah', 'AdminKab\AssignPetugasController::getSisaTargetKegiatanWilayah');
         $routes->get('pcl-detail/(:num)', 'AdminKab\AssignPetugasController::pclDetail/$1');
         $routes->get('edit/(:num)', 'AdminKab\AssignPetugasController::edit/$1');
         $routes->post('update/(:num)', 'AdminKab\AssignPetugasController::update/$1');
 
-        // AJAX endpoints
+        // Additional helper endpoints
+        $routes->post('get-sisa-target-wilayah', 'AdminKab\AssignPetugasController::getSisaTargetKegiatanWilayah');
         $routes->post('get-available-pml', 'AdminKab\AssignPetugasController::getAvailablePML');
         $routes->post('get-available-pcl', 'AdminKab\AssignPetugasController::getAvailablePCL');
     });
-    // $routes->get('assign-petugas', 'AdminSurveiKabController::AssignPetugas');
-    // $routes->get('assign-petugas/create', 'AdminSurveiKabController::createAssignPetugas');
-    // $routes->get('assign-petugas/detail/(:num)', 'AdminSurveiKabController::detail/$1');
-    // $routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
+
     $routes->get('approval-laporan', 'AdminKab\DashboardController::approve_laporan');
 });
 
-$routes->get('assign-petugas/pcl-detail/(:num)', 'AdminSurveiKabController::kurva_s/$1');
+// ================== PEMANTAU PROVINSI (id_role = 2) ==================
+$routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($routes) {
+    // ===== Dashboard =====
+    $routes->get('/', 'PemantauProv\DashboardController::index');
+    $routes->get('kurva-provinsi', 'PemantauProv\DashboardController::getKurvaProvinsi');
+    $routes->get('kurva-kabupaten', 'PemantauProv\DashboardController::getKurvaKabupaten');
+    $routes->get('kegiatan-wilayah', 'PemantauProv\DashboardController::getKegiatanWilayah');
+    $routes->get('get-petugas', 'PemantauProv\DashboardController::getPetugas');
+    
+    // ===== Menu Lainnya (yang sudah ada sebelumnya) =====
+    $routes->get('detail-proses', 'PemantauProv\MasterKegiatanDetailProsesController::index');
+    $routes->get('kegiatan-wilayah-list', 'PemantauProv\MasterKegiatanWilayahController::index');
 
+    // ===== Data Petugas (UPDATED) =====
+    $routes->get('data-petugas', 'PemantauProv\DataPetugasController::index');
 
-// ================== PEMANTAU (id_role = 4) ==================
-$routes->group('pemantau', ['filter' => 'role:4'], static function ($routes) {
-    $routes->get('/', 'PemantauController::index');
+    $routes->get('laporan-petugas', 'PemantauProv\LaporanPetugasController::index');
+    $routes->get('laporan-petugas/export-csv', 'PemantauProv\LaporanPetugasController::exportCSV');
 
-    $routes->get('detail-proses', 'Pemantau\MasterKegiatanDetailProses::index');
-    $routes->get('kegiatan-wilayah-pemantau', 'Pemantau\MasterKegiatanWilayah::index');
-    $routes->get('data-petugas', 'PemantauController::DataPetugas');
-    $routes->get('laporan-petugas', 'PemantauController::LaporanPetugas');
-    $routes->get('laporan-petugas/detail/(:num)', 'PemantauController::detailLaporanPetugas/$1');
+    // $routes->get('laporan-petugas', 'PemantauController::LaporanPetugas');
+    // $routes->get('laporan-petugas/detail/(:num)', 'PemantauController::::detailLaporanPetugas/$1');
 });
 
-//===================Api Auth Login===============================
-    $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static function ($routes) {
-        $routes->post('login', 'AuthController::login');
-        $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
-    });
+// ================== API AUTH LOGIN ==================
+$routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static function ($routes) {
+    $routes->post('login', 'AuthController::login');
+    $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
+});
 
-    //=================== Api Fitur Aplikasi Mobile ===============================
-    $routes->group('api', [
-        'namespace' => 'App\Controllers\Api',
-        'filter'    => 'jwt'
-    ], static function ($routes) {
-        $routes->get('pelaporan', 'PelaporanController::index');
-        $routes->post('pelaporan', 'PelaporanController::create');
-        $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
-        $routes->get('kegiatan', 'KegiatanController::index');
-        $routes->get('kecamatan', 'KecamatanController::index');
-        $routes->get('desa', 'DesaController::index');
-        $routes->post('progres', 'PantauProgressController::create');
-        $routes->get('progres', 'PantauProgressController::index');
-        $routes->delete('progres/(:num)', 'PantauProgressController::delete/$1');
-    });
+// ================== API FITUR APLIKASI MOBILE ==================
+$routes->group('api', [
+    'namespace' => 'App\Controllers\Api',
+    'filter'    => 'jwt'
+], static function ($routes) {
+    // ===== Pelaporan =====
+    $routes->get('pelaporan', 'PelaporanController::index');
+    $routes->post('pelaporan', 'PelaporanController::create');
+    $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
+
+    // ===== Referensi =====
+    $routes->get('kegiatan', 'KegiatanController::index');
+    $routes->get('kecamatan', 'KecamatanController::index');
+    $routes->get('desa', 'DesaController::index');
+
+    // ===== Pantau Progress =====
+    $routes->post('progres', 'PantauProgressController::create');
+    $routes->get('progres', 'PantauProgressController::index');
+    $routes->delete('progres/(:num)', 'PantauProgressController::delete/$1');
+});

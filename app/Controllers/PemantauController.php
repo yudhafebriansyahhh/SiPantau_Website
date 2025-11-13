@@ -14,7 +14,7 @@ class PemantauController extends BaseController
             'active_menu' => 'dashboard'
         ];
         
-        return view('Pemantau/dashboard', $data);
+        return view('PemantauProvinsi/dashboard', $data);
     }
 
      public function DetailProses()
@@ -44,7 +44,7 @@ class PemantauController extends BaseController
             'active_menu' => 'data-petugas'
         ];
         
-        return view('Pemantau/DataPetugas/index', $data);
+        return view('PemantauProvinsi/DataPetugas/index', $data);
     }
 
     public function LaporanPetugas()
@@ -54,7 +54,7 @@ class PemantauController extends BaseController
             'active_menu' => 'laporan-petugas'
         ];
         
-        return view('Pemantau/LaporanPetugas/index', $data);
+        return view('PemantauProvinsi/LaporanPetugas/index', $data);
     }
     public function detailLaporanPetugas($id)
     {
@@ -64,7 +64,7 @@ class PemantauController extends BaseController
             'petugas_id' => $id
         ];
         
-        return view('Pemantau/LaporanPetugas/detail', $data);
+        return view('PemantauProvinsi/LaporanPetugas/detail', $data);
     }
 
 
