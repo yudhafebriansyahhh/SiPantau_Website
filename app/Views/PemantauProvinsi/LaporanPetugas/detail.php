@@ -133,7 +133,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200">
+                        <tr class="bg-gray-50 border border-gray-200">
                             <th class="px-4 py-3 text-left text-xs font-semibold border-r border-gray-200 text-gray-700">No</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold border-r border-gray-200 text-gray-700">Tanggal</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold border-r border-gray-200 text-gray-700">Waktu</th>
@@ -165,14 +165,14 @@
                 <table class="w-full border-collapse">
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">No</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Tanggal</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Waktu</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Kecamatan</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Desa</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Lokasi</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Foto</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Resume</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">No</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">Tanggal</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">Waktu</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">Kecamatan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">Desa</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">Lokasi</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">Foto</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold border border-gray-200 text-gray-700">Resume</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200" id="transaksiTableBody">
@@ -448,7 +448,7 @@ function renderPantauTable(data, pagination) {
     if (data.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="px-4 py-12 text-center">
+                <td colspan="6" class="px-4 py-12 text-center border">
                     <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
                     <p class="text-gray-500">Belum ada data</p>
                 </td>
@@ -461,12 +461,12 @@ function renderPantauTable(data, pagination) {
     
     tbody.innerHTML = data.map((item, index) => `
         <tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm text-gray-700">${startNo + index}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">${formatDate(item.created_at)}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">${formatTime(item.created_at)}</td>
-            <td class="px-4 py-3 text-sm text-center font-semibold text-gray-900">${item.jumlah_realisasi_absolut || 0}</td>
-            <td class="px-4 py-3 text-sm text-center font-semibold text-blue-600">${item.jumlah_realisasi_kumulatif || 0}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">${item.catatan_aktivitas || '-'}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${startNo + index}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${formatDate(item.created_at)}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${formatTime(item.created_at)}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-center font-semibold text-gray-900">${item.jumlah_realisasi_absolut || 0}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-center font-semibold text-blue-600">${item.jumlah_realisasi_kumulatif || 0}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${item.catatan_aktivitas || '-'}</td>
         </tr>
     `).join('');
     
@@ -527,7 +527,7 @@ function renderTransaksiTable(data, pagination) {
     if (data.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="px-4 py-12 text-center">
+                <td colspan="8" class="px-4 py-12 text-center border">
                     <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
                     <p class="text-gray-500">Belum ada data</p>
                 </td>
@@ -540,18 +540,18 @@ function renderTransaksiTable(data, pagination) {
     
     tbody.innerHTML = data.map((item, index) => `
         <tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm text-gray-700">${startNo + index}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">${formatDate(item.created_at)}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">${formatTime(item.created_at)}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">${item.nama_kecamatan || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">${item.nama_desa || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-700">
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700 ">${startNo + index}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${formatDate(item.created_at)}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${formatTime(item.created_at)}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${item.nama_kecamatan || '-'}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">${item.nama_desa || '-'}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">
                 ${item.latitude && item.longitude ? 
                     `<a href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
                         <i class="fas fa-map-marker-alt mr-1"></i>Lihat
                     </a>` : '-'}
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-3 border border-gray-200">
                 ${item.imagepath ? 
                     `<img src="<?= base_url() ?>${item.imagepath}" 
                          alt="Foto" 
@@ -561,7 +561,7 @@ function renderTransaksiTable(data, pagination) {
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22%3E%3Crect fill=%22%23ddd%22 width=%2264%22 height=%2264%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2212%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E'">` 
                     : '<span class="text-gray-400 text-xs">Tidak ada foto</span>'}
             </td>
-            <td class="px-4 py-3 text-sm text-gray-700">
+            <td class="px-4 py-3 border border-gray-200 text-sm text-gray-700">
                 <div class="max-w-xs truncate" title="${item.resume || '-'}">${item.resume || '-'}</div>
             </td>
         </tr>
