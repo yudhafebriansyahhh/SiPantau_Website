@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Controllers\Pemantau;
+namespace App\Controllers\PemantauProv;
 
 use App\Controllers\BaseController;
 use App\Models\MasterKegiatanDetailModel;
 use App\Models\MasterKegiatanDetailProsesModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
-class MasterKegiatanDetailProses extends BaseController
+class MasterKegiatanDetailProsesController extends BaseController
 {
     protected $masterDetailProsesModel;
     protected $masterDetailModel;
@@ -44,6 +44,6 @@ class MasterKegiatanDetailProses extends BaseController
             'selectedKegiatanDetail' => $kegiatanDetailFilter
         ];
 
-        return view('Pemantau/DetailProses/index', $data);
+        return view('PemantauProvinsi/DetailProses/index', $data);
     }
 }

@@ -29,6 +29,7 @@
     <aside id="sidebar"
         class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0">
         <div class="h-full flex flex-col bg-white border-r border-gray-200">
+
             <!-- Logo -->
             <div class="h-20 border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center">
@@ -47,57 +48,38 @@
             <nav class="flex-1 overflow-y-auto scrollbar-thin py-4 px-3 pb-20">
                 <div class="space-y-1">
                     <!-- Dashboard -->
-                    <a href="<?= base_url('adminsurvei') ?>"
+                    <a href="<?= base_url('pemantau-provinsi') ?>"
                         class="sidebar-link <?= ($active_menu ?? '') == 'dashboard' ? 'active' : '' ?>">
                         <i class="fas fa-th-large w-5"></i>
                         <span class="ml-3">Dashboard</span>
                     </a>
 
-                    <!-- Divider -->
-                    <div class="py-2">
-                        <div class="border-t border-gray-200"></div>
-                    </div>
-
-                    <!-- Master Data Menu -->
-                    <div class="space-y-1">
-                        <button onclick="toggleSubmenu('task')" class="sidebar-link w-full justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-database w-5"></i>
-                                <span class="ml-3">Master Data</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="task-icon"></i>
-                        </button>
-                        <div id="task-submenu" class="hidden ml-8 space-y-1">
-                            <a href="<?= base_url('adminsurvei/master-kegiatan-detail-proses') ?>"
-                                class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-detail-proses' ? 'active' : '' ?>">
-                                <i class="fas fa-bullseye w-4 mr-2"></i>
-                                <span>Master Kegiatan Detail Proses</span>
-                            </a>
-                            <a href="<?= base_url('adminsurvei/master-kegiatan-wilayah/') ?>"
-                                class="sidebar-link text-sm <?= ($active_menu ?? '') == 'master-kegiatan-wilayah' ? 'active' : '' ?>">
-                                <i class="fas fa-clipboard-list w-4 mr-2"></i>
-                                <span>Master Kegiatan Wilayah</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Divider -->
-                    <div class="py-2">
-                        <div class="border-t border-gray-200"></div>
-                    </div>
-
-                    <!-- Kelola Pengguna -->
-                    <a href="<?= base_url('adminsurvei/admin-survei-kab') ?>"
-                        class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
-                        <i class="fas fa-users w-5"></i>
-                        <span class="ml-3">Assign Admin Survei Kab</span>
+                    <!-- Kegiatan Detail Proses -->
+                    <a href="<?= base_url('pemantau-provinsi/detail-proses') ?>"
+                        class="sidebar-link <?= ($active_menu ?? '') == 'detail-proses' ? 'active' : '' ?>">
+                        <i class="fas fa-list-check w-5"></i>
+                        <span class="ml-3">Kegiatan Detail Proses</span>
                     </a>
 
-                    <!-- Feedback -->
-                    <a href="<?= base_url('adminsurvei/comingsoon') ?>"
-                        class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
-                        <i class="fas fa-comment-dots w-5"></i>
-                        <span class="ml-3">Feedback</span>
+                    <!-- Kegiatan Wilayah -->
+                    <a href="<?= base_url('pemantau-provinsi/kegiatan-wilayah-list') ?>"
+                        class="sidebar-link <?= ($active_menu ?? '') == 'kegiatan-wilayah-pemantau' ? 'active' : '' ?>">
+                        <i class="fas fa-map-location-dot w-5"></i>
+                        <span class="ml-3">Kegiatan Wilayah</span>
+                    </a>
+
+                    <!-- Data Petugas -->
+                    <a href="<?= base_url('pemantau-provinsi/data-petugas') ?>"
+                        class="sidebar-link <?= ($active_menu ?? '') == 'data-petugas' ? 'active' : '' ?>">
+                        <i class="fas fa-id-card w-5"></i>
+                        <span class="ml-3">Data Petugas</span>
+                    </a>
+
+                    <!-- Laporan Petugas -->
+                    <a href="<?= base_url('pemantau-provinsi/laporan-petugas') ?>"
+                        class="sidebar-link <?= ($active_menu ?? '') == 'laporan-petugas' ? 'active' : '' ?>">
+                        <i class="fas fa-file-lines w-5"></i>
+                        <span class="ml-3">Laporan Petugas</span>
                     </a>
                 </div>
             </nav>
@@ -115,6 +97,7 @@
 
     <!-- Main Content -->
     <div class="lg:ml-64">
+
         <!-- Header -->
         <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
             <div class="px-4 sm:px-6 lg:px-8">

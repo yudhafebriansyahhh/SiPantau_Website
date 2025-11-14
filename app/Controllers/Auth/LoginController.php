@@ -10,6 +10,10 @@ use App\Models\AdminSurveiKabupatenModel;
 
 class LoginController extends BaseController
 {
+    // Role yang diperbolehkan login ke web
+    private const ALLOWED_WEB_ROLES = [1, 2, 3]; // Super Admin, Pemantau Provinsi, Pemantau Kabupaten
+    private const MOBILE_ONLY_ROLES = [4, 5]; // Role 4 = Petugas, Role 5 = lainnya (mobile only)
+
     public function index()
     {
         $session = session();
@@ -62,6 +66,30 @@ class LoginController extends BaseController
             $userRoles = [(int) $roleValue];
         }
 
+        // VALIDASI: Cek apakah user punya role yang diperbolehkan login ke web
+        $hasWebRole = false;
+        foreach ($userRoles as $roleId) {
+            if (in_array($roleId, self::ALLOWED_WEB_ROLES)) {
+                $hasWebRole = true;
+                break;
+            }
+        }
+
+        // VALIDASI: Cek apakah semua role adalah mobile-only
+        $allRolesAreMobileOnly = true;
+        foreach ($userRoles as $roleId) {
+            if (!in_array($roleId, self::MOBILE_ONLY_ROLES)) {
+                $allRolesAreMobileOnly = false;
+                break;
+            }
+        }
+
+        // Jika semua role adalah mobile-only (Petugas/Role 4 atau Role 5)
+        if ($allRolesAreMobileOnly) {
+            $session->setFlashdata('error', 'Anda tidak memiliki akses ke Web. Akun Anda hanya dapat digunakan pada aplikasi mobile. Silakan login melalui aplikasi mobile.');
+            return redirect()->back()->withInput();
+        }
+
         // --- Check admin status ---
         $adminProvinsiModel = new AdminSurveiProvinsiModel();
         $adminKabupatenModel = new AdminSurveiKabupatenModel();
@@ -73,28 +101,33 @@ class LoginController extends BaseController
         $adminProvinsiId = $isAdminProvinsi ? $adminProvinsiModel->getAdminProvinsiId($user['sobat_id']) : null;
         $adminKabupatenId = $isAdminKabupaten ? $adminKabupatenModel->getAdminKabupatenId($user['sobat_id']) : null;
 
-        // Build available roles
+        // Build available roles (hanya yang diperbolehkan di web)
         $availableRoles = [];
 
-        // 1. Tambahkan role dari tabel user (role asli)
+        // 1. Tambahkan role dari tabel user (hanya yang diperbolehkan login ke web)
         foreach ($userRoles as $roleId) {
-            if ($roleId == 2) {
+            // Skip role yang tidak diperbolehkan login ke web
+            if (in_array($roleId, self::MOBILE_ONLY_ROLES)) {
+                continue;
+            }
+
+            if ($roleId == 1) {
+                // Super Admin
+                $availableRoles[] = [
+                    'id' => 1,
+                    'type' => 'superadmin',
+                ];
+            } elseif ($roleId == 2) {
                 // Pemantau Provinsi (role asli)
                 $availableRoles[] = [
-                    'id'   => 2,
+                    'id' => 2,
                     'type' => 'pemantau_provinsi',
                 ];
             } elseif ($roleId == 3) {
                 // Pemantau Kabupaten (role asli)
                 $availableRoles[] = [
-                    'id'   => 3,
+                    'id' => 3,
                     'type' => 'pemantau_kabupaten',
-                ];
-            } else {
-                // Role lain (Super Admin, Pemantau Pusat, dll)
-                $availableRoles[] = [
-                    'id'   => $roleId,
-                    'type' => 'default',
                 ];
             }
         }
@@ -103,8 +136,8 @@ class LoginController extends BaseController
         if ($isAdminProvinsi && $adminProvinsiId) {
             // Tambahkan opsi Admin Survei Provinsi
             $availableRoles[] = [
-                'id'       => 2,
-                'type'     => 'admin_provinsi',
+                'id' => 2,
+                'type' => 'admin_provinsi',
                 'admin_id' => $adminProvinsiId,
             ];
         }
@@ -112,15 +145,15 @@ class LoginController extends BaseController
         if ($isAdminKabupaten && $adminKabupatenId) {
             // Tambahkan opsi Admin Survei Kabupaten
             $availableRoles[] = [
-                'id'       => 3,
-                'type'     => 'admin_kabupaten',
+                'id' => 3,
+                'type' => 'admin_kabupaten',
                 'admin_id' => $adminKabupatenId,
             ];
         }
 
-        // Jika tidak ada role yang valid (seharusnya tidak mungkin terjadi)
+        // Jika tidak ada role yang valid untuk web
         if (empty($availableRoles)) {
-            $session->setFlashdata('error', 'Anda tidak memiliki akses ke sistem. Hubungi administrator.');
+            $session->setFlashdata('error', 'Anda tidak memiliki akses ke sistem web. Hubungi administrator atau gunakan aplikasi mobile.');
             return redirect()->back();
         }
 
@@ -167,7 +200,10 @@ class LoginController extends BaseController
 
             if ($roleInfo) {
                 // Customize nama role berdasarkan tipe
-                if ($roleType === 'admin_provinsi') {
+                if ($roleType === 'superadmin') {
+                    $roleInfo['roleuser'] = 'Super Admin';
+                    $roleInfo['keterangan'] = 'Mengelola seluruh sistem';
+                } elseif ($roleType === 'admin_provinsi') {
                     $roleInfo['roleuser'] = 'Admin Survei Provinsi';
                     $roleInfo['keterangan'] = 'Mengelola survei tingkat provinsi';
                 } elseif ($roleType === 'pemantau_provinsi') {
@@ -188,7 +224,7 @@ class LoginController extends BaseController
         }
 
         $data = [
-            'user'  => $tempUserData,
+            'user' => $tempUserData,
             'roles' => $processedRoles,
         ];
 
@@ -236,15 +272,35 @@ class LoginController extends BaseController
         $roleId = $roleData['id'];
         $roleType = $roleData['type'];
 
+        // Hitung total available roles (untuk switch role feature)
+        $userRoles = is_string($user['role']) ? json_decode($user['role'], true) : [$user['role']];
+        $webRoles = array_filter($userRoles, function ($r) {
+            return !in_array($r, self::MOBILE_ONLY_ROLES);
+        });
+
+        $totalRoles = count($webRoles);
+
+        // Cek admin
+        $adminProvinsiModel = new AdminSurveiProvinsiModel();
+        $adminKabupatenModel = new AdminSurveiKabupatenModel();
+
+        if ($adminProvinsiModel->isAdminProvinsi($user['sobat_id'])) {
+            $totalRoles++;
+        }
+        if ($adminKabupatenModel->isAdminKabupaten($user['sobat_id'])) {
+            $totalRoles++;
+        }
+
         // Set session dasar
         $sessionData = [
-            'user_id'   => $user['sobat_id'],
-            'sobat_id'  => $user['sobat_id'],
+            'user_id' => $user['sobat_id'],
+            'sobat_id' => $user['sobat_id'],
             'nama_user' => $user['nama_user'],
-            'email'     => $user['email'],
-            'role'      => (int) $roleId,
+            'email' => $user['email'],
+            'role' => (int) $roleId,
             'role_type' => $roleType,
-            'all_roles' => is_string($user['role']) ? json_decode($user['role'], true) : [$user['role']],
+            'all_roles' => $userRoles,
+            'total_available_roles' => $totalRoles, // TAMBAHKAN INI
             'isLoggedIn' => true,
         ];
 
@@ -277,19 +333,18 @@ class LoginController extends BaseController
                 if ($roleType === 'admin_provinsi') {
                     return redirect()->to('/adminsurvei');
                 }
-                return redirect()->to('/pemantau')->with('info', 'Dashboard Pemantau Provinsi belum tersedia.');
+                // Pemantau Provinsi
+                return redirect()->to('/pemantau-provinsi');
 
             case 3:
                 if ($roleType === 'admin_kabupaten') {
                     return redirect()->to('/adminsurvei-kab');
                 }
-                return redirect()->to('/pemantau')->with('info', 'Dashboard Pemantau Kabupaten belum tersedia.');
-
-            case 4:
-                return redirect()->to('/pemantau');
+                // Pemantau Kabupaten
+                return redirect()->to('/pemantau-provinsi')->with('info', 'Dashboard Pemantau Kabupaten belum tersedia.');
 
             default:
-                session()->setFlashdata('error', 'Role tidak dikenali.');
+                session()->setFlashdata('error', 'Role tidak dikenali atau tidak memiliki akses ke sistem web.');
                 return redirect()->to('/login');
         }
     }
@@ -321,25 +376,30 @@ class LoginController extends BaseController
         $adminProvinsiId = $isAdminProvinsi ? $adminProvinsiModel->getAdminProvinsiId($user['sobat_id']) : null;
         $adminKabupatenId = $isAdminKabupaten ? $adminKabupatenModel->getAdminKabupatenId($user['sobat_id']) : null;
 
-        // Build available roles
+        // Build available roles (hanya yang diperbolehkan di web)
         $availableRoles = [];
 
-        // 1. Tambahkan role dari tabel user (role asli)
+        // 1. Tambahkan role dari tabel user (hanya yang diperbolehkan login ke web)
         foreach ($allRoles as $roleId) {
-            if ($roleId == 2) {
+            // Skip role mobile-only
+            if (in_array($roleId, self::MOBILE_ONLY_ROLES)) {
+                continue;
+            }
+
+            if ($roleId == 1) {
                 $availableRoles[] = [
-                    'id'   => 2,
+                    'id' => 1,
+                    'type' => 'superadmin',
+                ];
+            } elseif ($roleId == 2) {
+                $availableRoles[] = [
+                    'id' => 2,
                     'type' => 'pemantau_provinsi',
                 ];
             } elseif ($roleId == 3) {
                 $availableRoles[] = [
-                    'id'   => 3,
+                    'id' => 3,
                     'type' => 'pemantau_kabupaten',
-                ];
-            } else {
-                $availableRoles[] = [
-                    'id'   => $roleId,
-                    'type' => 'default',
                 ];
             }
         }
@@ -347,16 +407,16 @@ class LoginController extends BaseController
         // 2. Tambahkan role admin JIKA terdaftar di tabel admin
         if ($isAdminProvinsi && $adminProvinsiId) {
             $availableRoles[] = [
-                'id'       => 2,
-                'type'     => 'admin_provinsi',
+                'id' => 2,
+                'type' => 'admin_provinsi',
                 'admin_id' => $adminProvinsiId,
             ];
         }
 
         if ($isAdminKabupaten && $adminKabupatenId) {
             $availableRoles[] = [
-                'id'       => 3,
-                'type'     => 'admin_kabupaten',
+                'id' => 3,
+                'type' => 'admin_kabupaten',
                 'admin_id' => $adminKabupatenId,
             ];
         }
@@ -377,7 +437,10 @@ class LoginController extends BaseController
             $roleInfo = $roleModel->find($roleId);
 
             if ($roleInfo) {
-                if ($roleType === 'admin_provinsi') {
+                if ($roleType === 'superadmin') {
+                    $roleInfo['roleuser'] = 'Super Admin';
+                    $roleInfo['keterangan'] = 'Mengelola seluruh sistem';
+                } elseif ($roleType === 'admin_provinsi') {
                     $roleInfo['roleuser'] = 'Admin Survei Provinsi';
                     $roleInfo['keterangan'] = 'Mengelola survei tingkat provinsi';
                 } elseif ($roleType === 'pemantau_provinsi') {
@@ -398,8 +461,8 @@ class LoginController extends BaseController
         }
 
         $data = [
-            'roles'             => $processedRoles,
-            'current_role'      => $session->get('role'),
+            'roles' => $processedRoles,
+            'current_role' => $session->get('role'),
             'current_role_type' => $session->get('role_type'),
         ];
 
@@ -420,7 +483,7 @@ class LoginController extends BaseController
         // Get user data dari database untuk validasi
         $userModel = new UserModel();
         $user = $userModel->find($session->get('user_id'));
-        
+
         // Get all roles dari database
         $allRoles = is_string($user['role']) ? json_decode($user['role'], true) : [$user['role']];
 
@@ -431,22 +494,27 @@ class LoginController extends BaseController
         $isAdminProvinsi = $adminProvinsiModel->isAdminProvinsi($user['sobat_id']);
         $isAdminKabupaten = $adminKabupatenModel->isAdminKabupaten($user['sobat_id']);
 
-        // Build available roles untuk validasi
+        // Build available roles untuk validasi (hanya web)
         $availableRoles = [];
 
         foreach ($allRoles as $roleId) {
-            if ($roleId == 2) {
+            // Skip mobile-only roles
+            if (in_array($roleId, self::MOBILE_ONLY_ROLES)) {
+                continue;
+            }
+
+            if ($roleId == 1) {
+                $availableRoles[] = ['id' => 1, 'type' => 'superadmin'];
+            } elseif ($roleId == 2) {
                 $availableRoles[] = ['id' => 2, 'type' => 'pemantau_provinsi'];
             } elseif ($roleId == 3) {
                 $availableRoles[] = ['id' => 3, 'type' => 'pemantau_kabupaten'];
-            } else {
-                $availableRoles[] = ['id' => $roleId, 'type' => 'default'];
             }
         }
 
         if ($isAdminProvinsi) {
             $availableRoles[] = [
-                'id' => 2, 
+                'id' => 2,
                 'type' => 'admin_provinsi',
                 'admin_id' => $adminProvinsiModel->getAdminProvinsiId($user['sobat_id'])
             ];
@@ -454,7 +522,7 @@ class LoginController extends BaseController
 
         if ($isAdminKabupaten) {
             $availableRoles[] = [
-                'id' => 3, 
+                'id' => 3,
                 'type' => 'admin_kabupaten',
                 'admin_id' => $adminKabupatenModel->getAdminKabupatenId($user['sobat_id'])
             ];

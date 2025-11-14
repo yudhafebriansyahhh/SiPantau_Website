@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/pemantau_layout') ?>
+<?= $this->extend('layouts/pemantau_provinsi_layout') ?>
 
 <?= $this->section('content') ?>
 

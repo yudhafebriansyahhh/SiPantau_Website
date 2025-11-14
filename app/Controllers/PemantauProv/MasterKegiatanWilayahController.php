@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Controllers\Pemantau;
+namespace App\Controllers\PemantauProv;
 
 use App\Controllers\BaseController;
 use App\Models\MasterKabModel;
 use App\Models\MasterKegiatanWilayahModel;
 
-class MasterKegiatanWilayah extends BaseController
+class MasterKegiatanWilayahController extends BaseController
 {
     protected $masterKegiatanWilayah;
     protected $masterKab;
@@ -21,12 +21,20 @@ class MasterKegiatanWilayah extends BaseController
     {
         // Ambil parameter filter dari GET
         $kabupatenId = $this->request->getGet('kabupaten');
+        
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+        
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int)$perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
 
         // Ambil semua kabupaten untuk dropdown
-        $kabupatenList = $this->masterKab->orderBy('nama_kabupaten', 'ASC')->findAll();
+        $kabupatenList = $this->masterKab->orderBy('id_kabupaten', 'ASC')->findAll();
 
         // Pagination setup
-        $perPage = 3; // jumlah data per halaman
         $page = $this->request->getVar('page') ?? 1;
 
         // Query dengan pagination
@@ -40,9 +48,10 @@ class MasterKegiatanWilayah extends BaseController
             'kegiatanWilayah' => $query,
             'kabupatenList' => $kabupatenList,
             'selectedKabupaten' => $kabupatenId,
+            'perPage' => $perPage,
             'pager' => $this->masterKegiatanWilayah->pager,
         ];
 
-        return view('Pemantau/KegiatanWilayah/index', $data);
+        return view('PemantauProvinsi/KegiatanWilayah/index', $data);
     }
 }

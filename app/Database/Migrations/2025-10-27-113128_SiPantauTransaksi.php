@@ -47,6 +47,9 @@ class SiPantauTransaksi extends Migration
             ],
             'imagepath' => [
                 'type' => 'TEXT',
+            ],
+            '	created_at' =>[
+                'type' => 'timestamp'
             ]
         ]);
 

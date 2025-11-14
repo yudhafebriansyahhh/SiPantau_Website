@@ -16,6 +16,7 @@ class FeedbackUserModel extends Model
         'id_feedback',
         'sobat_id',
         'feedback',
+        'rating',
         'created_at',
     ];
 
