@@ -468,14 +468,45 @@ class DashboardController extends Controller
             }
         }
 
+        if (!$idProses) {
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        // Get detail kegiatan untuk cek tanggal mulai dan selesai
+        $prosesModel = new MasterKegiatanDetailProsesModel();
+        $detailProses = $prosesModel->find($idProses);
+
+        if (!$detailProses) {
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        $tanggalMulai = $detailProses['tanggal_mulai'];
+        $tanggalSelesai = $detailProses['tanggal_selesai'];
+        $today = date('Y-m-d');
+
+        // Tentukan status kegiatan global
+        $statusKegiatanGlobal = 'Belum Dimulai';
+        if ($today >= $tanggalMulai && $today <= $tanggalSelesai) {
+            $statusKegiatanGlobal = 'Sedang Berjalan';
+        } elseif ($today > $tanggalSelesai) {
+            $statusKegiatanGlobal = 'Selesai';
+        }
+
         if (!$idWilayah || $idWilayah == 'all') {
             $petugas = $this->db->query("
                 SELECT 
                     u.nama_user,
                     u.sobat_id,
+                    pcl.id_pcl,
                     mk.nama_kabupaten,
                     pcl.target,
-                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi,
+                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi_total,
                     'PCL' as role
                 FROM pcl
                 JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
@@ -492,9 +523,10 @@ class DashboardController extends Controller
                 SELECT 
                     u.nama_user,
                     u.sobat_id,
+                    pcl.id_pcl,
                     mk.nama_kabupaten,
                     pcl.target,
-                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi,
+                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi_total,
                     'PCL' as role
                 FROM pcl
                 JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
@@ -508,28 +540,132 @@ class DashboardController extends Controller
             ", [$idWilayah])->getResultArray();
         }
 
+        // Process setiap petugas
         foreach ($petugas as &$p) {
             $target = (int)$p['target'];
-            $realisasi = (int)$p['realisasi'];
-            $progress = $target > 0 ? round(($realisasi / $target) * 100, 0) : 0;
-            
+            $realisasiTotal = (int)$p['realisasi_total'];
+
+            // Hitung progress keseluruhan
+            $progress = $target > 0 ? round(($realisasiTotal / $target) * 100, 0) : 0;
             $p['progress'] = min(100, $progress);
-            
-            if ($realisasi >= $target) {
-                $p['status'] = 'Sudah Lapor';
-                $p['status_class'] = 'badge-success';
-            } elseif ($progress >= 50) {
-                $p['status'] = 'Sedang Berjalan';
-                $p['status_class'] = 'badge-warning';
-            } else {
-                $p['status'] = 'Belum Lapor';
-                $p['status_class'] = 'badge-warning';
-            }
+
+            // Set status kegiatan (sama dengan global)
+            $p['status_kegiatan'] = $statusKegiatanGlobal;
+            $p['status_kegiatan_class'] = $this->getStatusKegiatanClass($statusKegiatanGlobal);
+
+            // Cek status harian
+            $statusHarian = $this->getStatusHarian(
+                $p['id_pcl'],
+                $statusKegiatanGlobal,
+                $today,
+                $target
+            );
+
+            $p['status_harian'] = $statusHarian['text'];
+            $p['status_harian_class'] = $statusHarian['class'];
+            $p['realisasi_hari_ini'] = $statusHarian['realisasi_hari_ini'];
+            $p['target_harian'] = $statusHarian['target_harian'];
         }
 
         return $this->response->setJSON([
             'success' => true,
             'data' => $petugas
         ]);
+    }
+
+    // Helper: Get Status Kegiatan Class
+    private function getStatusKegiatanClass($status)
+    {
+        switch ($status) {
+            case 'Sedang Berjalan':
+                return 'badge-success';
+            case 'Belum Dimulai':
+                return 'badge-warning';
+            case 'Selesai':
+                return 'badge-secondary';
+            default:
+                return 'badge-secondary';
+        }
+    }
+
+    // Helper: Get Status Harian
+    private function getStatusHarian($idPCL, $statusKegiatan, $today, $targetTotal)
+    {
+        // Jika kegiatan belum dimulai atau sudah selesai
+        if ($statusKegiatan !== 'Sedang Berjalan') {
+            return [
+                'text' => 'Tidak Perlu Lapor',
+                'class' => 'badge-secondary',
+                'realisasi_hari_ini' => 0,
+                'target_harian' => 0
+            ];
+        }
+
+        // Cek apakah sudah lapor hari ini
+        $laporanHariIni = $this->db->query("
+            SELECT jumlah_realisasi_absolut
+            FROM pantau_progress
+            WHERE id_pcl = ?
+            AND DATE(created_at) = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        ", [$idPCL, $today])->getRowArray();
+
+        // Get target harian dari kurva_petugas
+        $targetHarian = $this->db->query("
+            SELECT target_harian_absolut
+            FROM kurva_petugas
+            WHERE id_pcl = ?
+            AND tanggal_target = ?
+            AND is_hari_kerja = 1
+        ", [$idPCL, $today])->getRowArray();
+
+        $targetHarianValue = $targetHarian ? (int)$targetHarian['target_harian_absolut'] : 0;
+
+        // Jika belum lapor
+        if (!$laporanHariIni) {
+            return [
+                'text' => 'Belum Lapor',
+                'class' => 'badge-danger',
+                'realisasi_hari_ini' => 0,
+                'target_harian' => $targetHarianValue
+            ];
+        }
+
+        $realisasiHariIni = (int)$laporanHariIni['jumlah_realisasi_absolut'];
+
+        // Jika tidak ada target harian (hari libur atau belum ada kurva)
+        if ($targetHarianValue === 0) {
+            return [
+                'text' => 'Sudah Lapor',
+                'class' => 'badge-success',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => 0
+            ];
+        }
+
+        // Bandingkan dengan target harian
+        if ($realisasiHariIni < $targetHarianValue) {
+            return [
+                'text' => 'Di Bawah Target',
+                'class' => 'badge-warning',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => $targetHarianValue
+            ];
+        } elseif ($realisasiHariIni > $targetHarianValue) {
+            return [
+                'text' => 'Melebihi Target',
+                'class' => 'badge-info',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => $targetHarianValue
+            ];
+        } else {
+            return [
+                'text' => 'Sesuai Target',
+                'class' => 'badge-success',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => $targetHarianValue
+            ];
+        }
     }
 }

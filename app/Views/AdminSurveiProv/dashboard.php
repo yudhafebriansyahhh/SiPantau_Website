@@ -39,7 +39,7 @@
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2">
-        <select id="filterKegiatanProses" class="input-field text-sm w-full sm:w-64">
+        <select id="filterKegiatanProses" class="input-field text-sm w-full sm:w-80">
           <option value="">-- Pilih Kegiatan --</option>
           <?php foreach ($kegiatanList as $item): ?>
             <option value="<?= esc($item['id_kegiatan_detail_proses']) ?>">
@@ -48,8 +48,8 @@
           <?php endforeach; ?>
         </select>
 
-        <select id="filterKabupaten" class="input-field text-sm w-full sm:w-64" disabled>
-          <option value="">-- Pilih Kabupaten (opsional) --</option>
+        <select id="filterKabupaten" class="input-field text-sm w-full sm:w-48" disabled>
+          <option value="">-- Pilih Kabupaten --</option>
         </select>
       </div>
     </div>
@@ -83,9 +83,8 @@
               <span class="text-sm font-semibold" style="color: <?= $prog['color'] ?>;"><?= $prog['progress'] ?>%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="h-2 rounded-full transition-all duration-500" 
-                   style="width: 0%; background-color: <?= $prog['color'] ?>;" 
-                   data-width="<?= $prog['progress'] ?>"></div>
+              <div class="h-2 rounded-full transition-all duration-500"
+                style="width: 0%; background-color: <?= $prog['color'] ?>;" data-width="<?= $prog['progress'] ?>"></div>
             </div>
           </div>
         <?php endforeach; ?>
@@ -116,7 +115,10 @@
             <i class="fas fa-user mr-2"></i>Petugas
           </th>
           <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            <i class="fas fa-list mr-2"></i>Status
+            <i class="fas fa-calendar-check mr-2"></i>Status Kegiatan
+          </th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+            <i class="fas fa-clipboard-check mr-2"></i>Status Harian
           </th>
           <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
             <i class="fas fa-tasks mr-2"></i>Progress
@@ -125,7 +127,7 @@
       </thead>
       <tbody class="divide-y divide-gray-100" id="petugasTableBody">
         <tr>
-          <td colspan="3" class="px-4 py-12 text-center">
+          <td colspan="4" class="px-4 py-12 text-center">
             <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
             <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
           </td>
@@ -138,144 +140,144 @@
 <!-- ApexCharts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js"></script>
 <script>
-let chartInstance = null;
-const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
-const baseProv = "<?= base_url('adminsurvei/kurva-provinsi') ?>";
-const baseKab = "<?= base_url('adminsurvei/kurva-kabupaten') ?>";
-const baseWilayah = "<?= base_url('adminsurvei/kegiatan-wilayah') ?>";
-const basePetugas = "<?= base_url('adminsurvei/get-petugas') ?>";
+  let chartInstance = null;
+  const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
+  const baseProv = "<?= base_url('adminsurvei/kurva-provinsi') ?>";
+  const baseKab = "<?= base_url('adminsurvei/kurva-kabupaten') ?>";
+  const baseWilayah = "<?= base_url('adminsurvei/kegiatan-wilayah') ?>";
+  const basePetugas = "<?= base_url('adminsurvei/get-petugas') ?>";
 
-// Load Kabupaten Dropdown
-async function loadKabupatenDropdown(idProses) {
-  const kabSelect = document.getElementById("filterKabupaten");
-  kabSelect.innerHTML = `<option value="">-- Pilih Kabupaten (opsional) --</option>`;
-  kabSelect.disabled = true;
-  
-  if (!idProses) return;
-  
-  try {
-    const res = await fetch(`${baseWilayah}?id_kegiatan_detail_proses=${idProses}`);
-    const data = await res.json();
-    
-    if (data.length) {
-      data.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.id_kegiatan_wilayah;
-        opt.textContent = item.nama_kabupaten;
-        kabSelect.appendChild(opt);
-      });
-      kabSelect.disabled = false;
-    }
-  } catch (e) {
-    console.error('Error loading kabupaten:', e);
-  }
-}
+  // Load Kabupaten Dropdown
+  async function loadKabupatenDropdown(idProses) {
+    const kabSelect = document.getElementById("filterKabupaten");
+    kabSelect.innerHTML = `<option value="">-- Pilih Kabupaten --</option>`;
+    kabSelect.disabled = true;
 
-// Load dan Render Kurva S
-async function loadAndRenderKurvaS(idProses = "", idWilayah = "") {
-  try {
-    const url = idWilayah
-      ? `${baseKab}?id_kegiatan_wilayah=${idWilayah}&nocache=${Date.now()}`
-      : `${baseProv}?id_kegiatan_detail_proses=${idProses}&nocache=${Date.now()}`;
+    if (!idProses) return;
 
-    document.getElementById('chartLoadingState').style.display = 'flex';
-    document.getElementById('kurvaSProvChart').style.display = 'none';
-    document.getElementById('chartErrorState').style.display = 'none';
-    document.getElementById('chartPlaceholder').style.display = 'none';
+    try {
+      const res = await fetch(`${baseWilayah}?id_kegiatan_detail_proses=${idProses}`);
+      const data = await res.json();
 
-    const response = await fetch(url, { cache: "no-store" });
-    const data = await response.json();
-    
-    if (!data.labels.length) throw new Error('Empty data');
-
-    await new Promise(res => setTimeout(res, 200));
-    document.getElementById('chartLoadingState').style.display = 'none';
-    document.getElementById('kurvaSProvChart').style.display = 'block';
-    renderChart(data);
-  } catch (e) {
-    console.error(e);
-    document.getElementById('chartLoadingState').style.display = 'none';
-    document.getElementById('chartErrorState').style.display = 'block';
-  }
-}
-
-// Render Chart
-function renderChart(data) {
-  if (chartInstance) { 
-    chartInstance.destroy(); 
-    chartInstance = null; 
-  }
-  
-  const isMobile = window.innerWidth < 640;
-  
-  const options = {
-    chart: { 
-      type: 'area', 
-      height: isMobile ? 300 : 420, 
-      animations: { enabled: true, speed: 600 }, 
-      toolbar: { show: !isMobile },
-      fontFamily: 'Poppins, sans-serif'
-    },
-    series: [{ 
-      name: 'Target Kumulatif', 
-      data: data.targetAbsolut 
-    }],
-    xaxis: { 
-      categories: data.labels, 
-      title: { text: 'Tanggal', style: { fontSize: isMobile ? '11px' : '12px' } }, 
-      labels: { 
-        rotate: isMobile ? -45 : 0,
-        style: { fontSize: isMobile ? '10px' : '11px' }
-      } 
-    },
-    yaxis: { 
-      title: { 
-        text: isMobile ? '' : 'Target Kumulatif', 
-        style: { fontSize: '12px' } 
-      },
-      labels: {
-        style: { fontSize: isMobile ? '9px' : '11px' },
-        formatter: value => Math.round(value).toLocaleString('id-ID')
+      if (data.length) {
+        data.forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = item.id_kegiatan_wilayah;
+          opt.textContent = item.nama_kabupaten;
+          kabSelect.appendChild(opt);
+        });
+        kabSelect.disabled = false;
       }
-    },
-    tooltip: {
-      shared: true,
-      custom: ({ dataPointIndex }) => `
+    } catch (e) {
+      console.error('Error loading kabupaten:', e);
+    }
+  }
+
+  // Load dan Render Kurva S
+  async function loadAndRenderKurvaS(idProses = "", idWilayah = "") {
+    try {
+      const url = idWilayah
+        ? `${baseKab}?id_kegiatan_wilayah=${idWilayah}&nocache=${Date.now()}`
+        : `${baseProv}?id_kegiatan_detail_proses=${idProses}&nocache=${Date.now()}`;
+
+      document.getElementById('chartLoadingState').style.display = 'flex';
+      document.getElementById('kurvaSProvChart').style.display = 'none';
+      document.getElementById('chartErrorState').style.display = 'none';
+      document.getElementById('chartPlaceholder').style.display = 'none';
+
+      const response = await fetch(url, { cache: "no-store" });
+      const data = await response.json();
+
+      if (!data.labels.length) throw new Error('Empty data');
+
+      await new Promise(res => setTimeout(res, 200));
+      document.getElementById('chartLoadingState').style.display = 'none';
+      document.getElementById('kurvaSProvChart').style.display = 'block';
+      renderChart(data);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('chartLoadingState').style.display = 'none';
+      document.getElementById('chartErrorState').style.display = 'block';
+    }
+  }
+
+  // Render Chart
+  function renderChart(data) {
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+
+    const isMobile = window.innerWidth < 640;
+
+    const options = {
+      chart: {
+        type: 'area',
+        height: isMobile ? 300 : 420,
+        animations: { enabled: true, speed: 600 },
+        toolbar: { show: !isMobile },
+        fontFamily: 'Poppins, sans-serif'
+      },
+      series: [{
+        name: 'Target Kumulatif',
+        data: data.targetAbsolut
+      }],
+      xaxis: {
+        categories: data.labels,
+        title: { text: 'Tanggal', style: { fontSize: isMobile ? '11px' : '12px' } },
+        labels: {
+          rotate: isMobile ? -45 : 0,
+          style: { fontSize: isMobile ? '10px' : '11px' }
+        }
+      },
+      yaxis: {
+        title: {
+          text: isMobile ? '' : 'Target Kumulatif',
+          style: { fontSize: '12px' }
+        },
+        labels: {
+          style: { fontSize: isMobile ? '9px' : '11px' },
+          formatter: value => Math.round(value).toLocaleString('id-ID')
+        }
+      },
+      tooltip: {
+        shared: true,
+        custom: ({ dataPointIndex }) => `
         <div class="p-2">
           <strong>${data.labels[dataPointIndex]}</strong><br>
           Target Kumulatif: <b>${data.targetAbsolut[dataPointIndex].toLocaleString('id-ID')}</b><br>
           Target Harian: <b>${data.targetHarian[dataPointIndex].toLocaleString('id-ID')}</b><br>
           Persen Kumulatif: <b>${data.targetPersen[dataPointIndex].toFixed(2)}%</b>
         </div>`
-    },
-    colors: ['#1e88e5'],
-    stroke: { curve: 'smooth', width: isMobile ? 2 : 3 },
-    fill: { 
-      type: 'gradient', 
-      gradient: { 
-        opacityFrom: 0.5, 
-        opacityTo: 0.05 
-      } 
-    },
-    dataLabels: { enabled: false },
-    legend: {
-      position: isMobile ? 'bottom' : 'top',
-      horizontalAlign: isMobile ? 'center' : 'left',
-      fontSize: isMobile ? '11px' : '13px'
-    }
-  };
-  
-  chartInstance = new ApexCharts(document.querySelector("#kurvaSProvChart"), options);
-  chartInstance.render();
-}
+      },
+      colors: ['#1e88e5'],
+      stroke: { curve: 'smooth', width: isMobile ? 2 : 3 },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          opacityFrom: 0.5,
+          opacityTo: 0.05
+        }
+      },
+      dataLabels: { enabled: false },
+      legend: {
+        position: isMobile ? 'bottom' : 'top',
+        horizontalAlign: isMobile ? 'center' : 'left',
+        fontSize: isMobile ? '11px' : '13px'
+      }
+    };
 
-// Load Petugas
-async function loadPetugas() {
-  const kegiatanId = document.getElementById('filterKegiatanProses').value;
-  const wilayahId = document.getElementById('filterKabupaten').value;
-  
-  if (!kegiatanId) {
-    document.getElementById('petugasTableBody').innerHTML = `
+    chartInstance = new ApexCharts(document.querySelector("#kurvaSProvChart"), options);
+    chartInstance.render();
+  }
+
+  // Load Petugas
+  async function loadPetugas() {
+    const kegiatanId = document.getElementById('filterKegiatanProses').value;
+    const wilayahId = document.getElementById('filterKabupaten').value;
+
+    if (!kegiatanId) {
+      document.getElementById('petugasTableBody').innerHTML = `
       <tr>
         <td colspan="3" class="px-4 py-12 text-center">
           <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
@@ -283,131 +285,159 @@ async function loadPetugas() {
         </td>
       </tr>
     `;
-    return;
-  }
-  
-  try {
-    const response = await fetch(`${basePetugas}?id_kegiatan_detail_proses=${kegiatanId}&id_kegiatan_wilayah=${wilayahId || 'all'}`);
-    const result = await response.json();
-    
-    if (result.success) {
-      renderPetugasTable(result.data);
+      return;
     }
-  } catch (e) {
-    console.error('Error loading petugas:', e);
-  }
-}
 
-// Render Petugas Table
-function renderPetugasTable(data) {
-  const tbody = document.getElementById('petugasTableBody');
-  
-  if (data.length === 0) {
-    tbody.innerHTML = `
+    try {
+      const response = await fetch(`${basePetugas}?id_kegiatan_detail_proses=${kegiatanId}&id_kegiatan_wilayah=${wilayahId || 'all'}`);
+      const result = await response.json();
+
+      if (result.success) {
+        renderPetugasTable(result.data);
+      }
+    } catch (e) {
+      console.error('Error loading petugas:', e);
+    }
+  }
+
+  // Render Petugas Table
+  function renderPetugasTable(data) {
+    const tbody = document.getElementById('petugasTableBody');
+
+    if (data.length === 0) {
+      tbody.innerHTML = `
       <tr>
-        <td colspan="3" class="px-4 py-12 text-center">
+        <td colspan="4" class="px-4 py-12 text-center">
           <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
           <p class="text-gray-500">Belum ada data petugas</p>
         </td>
       </tr>
     `;
-    return;
-  }
-  
-  const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
-  
-  tbody.innerHTML = data.map((p, index) => `
+      return;
+    }
+
+    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
+
+    tbody.innerHTML = data.map((p, index) => `
     <tr class="hover:bg-gray-50 transition-colors duration-150">
+      <!-- Petugas Info -->
       <td class="px-4 py-4">
-        <div class="flex items-center">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" 
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
                style="background-color: ${colors[index % colors.length]};">
-            <span class="text-white text-sm font-medium">${p.nama_user.substring(0, 2).toUpperCase()}</span>
+            <span class="text-white text-sm font-semibold">${p.nama_user.substring(0, 2).toUpperCase()}</span>
           </div>
-          <div>
-            <p class="text-sm font-medium text-gray-900">${p.nama_user}</p>
-            <p class="text-xs text-gray-500">${p.role} - ${p.nama_kabupaten}</p>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">${p.nama_user}</p>
+            <p class="text-xs text-gray-500 truncate">${p.role} - ${p.nama_kabupaten}</p>
           </div>
         </div>
       </td>
+      
+      <!-- Status Kegiatan -->
       <td class="px-4 py-4">
-        <span class="badge ${p.status_class}">${p.status}</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_kegiatan_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_kegiatan_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_kegiatan_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_kegiatan_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
+          ${p.status_kegiatan}
+        </span>
       </td>
+      
+      <!-- Status Harian -->
       <td class="px-4 py-4">
-        <div class="flex items-center">
-          <div class="flex-1 mr-3">
+        <div class="flex flex-col gap-1 items-start">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_harian_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_harian_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_harian_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_harian_class === 'badge-info' ? 'bg-blue-100 text-blue-800' : ''} ${p.status_harian_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
+            ${p.status_harian}
+          </span>
+          ${p.status_harian === 'Belum Lapor' && p.target_harian > 0 ? `
+            <span class="text-xs text-gray-600">
+              <i class="fas fa-bullseye mr-1"></i>
+              Target: ${p.target_harian}
+            </span>
+          ` : ''}
+          ${p.status_harian !== 'Tidak Perlu Lapor' && p.status_harian !== 'Belum Lapor' && (p.realisasi_hari_ini > 0 || p.target_harian > 0) ? `
+            <span class="text-xs text-gray-600">
+              <i class="fas fa-check-circle mr-1"></i>
+              ${p.realisasi_hari_ini}${p.target_harian > 0 ? ' / ' + p.target_harian : ''}
+            </span>
+          ` : ''}
+        </div>
+      </td>
+      
+      <!-- Progress Keseluruhan -->
+      <td class="px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex-1">
             <div class="w-full bg-gray-200 rounded-full h-2">
               <div class="h-2 rounded-full transition-all duration-300" 
                    style="width: ${p.progress}%; background-color: ${colors[index % colors.length]};"></div>
             </div>
           </div>
-          <span class="text-sm font-semibold text-gray-900 min-w-[2rem] text-right">${p.progress}</span>
+          <span class="text-sm font-semibold text-gray-900 min-w-[3rem] text-right">${p.progress}%</span>
         </div>
       </td>
     </tr>
   `).join('');
-}
-
-// Event Listeners
-document.addEventListener("DOMContentLoaded", function() {
-  if (defaultKegiatan) {
-    document.getElementById('filterKegiatanProses').value = defaultKegiatan;
-    loadAndRenderKurvaS(defaultKegiatan);
-    loadKabupatenDropdown(defaultKegiatan);
-    loadPetugas();
-  } else {
-    document.getElementById('chartLoadingState').style.display = 'none';
-    document.getElementById('chartPlaceholder').style.display = 'flex';
   }
 
-  document.getElementById('filterKegiatanProses').addEventListener('change', function() {
-    const idProses = this.value;
-    
-    if (!idProses) {
-      if (chartInstance) {
-        chartInstance.destroy();
-        chartInstance = null;
-      }
+  // Event Listeners
+  document.addEventListener("DOMContentLoaded", function () {
+    if (defaultKegiatan) {
+      document.getElementById('filterKegiatanProses').value = defaultKegiatan;
+      loadAndRenderKurvaS(defaultKegiatan);
+      loadKabupatenDropdown(defaultKegiatan);
+      loadPetugas();
+    } else {
       document.getElementById('chartLoadingState').style.display = 'none';
       document.getElementById('chartPlaceholder').style.display = 'flex';
-      document.getElementById('filterKabupaten').disabled = true;
-      document.getElementById('filterKabupaten').innerHTML = '<option value="">-- Pilih Kabupaten (opsional) --</option>';
+    }
+
+    document.getElementById('filterKegiatanProses').addEventListener('change', function () {
+      const idProses = this.value;
+
+      if (!idProses) {
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+        }
+        document.getElementById('chartLoadingState').style.display = 'none';
+        document.getElementById('chartPlaceholder').style.display = 'flex';
+        document.getElementById('filterKabupaten').disabled = true;
+        document.getElementById('filterKabupaten').innerHTML = '<option value="">-- Pilih Kabupaten --</option>';
+        loadPetugas();
+        return;
+      }
+
+      loadKabupatenDropdown(idProses);
+      loadAndRenderKurvaS(idProses);
       loadPetugas();
-      return;
-    }
-    
-    loadKabupatenDropdown(idProses);
-    loadAndRenderKurvaS(idProses);
-    loadPetugas();
-  });
-
-  document.getElementById('filterKabupaten').addEventListener('change', function() {
-    const idKab = this.value;
-    const idProses = document.getElementById('filterKegiatanProses').value;
-    loadAndRenderKurvaS(idProses, idKab);
-    loadPetugas();
-  });
-
-  // Animate progress bars
-  setTimeout(() => {
-    document.querySelectorAll('[data-width]').forEach(bar => {
-      bar.style.width = bar.dataset.width + '%';
     });
-  }, 400);
-});
 
-// Window resize handler
-let resizeTimer;
-window.addEventListener('resize', function() {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(function() {
-    const idProses = document.getElementById('filterKegiatanProses').value;
-    const idKab = document.getElementById('filterKabupaten').value;
-    if (chartInstance && idProses) {
+    document.getElementById('filterKabupaten').addEventListener('change', function () {
+      const idKab = this.value;
+      const idProses = document.getElementById('filterKegiatanProses').value;
       loadAndRenderKurvaS(idProses, idKab);
-    }
-  }, 250);
-});
+      loadPetugas();
+    });
+
+    // Animate progress bars
+    setTimeout(() => {
+      document.querySelectorAll('[data-width]').forEach(bar => {
+        bar.style.width = bar.dataset.width + '%';
+      });
+    }, 400);
+  });
+
+  // Window resize handler
+  let resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      const idProses = document.getElementById('filterKegiatanProses').value;
+      const idKab = document.getElementById('filterKabupaten').value;
+      if (chartInstance && idProses) {
+        loadAndRenderKurvaS(idProses, idKab);
+      }
+    }, 250);
+  });
 </script>
 
 <?= $this->endSection() ?>

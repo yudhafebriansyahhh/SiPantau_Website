@@ -139,23 +139,26 @@
         <table class="w-full" id="petugasTable">
             <thead>
                 <tr class="border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        <i class="fas fa-user mr-2"></i>Petugas
-                    </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        <i class="fas fa-list mr-2"></i>Status
-                    </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        <i class="fas fa-tasks mr-2"></i>Progress
-                    </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <i class="fas fa-user mr-2"></i>Petugas
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <i class="fas fa-calendar-check mr-2"></i>Status Kegiatan
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <i class="fas fa-clipboard-check mr-2"></i>Status Harian
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <i class="fas fa-tasks mr-2"></i>Progress
+                </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100" id="petugasTableBody">
                 <tr>
-                    <td colspan="3" class="px-4 py-12 text-center">
-                        <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
-                        <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
-                    </td>
+                <td colspan="4" class="px-4 py-12 text-center">
+                    <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
+                    <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
+                </td>
                 </tr>
             </tbody>
         </table>
@@ -415,52 +418,80 @@ async function loadPetugas() {
 
 // Render petugas table
 function renderPetugasTable(data) {
-    const tbody = document.getElementById('petugasTableBody');
-    
-    if (data.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="3" class="px-4 py-12 text-center">
-                    <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
-                    <p class="text-gray-500">Belum ada data petugas</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
-    
-    tbody.innerHTML = data.map((p, index) => `
-        <tr class="hover:bg-gray-50 transition-colors duration-150">
-            <td class="px-4 py-4">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" 
-                         style="background-color: ${colors[index % colors.length]};">
-                        <span class="text-white text-sm font-medium">${p.nama_user.substring(0, 2).toUpperCase()}</span>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-900">${p.nama_user}</p>
-                        <p class="text-xs text-gray-500">${p.role} - ${p.nama_kabupaten}</p>
-                    </div>
-                </div>
-            </td>
-            <td class="px-4 py-4">
-                <span class="badge ${p.status_class}">${p.status}</span>
-            </td>
-            <td class="px-4 py-4">
-                <div class="flex items-center">
-                    <div class="flex-1 mr-3">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full transition-all duration-300" 
-                                 style="width: ${p.progress}%; background-color: ${colors[index % colors.length]};"></div>
-                        </div>
-                    </div>
-                    <span class="text-sm font-semibold text-gray-900 min-w-[2rem] text-right">${p.progress}</span>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+  const tbody = document.getElementById('petugasTableBody');
+  
+  if (data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="px-4 py-12 text-center">
+          <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
+          <p class="text-gray-500">Belum ada data petugas</p>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
+  
+  tbody.innerHTML = data.map((p, index) => `
+    <tr class="hover:bg-gray-50 transition-colors duration-150">
+      <!-- Petugas Info -->
+      <td class="px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
+               style="background-color: ${colors[index % colors.length]};">
+            <span class="text-white text-sm font-semibold">${p.nama_user.substring(0, 2).toUpperCase()}</span>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">${p.nama_user}</p>
+            <p class="text-xs text-gray-500 truncate">${p.role} - ${p.nama_kabupaten}</p>
+          </div>
+        </div>
+      </td>
+      
+      <!-- Status Kegiatan -->
+      <td class="px-4 py-4">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_kegiatan_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_kegiatan_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_kegiatan_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_kegiatan_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
+          ${p.status_kegiatan}
+        </span>
+      </td>
+      
+      <!-- Status Harian -->
+      <td class="px-4 py-4">
+        <div class="flex flex-col gap-1 items-start">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_harian_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_harian_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_harian_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_harian_class === 'badge-info' ? 'bg-blue-100 text-blue-800' : ''} ${p.status_harian_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
+            ${p.status_harian}
+          </span>
+          ${p.status_harian === 'Belum Lapor' && p.target_harian > 0 ? `
+            <span class="text-xs text-gray-600">
+              <i class="fas fa-bullseye mr-1"></i>
+              Target: ${p.target_harian}
+            </span>
+          ` : ''}
+          ${p.status_harian !== 'Tidak Perlu Lapor' && p.status_harian !== 'Belum Lapor' && (p.realisasi_hari_ini > 0 || p.target_harian > 0) ? `
+            <span class="text-xs text-gray-600">
+              <i class="fas fa-check-circle mr-1"></i>
+              ${p.realisasi_hari_ini}${p.target_harian > 0 ? ' / ' + p.target_harian : ''}
+            </span>
+          ` : ''}
+        </div>
+      </td>
+      
+      <!-- Progress Keseluruhan -->
+      <td class="px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex-1">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="h-2 rounded-full transition-all duration-300" 
+                   style="width: ${p.progress}%; background-color: ${colors[index % colors.length]};"></div>
+            </div>
+          </div>
+          <span class="text-sm font-semibold text-gray-900 min-w-[3rem] text-right">${p.progress}%</span>
+        </div>
+      </td>
+    </tr>
+  `).join('');
 }
 
 // Window resize handler

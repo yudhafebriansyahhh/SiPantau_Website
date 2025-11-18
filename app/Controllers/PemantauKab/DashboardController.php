@@ -9,8 +9,8 @@ use App\Models\UserModel;
 use CodeIgniter\Controller;
 
 class DashboardController extends Controller
-{   
-    protected $db; 
+{
+    protected $db;
 
     public function __construct()
     {
@@ -23,9 +23,9 @@ class DashboardController extends Controller
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $sobatId = session()->get('sobat_id');
-        
+
         $isPemantauKabupaten = ($role == 3 && $roleType == 'pemantau_kabupaten');
-        
+
         if (!$isPemantauKabupaten) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
@@ -34,14 +34,14 @@ class DashboardController extends Controller
         // Get kabupaten user dari database
         $userModel = new UserModel();
         $user = $userModel->find($sobatId);
-        
+
         if (!$user || !$user['id_kabupaten']) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Data kabupaten tidak ditemukan.');
         }
 
         $idKabupaten = $user['id_kabupaten'];
-        
+
         // Simpan ke session untuk digunakan di method lain
         session()->set('user_kabupaten_id', $idKabupaten);
 
@@ -103,7 +103,7 @@ class DashboardController extends Controller
 
         return [
             'total_kegiatan' => $totalKegiatan ?? 0,
-            'kegiatan_aktif' => (int)($kegiatanAktif['total'] ?? 0),
+            'kegiatan_aktif' => (int) ($kegiatanAktif['total'] ?? 0),
             'target_tercapai' => round($targetTercapai, 0)
         ];
     }
@@ -129,9 +129,9 @@ class DashboardController extends Controller
         $countKegiatan = 0;
 
         foreach ($wilayahList as $wilayah) {
-            $targetTotal = (int)$wilayah['target_wilayah'];
+            $targetTotal = (int) $wilayah['target_wilayah'];
             $realisasiTotal = $this->getRealisasiByKegiatanWilayah($wilayah['id_kegiatan_wilayah']);
-            
+
             if ($targetTotal > 0) {
                 $progress = ($realisasiTotal / $targetTotal) * 100;
                 $totalProgress += min(100, $progress);
@@ -155,7 +155,7 @@ class DashboardController extends Controller
             WHERE pml.id_kegiatan_wilayah = ?
         ", [$idKegiatanWilayah])->getRowArray();
 
-        return (int)($result['total_realisasi'] ?? 0);
+        return (int) ($result['total_realisasi'] ?? 0);
     }
 
     // ======================================================
@@ -205,18 +205,18 @@ class DashboardController extends Controller
         $colorIndex = 0;
 
         foreach ($kegiatanWilayah as $wilayah) {
-            $targetTotal = (int)$wilayah['target_wilayah'];
+            $targetTotal = (int) $wilayah['target_wilayah'];
             $realisasiTotal = $this->getRealisasiByKegiatanWilayah($wilayah['id_kegiatan_wilayah']);
 
             if ($targetTotal > 0) {
                 $progress = ($realisasiTotal / $targetTotal) * 100;
-                
+
                 $progressData[] = [
                     'nama' => $wilayah['nama_kegiatan_detail_proses'],
                     'progress' => min(100, round($progress, 0)),
                     'color' => $colors[$colorIndex % count($colors)]
                 ];
-                
+
                 $colorIndex++;
             }
         }
@@ -231,14 +231,14 @@ class DashboardController extends Controller
     {
         $idKegiatanWilayah = $this->request->getGet('id_kegiatan_wilayah');
         $idKabupaten = session()->get('user_kabupaten_id');
-        
+
         // Validasi: pastikan kegiatan wilayah ini milik kabupaten user
         $kegiatan = $this->db->table('kegiatan_wilayah')
             ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
             ->where('id_kabupaten', $idKabupaten)
             ->get()
             ->getRowArray();
-        
+
         if (!$kegiatan) {
             return $this->response->setJSON([
                 'labels' => [],
@@ -247,7 +247,7 @@ class DashboardController extends Controller
                 'targetHarian' => []
             ]);
         }
-        
+
         $model = new KurvaSkabModel();
         $records = $model
             ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
@@ -312,12 +312,14 @@ class DashboardController extends Controller
         $idKabupaten = session()->get('user_kabupaten_id');
 
         // Validasi: pastikan kegiatan wilayah ini milik kabupaten user
-        $kegiatan = $this->db->table('kegiatan_wilayah')
-            ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
-            ->where('id_kabupaten', $idKabupaten)
+        $kegiatan = $this->db->table('kegiatan_wilayah kw')
+            ->select('kw.*, mkdp.tanggal_mulai, mkdp.tanggal_selesai')
+            ->join('master_kegiatan_detail_proses mkdp', 'mkdp.id_kegiatan_detail_proses = kw.id_kegiatan_detail_proses')
+            ->where('kw.id_kegiatan_wilayah', $idKegiatanWilayah)
+            ->where('kw.id_kabupaten', $idKabupaten)
             ->get()
             ->getRowArray();
-        
+
         if (!$kegiatan) {
             return $this->response->setJSON([
                 'success' => true,
@@ -325,13 +327,26 @@ class DashboardController extends Controller
             ]);
         }
 
+        $tanggalMulai = $kegiatan['tanggal_mulai'];
+        $tanggalSelesai = $kegiatan['tanggal_selesai'];
+        $today = date('Y-m-d');
+
+        // Tentukan status kegiatan global
+        $statusKegiatanGlobal = 'Belum Dimulai';
+        if ($today >= $tanggalMulai && $today <= $tanggalSelesai) {
+            $statusKegiatanGlobal = 'Sedang Berjalan';
+        } elseif ($today > $tanggalSelesai) {
+            $statusKegiatanGlobal = 'Selesai';
+        }
+
         $petugas = $this->db->query("
             SELECT 
                 u.nama_user,
                 u.sobat_id,
+                pcl.id_pcl,
                 mk.nama_kabupaten,
                 pcl.target,
-                COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi,
+                COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi_total,
                 'PCL' as role
             FROM pcl
             JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
@@ -344,28 +359,132 @@ class DashboardController extends Controller
             ORDER BY u.nama_user
         ", [$idKegiatanWilayah])->getResultArray();
 
+        // Process setiap petugas
         foreach ($petugas as &$p) {
-            $target = (int)$p['target'];
-            $realisasi = (int)$p['realisasi'];
-            $progress = $target > 0 ? round(($realisasi / $target) * 100, 0) : 0;
-            
+            $target = (int) $p['target'];
+            $realisasiTotal = (int) $p['realisasi_total'];
+
+            // Hitung progress keseluruhan
+            $progress = $target > 0 ? round(($realisasiTotal / $target) * 100, 0) : 0;
             $p['progress'] = min(100, $progress);
-            
-            if ($realisasi >= $target) {
-                $p['status'] = 'Sudah Lapor';
-                $p['status_class'] = 'badge-success';
-            } elseif ($progress >= 50) {
-                $p['status'] = 'Sedang Berjalan';
-                $p['status_class'] = 'badge-warning';
-            } else {
-                $p['status'] = 'Belum Lapor';
-                $p['status_class'] = 'badge-warning';
-            }
+
+            // Set status kegiatan (sama dengan global)
+            $p['status_kegiatan'] = $statusKegiatanGlobal;
+            $p['status_kegiatan_class'] = $this->getStatusKegiatanClass($statusKegiatanGlobal);
+
+            // Cek status harian
+            $statusHarian = $this->getStatusHarian(
+                $p['id_pcl'],
+                $statusKegiatanGlobal,
+                $today,
+                $target
+            );
+
+            $p['status_harian'] = $statusHarian['text'];
+            $p['status_harian_class'] = $statusHarian['class'];
+            $p['realisasi_hari_ini'] = $statusHarian['realisasi_hari_ini'];
+            $p['target_harian'] = $statusHarian['target_harian'];
         }
 
         return $this->response->setJSON([
             'success' => true,
             'data' => $petugas
         ]);
+    }
+
+    // Helper: Get Status Kegiatan Class
+    private function getStatusKegiatanClass($status)
+    {
+        switch ($status) {
+            case 'Sedang Berjalan':
+                return 'badge-success';
+            case 'Belum Dimulai':
+                return 'badge-warning';
+            case 'Selesai':
+                return 'badge-secondary';
+            default:
+                return 'badge-secondary';
+        }
+    }
+
+    // Helper: Get Status Harian
+    private function getStatusHarian($idPCL, $statusKegiatan, $today, $targetTotal)
+    {
+        // Jika kegiatan belum dimulai atau sudah selesai
+        if ($statusKegiatan !== 'Sedang Berjalan') {
+            return [
+                'text' => 'Tidak Perlu Lapor',
+                'class' => 'badge-secondary',
+                'realisasi_hari_ini' => 0,
+                'target_harian' => 0
+            ];
+        }
+
+        // Cek apakah sudah lapor hari ini
+        $laporanHariIni = $this->db->query("
+            SELECT jumlah_realisasi_absolut
+            FROM pantau_progress
+            WHERE id_pcl = ?
+            AND DATE(created_at) = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        ", [$idPCL, $today])->getRowArray();
+
+        // Get target harian dari kurva_petugas
+        $targetHarian = $this->db->query("
+            SELECT target_harian_absolut
+            FROM kurva_petugas
+            WHERE id_pcl = ?
+            AND tanggal_target = ?
+            AND is_hari_kerja = 1
+        ", [$idPCL, $today])->getRowArray();
+
+        $targetHarianValue = $targetHarian ? (int) $targetHarian['target_harian_absolut'] : 0;
+
+        // Jika belum lapor
+        if (!$laporanHariIni) {
+            return [
+                'text' => 'Belum Lapor',
+                'class' => 'badge-danger',
+                'realisasi_hari_ini' => 0,
+                'target_harian' => $targetHarianValue
+            ];
+        }
+
+        $realisasiHariIni = (int) $laporanHariIni['jumlah_realisasi_absolut'];
+
+        // Jika tidak ada target harian (hari libur atau belum ada kurva)
+        if ($targetHarianValue === 0) {
+            return [
+                'text' => 'Sudah Lapor',
+                'class' => 'badge-success',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => 0
+            ];
+        }
+
+        // Bandingkan dengan target harian
+        if ($realisasiHariIni < $targetHarianValue) {
+            return [
+                'text' => 'Di Bawah Target',
+                'class' => 'badge-warning',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => $targetHarianValue
+            ];
+        } elseif ($realisasiHariIni > $targetHarianValue) {
+            return [
+                'text' => 'Melebihi Target',
+                'class' => 'badge-info',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => $targetHarianValue
+            ];
+        } else {
+            return [
+                'text' => 'Sesuai Target',
+                'class' => 'badge-success',
+                'realisasi_hari_ini' => $realisasiHariIni,
+                'target_harian' => $targetHarianValue
+            ];
+        }
     }
 }
