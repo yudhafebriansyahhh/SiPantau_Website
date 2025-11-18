@@ -195,14 +195,42 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
     $routes->get('detail-proses', 'PemantauProv\MasterKegiatanDetailProsesController::index');
     $routes->get('kegiatan-wilayah-list', 'PemantauProv\MasterKegiatanWilayahController::index');
 
-    // ===== Data Petugas (UPDATED) =====
+    // ===== Data Petugas =====
     $routes->get('data-petugas', 'PemantauProv\DataPetugasController::index');
 
+    // ===== Laporan Petugas Routes =====
     $routes->get('laporan-petugas', 'PemantauProv\LaporanPetugasController::index');
     $routes->get('laporan-petugas/export-csv', 'PemantauProv\LaporanPetugasController::exportCSV');
 
-    // $routes->get('laporan-petugas', 'PemantauController::LaporanPetugas');
-    // $routes->get('laporan-petugas/detail/(:num)', 'PemantauController::::detailLaporanPetugas/$1');
+    // ===== Detail Petugas Routes =====
+    $routes->get('detail-petugas/(:num)', 'PemantauProv\DetailPetugasController::index/$1');
+    $routes->get('detail-petugas/get-pantau-progress', 'PemantauProv\DetailPetugasController::getPantauProgress');
+    $routes->get('detail-petugas/get-laporan-transaksi', 'PemantauProv\DetailPetugasController::getLaporanTransaksi');
+
+});
+
+// ================== PEMANTAU KABUPATEN (id_role = 3) ==================
+$routes->group('pemantau-kabupaten', ['filter' => 'role:3'], static function ($routes) {
+    // ===== Dashboard =====
+    $routes->get('/', 'PemantauKab\DashboardController::index');
+    $routes->get('kurva-kabupaten', 'PemantauKab\DashboardController::getKurvaKabupaten');
+    $routes->get('get-petugas', 'PemantauKab\DashboardController::getPetugas');
+    
+    // ===== Kegiatan Wilayah =====
+    $routes->get('kegiatan-wilayah', 'PemantauKab\MasterKegiatanWilayahController::index');
+    
+    // ===== Data Petugas =====
+    $routes->get('data-petugas', 'PemantauKab\DataPetugasController::index');
+
+    // ===== Laporan Petugas Routes =====
+    $routes->get('laporan-petugas', 'PemantauKab\LaporanPetugasController::index');
+    $routes->get('laporan-petugas/export-csv', 'PemantauKab\LaporanPetugasController::exportCSV');
+
+    // ===== Detail Petugas Routes =====
+    $routes->get('detail-petugas/(:num)', 'PemantauKab\DetailPetugasController::index/$1');
+    $routes->get('detail-petugas/get-pantau-progress', 'PemantauKab\DetailPetugasController::getPantauProgress');
+    $routes->get('detail-petugas/get-laporan-transaksi', 'PemantauKab\DetailPetugasController::getLaporanTransaksi');
+
 });
 
 // ================== API AUTH LOGIN ==================

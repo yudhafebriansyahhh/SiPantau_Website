@@ -341,8 +341,8 @@ class LoginController extends BaseController
                     return redirect()->to('/adminsurvei-kab');
                 }
                 // Pemantau Kabupaten
-                return redirect()->to('/pemantau-provinsi')->with('info', 'Dashboard Pemantau Kabupaten belum tersedia.');
-
+                return redirect()->to('/pemantau-kabupaten');
+                
             default:
                 session()->setFlashdata('error', 'Role tidak dikenali atau tidak memiliki akses ke sistem web.');
                 return redirect()->to('/login');

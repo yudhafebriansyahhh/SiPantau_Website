@@ -1,10 +1,10 @@
-<?= $this->extend('layouts/pemantau_provinsi_layout') ?>
+<?= $this->extend('layouts/pemantau_kabupaten_layout') ?>
 
 <?= $this->section('content') ?>
 
 <!-- Back Button & Title -->
 <div class="mb-6">
-    <a href="<?= base_url('pemantau-provinsi/laporan-petugas') ?>" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+    <a href="<?= base_url('pemantau-kabupaten/laporan-petugas') ?>" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
         <i class="fas fa-arrow-left mr-2"></i>
         <span>Kembali</span>
     </a>
@@ -197,7 +197,7 @@
 
 <script>
 const idPCL = <?= $idPCL ?>;
-const baseUrl = '<?= base_url('pemantau-provinsi/detail-petugas') ?>';
+const baseUrl = '<?= base_url('pemantau-kabupaten/detail-petugas') ?>';
 
 // Kurva Data dari PHP
 const kurvaData = <?= json_encode($kurvaData) ?>;

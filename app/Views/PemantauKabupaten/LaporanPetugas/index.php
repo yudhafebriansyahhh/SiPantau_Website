@@ -1,14 +1,15 @@
-<?= $this->extend('layouts/pemantau_provinsi_layout') ?>
+<?= $this->extend('layouts/pemantau_kabupaten_layout') ?>
 
 <?= $this->section('content') ?>
 
 <!-- Back Button & Title -->
 <div class="mb-6">
-    <a href="<?= base_url('pemantau-provinsi') ?>" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-3">
+    <a href="<?= base_url('pemantau-kabupaten') ?>" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-3">
         <i class="fas fa-arrow-left mr-2"></i>
         <span>Back</span>
     </a>
     <h1 class="text-3xl font-bold text-gray-900">Laporan Petugas</h1>
+    <p class="text-sm text-gray-600 mt-1">Kabupaten: <span class="font-semibold"><?= esc($kabupaten['nama_kabupaten'] ?? '-') ?></span></p>
 </div>
 
 <!-- Main Card -->
@@ -16,7 +17,7 @@
     <div class="p-6">
         <!-- Filter Section -->
         <div class="mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <!-- Filter Kegiatan Proses -->
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kegiatan Proses:</label>
@@ -30,27 +31,6 @@
                                 <option value="<?= $proses['id_kegiatan_detail_proses'] ?>" 
                                     <?= ($selectedKegiatanProses == $proses['id_kegiatan_detail_proses']) ? 'selected' : '' ?>>
                                     <?= esc($proses['nama_kegiatan_detail_proses']) ?> (<?= esc($proses['nama_kegiatan_detail']) ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Filter Kabupaten -->
-                <div class="md:col-span-1">
-                    <label class="block text-sm font-medium text-gray-700 mb-1 margin">Filter Kabupaten:</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-filter text-gray-400"></i>
-                        </div>
-                        <select id="kabupatenFilter" class="input-field w-full pl-10 pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer">
-                            <option value="">-- Semua Kabupaten --</option>
-                            <?php foreach ($kabupatenList as $kab): ?>
-                                <option value="<?= $kab['id_kabupaten'] ?>" <?= ($selectedKabupaten == $kab['id_kabupaten']) ? 'selected' : '' ?>>
-                                    <?= esc($kab['nama_kabupaten']) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -75,7 +55,7 @@
 
             <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <!-- Search Box -->
-                <div class="w-full sm:w-64">
+                <div class="w-full sm:w-96">
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
@@ -142,7 +122,7 @@
                                     <?= $no++ ?>
                                 </td>
                                 <td class="col-nama sticky bg-white px-4 py-3 text-sm border-r border-gray-200">
-                                    <a href="<?= base_url('pemantau-provinsi/detail-petugas/' . $petugas['id_pcl']) ?>" class="block hover:bg-gray-50 -mx-4 -my-3 px-4 py-3 transition-colors duration-150">
+                                    <a href="<?= base_url('pemantau-kabupaten/detail-petugas/' . $petugas['id_pcl']) ?>" class="block hover:bg-gray-50 -mx-4 -my-3 px-4 py-3 transition-colors duration-150">
                                         <div class="font-medium text-blue-600 hover:text-blue-800 hover:underline"><?= esc($petugas['nama_user']) ?></div>
                                         <div class="text-xs text-gray-500"><?= esc($petugas['nama_kabupaten']) ?></div>
                                     </a>
@@ -204,30 +184,26 @@
 <script>
 function updateFilters() {
     const kegiatanProses = document.getElementById('filterKegiatanProses').value;
-    const kabupaten = document.getElementById('kabupatenFilter').value;
     const perPage = document.getElementById('perPageSelect').value;
     const search = document.getElementById('searchInput').value;
     
     const params = new URLSearchParams();
     if (kegiatanProses) params.append('kegiatan_proses', kegiatanProses);
-    if (kabupaten) params.append('kabupaten', kabupaten);
     if (perPage) params.append('perPage', perPage);
     if (search) params.append('search', search);
     
-    window.location.href = '<?= base_url('pemantau-provinsi/laporan-petugas') ?>?' + params.toString();
+    window.location.href = '<?= base_url('pemantau-kabupaten/laporan-petugas') ?>?' + params.toString();
 }
 
 function exportCSV() {
     const kegiatanProses = document.getElementById('filterKegiatanProses').value;
-    const kabupaten = document.getElementById('kabupatenFilter').value;
     const search = document.getElementById('searchInput').value;
     
     const params = new URLSearchParams();
     if (kegiatanProses) params.append('kegiatan_proses', kegiatanProses);
-    if (kabupaten) params.append('kabupaten', kabupaten);
     if (search) params.append('search', search);
     
-    window.location.href = '<?= base_url('pemantau-provinsi/laporan-petugas/export-csv') ?>?' + params.toString();
+    window.location.href = '<?= base_url('pemantau-kabupaten/laporan-petugas/export-csv') ?>?' + params.toString();
 }
 
 // Handle search dengan debounce
@@ -249,7 +225,6 @@ document.getElementById('searchInput').addEventListener('keypress', function(e) 
 
 // Auto update ketika filter berubah
 document.getElementById('filterKegiatanProses').addEventListener('change', updateFilters);
-document.getElementById('kabupatenFilter').addEventListener('change', updateFilters);
 document.getElementById('perPageSelect').addEventListener('change', updateFilters);
 </script>
 
