@@ -45,6 +45,6 @@ class SiPantauFeedback extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('sipantau_feedback');
+        $this->forge->dropTable('sipantau_feedback_user');
     }
 }

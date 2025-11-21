@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class FeedbackUserModel extends Model
 {
-    protected $table            = 'sipantau_feedback';
+    protected $table            = 'sipantau_feedback_user';
     protected $primaryKey       = 'id_feedback';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
