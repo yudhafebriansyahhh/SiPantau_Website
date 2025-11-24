@@ -256,5 +256,6 @@ $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static f
         $routes->get('feedback', 'FeedBackUserController::index');
         $routes->post('feedback', 'FeedBackUserController::create');
         $routes->get('kurva-petugas/(:num)', 'KurvaPetugasController::show/$1');
+        $routes->get('pcl/(:num)', 'PmlController::index/$1');        
 
     });
