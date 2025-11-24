@@ -20,21 +20,21 @@
 
 <!-- Alert Messages -->
 <?php if (session()->getFlashdata('success')): ?>
-<div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
-    <div class="flex items-center">
-        <i class="fas fa-check-circle text-green-500 mr-3"></i>
-        <p class="text-green-700"><?= session()->getFlashdata('success') ?></p>
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+            <p class="text-green-700"><?= session()->getFlashdata('success') ?></p>
+        </div>
     </div>
-</div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-<div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-    <div class="flex items-center">
-        <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
-        <p class="text-red-700"><?= session()->getFlashdata('error') ?></p>
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+            <p class="text-red-700"><?= session()->getFlashdata('error') ?></p>
+        </div>
     </div>
-</div>
 <?php endif; ?>
 
 <!-- Stats Cards -->
@@ -83,65 +83,66 @@
 <div class="card">
     <!-- Filters -->
     <div class="mb-6">
-        <form method="GET" action="<?= base_url('superadmin/feedback') ?>" class="flex flex-col md:flex-row gap-4">
+        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
             <!-- Search -->
-            <div class="flex-1">
-                <div class="relative">
-                    <input type="text" 
-                           name="search" 
-                           value="<?= esc($filters['search'] ?? '') ?>"
-                           placeholder="Cari nama pengguna atau feedback..." 
-                           class="input-field pl-10">
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                </div>
+            <div class="relative flex-1 w-full sm:w-auto">
+                <input type="text" id="searchInput" placeholder="Cari nama pengguna atau feedback..."
+                    class="input-field pl-10 w-full" onkeyup="applyFilters()">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
 
             <!-- Filter Kabupaten -->
-            <select name="id_kabupaten" class="input-field">
-                <option value="">Semua Kabupaten</option>
-                <?php foreach ($kabupatens as $kab): ?>
-                    <option value="<?= $kab['id_kabupaten'] ?>" 
-                            <?= ($filters['id_kabupaten'] ?? '') == $kab['id_kabupaten'] ? 'selected' : '' ?>>
-                        <?= esc($kab['nama_kabupaten']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <div class="w-full sm:w-auto sm:min-w-[200px]">
+                <select id="kabupatenFilter" class="input-field w-full" onchange="applyFilters()">
+                    <option value="">Semua Kabupaten</option>
+                    <?php foreach ($kabupatens as $kab): ?>
+                        <option value="<?= $kab['id_kabupaten'] ?>">
+                            <?= esc($kab['nama_kabupaten']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-            <!-- Buttons -->
-            <button type="submit" class="btn-primary">
-                <i class="fas fa-filter mr-2"></i>Filter
-            </button>
-            <a href="<?= base_url('superadmin/feedback') ?>" class="btn-secondary">
-                <i class="fas fa-redo mr-2"></i>Reset
-            </a>
-        </form>
+            <!-- Reset Button -->
+            <div class="w-full sm:w-auto">
+                <button onclick="resetFilters()"
+                    class="btn-secondary inline-flex items-center justify-center w-full sm:w-auto whitespace-nowrap">
+                    <i class="fas fa-redo mr-2"></i>Reset
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Table -->
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th
+                        class="px-4 py-3 border border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
                         No
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                        class="px-4 py-3 border border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-64">
                         Penerima
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                        class="px-4 py-3 border border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Feedback
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                        class="px-4 py-3 border border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-64 whitespace-nowrap">
                         Tanggal
                     </th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                        class="px-4 py-3 border border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                         Aksi
                     </th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-gray-100" id="tableBody">
                 <?php if (empty($feedbacks)): ?>
-                    <tr>
+                    <tr id="emptyRow">
                         <td colspan="5" class="px-4 py-12 text-center">
                             <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
                             <p class="text-gray-500">Belum ada feedback</p>
@@ -149,13 +150,16 @@
                     </tr>
                 <?php else: ?>
                     <?php foreach ($feedbacks as $index => $fb): ?>
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-4 py-4 text-sm text-gray-900">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150 data-row"
+                            data-search="<?= strtolower(esc($fb['nama_user']) . ' ' . esc($fb['feedback']) . ' ' . esc($fb['nama_kabupaten'])) ?>"
+                            data-kabupaten="<?= $fb['id_kabupaten'] ?? '' ?>">
+                            <td class="px-4 py-4 border border-gray-200 text-sm text-gray-900 row-number">
                                 <?= $index + 1 ?>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border border-gray-200">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <div
+                                        class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                                         <?php
                                         $initials = '';
                                         $nameParts = explode(' ', $fb['nama_user']);
@@ -173,22 +177,20 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border border-gray-200">
                                 <p class="text-sm text-gray-900 line-clamp-2"><?= esc($fb['feedback']) ?></p>
                             </td>
-                            <td class="px-4 py-4 text-sm text-gray-600">
+                            <td class="px-4 py-4 border border-gray-200 text-sm text-center text-gray-600 whitespace-nowrap">
                                 <?= date('d M Y H:i', strtotime($fb['created_at'])) ?>
                             </td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="<?= base_url('superadmin/feedback/edit/' . $fb['id_feedback']) ?>" 
-                                       class="text-blue-600 hover:text-blue-800 transition-colors"
-                                       title="Edit">
+                            <td class="px-4 py-4 border border-gray-200">
+                                <div class="flex items-center justify-center gap-6">
+                                    <a href="<?= base_url('superadmin/feedback/edit/' . $fb['id_feedback']) ?>"
+                                        class="text-blue-600 hover:text-blue-800 transition-colors" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button onclick="confirmDelete(<?= $fb['id_feedback'] ?>)" 
-                                            class="text-red-600 hover:text-red-800 transition-colors"
-                                            title="Hapus">
+                                    <button onclick="confirmDelete(<?= $fb['id_feedback'] ?>)"
+                                        class="text-red-600 hover:text-red-800 transition-colors" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -199,32 +201,115 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination Info -->
+    <?php if (!empty($feedbacks)): ?>
+        <div class="mt-6 flex items-center justify-between">
+            <p class="text-sm text-gray-600" id="paginationInfo">
+                Menampilkan data <span class="font-medium" id="startRange">1</span>-<span class="font-medium"
+                    id="endRange">0</span> dari <span class="font-medium" id="totalData">0</span> data
+            </p>
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>
-function confirmDelete(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus feedback ini?')) {
-        fetch(`<?= base_url('superadmin/feedback/delete/') ?>${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat menghapus feedback');
-        });
+    function confirmDelete(id) {
+        if (confirm('Apakah Anda yakin ingin menghapus feedback ini?')) {
+            fetch(`<?= base_url('superadmin/feedback/delete/') ?>${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat menghapus feedback');
+                });
+        }
     }
-}
+
+    // Apply filters without page refresh
+    function applyFilters() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const kabupatenFilter = document.getElementById('kabupatenFilter').value;
+
+        const rows = document.querySelectorAll('#tableBody tr.data-row');
+        let visibleCount = 0;
+        const totalRows = rows.length;
+
+        rows.forEach((row) => {
+            const searchData = row.getAttribute('data-search') || '';
+            const rowKabupaten = row.getAttribute('data-kabupaten') || '';
+
+            let showRow = true;
+
+            // Filter by search
+            if (searchInput && !searchData.includes(searchInput)) {
+                showRow = false;
+            }
+
+            // Filter by kabupaten
+            if (kabupatenFilter && rowKabupaten !== kabupatenFilter) {
+                showRow = false;
+            }
+
+            // Show/hide row
+            if (showRow) {
+                row.style.display = '';
+                visibleCount++;
+                // Update row number
+                const rowNumber = row.querySelector('.row-number');
+                if (rowNumber) {
+                    rowNumber.textContent = visibleCount;
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update pagination info
+        updatePaginationInfo(visibleCount, totalRows);
+    }
+
+    // Reset all filters
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('kabupatenFilter').value = '';
+        applyFilters();
+    }
+
+    // Update pagination info
+    function updatePaginationInfo(visible, total) {
+        const paginationInfo = document.getElementById('paginationInfo');
+        if (paginationInfo) {
+            const startRange = visible > 0 ? 1 : 0;
+            const endRange = visible;
+
+            document.getElementById('startRange').textContent = startRange;
+            document.getElementById('endRange').textContent = endRange;
+            document.getElementById('totalData').textContent = total;
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        const rows = document.querySelectorAll('#tableBody tr.data-row');
+        const totalRows = rows.length;
+
+        if (totalRows > 0) {
+            updatePaginationInfo(totalRows, totalRows);
+        }
+    });
 </script>
 
 <?= $this->endSection() ?>

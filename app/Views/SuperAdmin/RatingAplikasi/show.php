@@ -63,10 +63,6 @@
 
             <!-- Action Buttons -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-                <button onclick="confirmDelete(<?= $feedback['id_feedback'] ?>)" 
-                        class="btn-secondary text-red-600 hover:bg-red-50 border-red-200">
-                    <i class="fas fa-trash mr-2"></i>Hapus Rating
-                </button>
                 <a href="<?= base_url('superadmin/rating-aplikasi') ?>" class="btn-primary">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
                 </a>
@@ -231,29 +227,6 @@
 </div>
 
 <script>
-function confirmDelete(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus rating ini?')) {
-        fetch(`<?= base_url('superadmin/rating-aplikasi/delete/') ?>${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                window.location.href = '<?= base_url('superadmin/rating-aplikasi') ?>';
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat menghapus rating');
-        });
-    }
-}
-</script>
+
 
 <?= $this->endSection() ?>

@@ -113,13 +113,8 @@
     <!-- Rating Trend Line Chart -->
     <div class="card">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Trend Rating</h3>
+            <h3 class="text-lg font-semibold text-gray-900">Trend Rating Kumulatif</h3>
             <div class="flex gap-2">
-                <button onclick="changeTrendView('day')" 
-                        class="trend-btn px-3 py-1 text-xs rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors"
-                        data-view="day">
-                    Hari
-                </button>
                 <button onclick="changeTrendView('month')" 
                         class="trend-btn px-3 py-1 text-xs rounded-lg border border-gray-300 bg-blue-50 border-blue-300 text-blue-600"
                         data-view="month">
@@ -178,104 +173,95 @@
 <div class="card">
     <!-- Filters -->
     <div class="mb-6">
-        <form method="GET" action="<?= base_url('superadmin/rating-aplikasi') ?>" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Search -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cari</label>
-                    <div class="relative">
-                        <input type="text" 
-                               name="search" 
-                               value="<?= esc($filters['search'] ?? '') ?>"
-                               placeholder="Nama user atau feedback..." 
-                               class="input-field pl-10">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-                </div>
-
-                <!-- Filter Rating -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-                    <select name="rating" class="input-field">
-                        <option value="">Semua Rating</option>
-                        <?php for($i = 5; $i >= 1; $i--): ?>
-                            <option value="<?= $i ?>" <?= ($filters['rating'] ?? '') == $i ? 'selected' : '' ?>>
-                                <?= $i ?> Bintang
-                            </option>
-                        <?php endfor; ?>
-                    </select>
-                </div>
-
-                <!-- Filter Kabupaten -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Kabupaten</label>
-                    <select name="id_kabupaten" class="input-field">
-                        <option value="">Semua Kabupaten</option>
-                        <?php foreach ($kabupatens as $kab): ?>
-                            <option value="<?= $kab['id_kabupaten'] ?>" 
-                                    <?= ($filters['id_kabupaten'] ?? '') == $kab['id_kabupaten'] ? 'selected' : '' ?>>
-                                <?= esc($kab['nama_kabupaten']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <!-- Date Range -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
-                    <div class="flex gap-2">
-                        <input type="date" 
-                               name="date_from" 
-                               value="<?= esc($filters['date_from'] ?? '') ?>"
-                               class="input-field"
-                               placeholder="Dari">
-                        <input type="date" 
-                               name="date_to" 
-                               value="<?= esc($filters['date_to'] ?? '') ?>"
-                               class="input-field"
-                               placeholder="Sampai">
-                    </div>
-                </div>
+        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <!-- Search -->
+            <div class="relative flex-1 w-full sm:w-auto">
+                <input type="text" 
+                       id="searchInput"
+                       placeholder="Nama user atau feedback..." 
+                       class="input-field pl-10 w-full"
+                       onkeyup="applyFilters()">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
 
-            <!-- Buttons -->
-            <div class="flex gap-2">
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-filter mr-2"></i>Filter
-                </button>
-                <a href="<?= base_url('superadmin/rating-aplikasi') ?>" class="btn-secondary">
+            <!-- Filter Rating -->
+            <div class="w-full sm:w-auto sm:min-w-[180px]">
+                <select id="ratingFilter" class="input-field w-full" onchange="applyFilters()">
+                    <option value="">Semua Rating</option>
+                    <?php for($i = 5; $i >= 1; $i--): ?>
+                        <option value="<?= $i ?>">
+                            <?= $i ?> Bintang
+                        </option>
+                    <?php endfor; ?>
+                </select>
+            </div>
+
+            <!-- Filter Kabupaten -->
+            <div class="w-full sm:w-auto sm:min-w-[200px]">
+                <select id="kabupatenFilter" class="input-field w-full" onchange="applyFilters()">
+                    <option value="">Semua Kabupaten</option>
+                    <?php foreach ($kabupatens as $kab): ?>
+                        <option value="<?= $kab['id_kabupaten'] ?>">
+                            <?= esc($kab['nama_kabupaten']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Dari Tanggal -->
+            <div class="w-full sm:w-auto sm:min-w-[160px]">
+                <input type="date" 
+                       id="dateFromFilter"
+                       placeholder="Dari Tanggal"
+                       class="input-field w-full"
+                       onchange="applyFilters()">
+            </div>
+
+            <!-- Sampai Tanggal -->
+            <div class="w-full sm:w-auto sm:min-w-[160px]">
+                <input type="date" 
+                       id="dateToFilter"
+                       placeholder="Sampai Tanggal"
+                       class="input-field w-full"
+                       onchange="applyFilters()">
+            </div>
+
+            <!-- Reset Button -->
+            <div class="w-full sm:w-auto">
+                <button onclick="resetFilters()" 
+                   class="btn-secondary inline-flex items-center justify-center w-full sm:w-auto whitespace-nowrap">
                     <i class="fas fa-redo mr-2"></i>Reset
-                </a>
+                </button>
             </div>
-        </form>
+        </div>
     </div>
 
     <!-- Table -->
     <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full" id="ratingTable">
             <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         No
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         User
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Rating
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Feedback
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Tanggal
                     </th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Aksi
                     </th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-gray-100" id="tableBody">
                 <?php if (empty($feedbacks)): ?>
                     <tr>
                         <td colspan="6" class="px-4 py-12 text-center">
@@ -285,11 +271,15 @@
                     </tr>
                 <?php else: ?>
                     <?php foreach ($feedbacks as $index => $fb): ?>
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-4 py-4 text-sm text-gray-900">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150" 
+                            data-search="<?= strtolower(esc($fb['nama_user']) . ' ' . esc($fb['feedback']) . ' ' . esc($fb['nama_kabupaten'])) ?>"
+                            data-rating="<?= $fb['rating'] ?>"
+                            data-kabupaten="<?= $fb['id_kabupaten'] ?? '' ?>"
+                            data-date="<?= date('Y-m-d', strtotime($fb['created_at'])) ?>">
+                            <td class="px-4 py-4 border-r border-gray-200 text-sm text-gray-900">
                                 <?= $index + 1 ?>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                                         <?php
@@ -306,9 +296,9 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-2xl font-bold text-gray-900"><?= $fb['rating'] ?></span>
+                                    <!-- <span class="text-2xl font-bold text-gray-900"><?= $fb['rating'] ?></span> -->
                                     <div class="text-yellow-500">
                                         <?php for($i = 1; $i <= 5; $i++): ?>
                                             <i class="fas fa-star<?= $i <= $fb['rating'] ? '' : '-o' ?>"></i>
@@ -316,25 +306,20 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <p class="text-sm text-gray-900 line-clamp-2"><?= esc($fb['feedback']) ?></p>
                             </td>
-                            <td class="px-4 py-4 text-sm text-gray-600">
+                            <td class="px-4 py-4 border-r border-gray-200 text-sm text-gray-600">
                                 <?= date('d M Y', strtotime($fb['created_at'])) ?><br>
                                 <span class="text-xs text-gray-400"><?= date('H:i', strtotime($fb['created_at'])) ?></span>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 border-r border-gray-200">
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="<?= base_url('superadmin/rating-aplikasi/show/' . $fb['id_feedback']) ?>" 
                                        class="text-blue-600 hover:text-blue-800 transition-colors"
                                        title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <button onclick="confirmDelete(<?= $fb['id_feedback'] ?>)" 
-                                            class="text-red-600 hover:text-red-800 transition-colors"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -342,6 +327,13 @@
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination Info -->
+    <div class="mt-6 flex items-center justify-between">
+        <p class="text-sm text-gray-600" id="paginationInfo">
+            Menampilkan data <span class="font-medium" id="startRange">1</span>-<span class="font-medium" id="endRange">0</span> dari <span class="font-medium" id="totalData">0</span> data
+        </p>
     </div>
 </div>
 
@@ -460,29 +452,44 @@ function renderTrendChart(view = 'month') {
     let processedData = [];
     
     if (view === 'month') {
-        // Gunakan data asli (per bulan)
-        processedData = trendData.map(d => ({
-            date: d.bulan,
-            total: parseInt(d.total),
-            avg: parseFloat(d.avg_rating)
-        })).reverse();
+        // Gunakan data asli (per bulan) dan hitung kumulatif
+        const reversedData = [...trendData].reverse();
+        let cumulativeTotal = 0;
+        let cumulativeSum = 0;
+        
+        processedData = reversedData.map(d => {
+            cumulativeTotal += parseInt(d.total);
+            cumulativeSum += parseFloat(d.avg_rating) * parseInt(d.total);
+            
+            return {
+                date: d.bulan,
+                total: cumulativeTotal,
+                avg: cumulativeTotal > 0 ? cumulativeSum / cumulativeTotal : 0
+            };
+        });
     } else if (view === 'year') {
-        // Group by year
+        // Group by year untuk kumulatif
         const yearMap = {};
-        trendData.forEach(d => {
+        const sortedData = [...trendData].sort((a, b) => a.bulan.localeCompare(b.bulan));
+        
+        let cumulativeTotal = 0;
+        let cumulativeSum = 0;
+        
+        sortedData.forEach(d => {
             const year = d.bulan.split('-')[0];
-            if (!yearMap[year]) {
-                yearMap[year] = { total: 0, sum: 0, count: 0 };
-            }
-            yearMap[year].total += parseInt(d.total);
-            yearMap[year].sum += parseFloat(d.avg_rating) * parseInt(d.total);
-            yearMap[year].count += parseInt(d.total);
+            cumulativeTotal += parseInt(d.total);
+            cumulativeSum += parseFloat(d.avg_rating) * parseInt(d.total);
+            
+            yearMap[year] = {
+                total: cumulativeTotal,
+                avg: cumulativeTotal > 0 ? cumulativeSum / cumulativeTotal : 0
+            };
         });
         
         processedData = Object.keys(yearMap).sort().map(year => ({
             date: year,
             total: yearMap[year].total,
-            avg: yearMap[year].count > 0 ? yearMap[year].sum / yearMap[year].count : 0
+            avg: yearMap[year].avg
         }));
     }
     
@@ -501,12 +508,12 @@ function renderTrendChart(view = 'month') {
     const options = {
         series: [
             {
-                name: 'Jumlah Rating',
-                data: processedData.map(d => d.total)
-            },
-            {
-                name: 'Rata-rata Rating',
-                data: processedData.map(d => parseFloat(d.avg).toFixed(2))
+                name: 'Rata-rata Rating Kumulatif',
+                data: processedData.map((d, index) => ({
+                    x: categories[index],
+                    y: parseFloat(d.avg).toFixed(2),
+                    jumlah: d.total
+                }))
             }
         ],
         chart: {
@@ -531,18 +538,18 @@ function renderTrendChart(view = 'month') {
             }
         },
         stroke: {
-            width: [3, 3],
+            width: 3,
             curve: 'smooth'
         },
-        colors: ['#3B82F6', '#EAB308'],
+        colors: ['#EAB308'],
         markers: {
-            size: [4, 4],
+            size: 5,
             hover: {
-                size: 6
+                size: 7
             }
         },
         xaxis: {
-            categories: categories,
+            type: 'category',
             labels: {
                 rotate: -45,
                 style: {
@@ -550,42 +557,25 @@ function renderTrendChart(view = 'month') {
                 }
             }
         },
-        yaxis: [
-            {
-                title: {
-                    text: 'Jumlah Rating',
-                    style: {
-                        fontSize: '12px'
-                    }
-                },
-                labels: {
-                    formatter: function(value) {
-                        return Math.floor(value);
-                    }
+        yaxis: {
+            title: {
+                text: 'Rata-rata Rating Kumulatif (★)',
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 500
                 }
             },
-            {
-                opposite: true,
-                title: {
-                    text: 'Rata-rata (★)',
-                    style: {
-                        fontSize: '12px'
-                    }
-                },
-                min: 0,
-                max: 5,
-                tickAmount: 5,
-                labels: {
-                    formatter: function(value) {
-                        return value.toFixed(1);
-                    }
+            min: 0,
+            max: 5,
+            tickAmount: 5,
+            labels: {
+                formatter: function(value) {
+                    return value.toFixed(1);
                 }
             }
-        ],
+        },
         legend: {
-            position: 'top',
-            horizontalAlign: 'left',
-            offsetY: 0
+            show: false
         },
         grid: {
             borderColor: '#f3f4f6',
@@ -594,20 +584,22 @@ function renderTrendChart(view = 'month') {
             }
         },
         tooltip: {
-            shared: true,
-            intersect: false,
-            y: [
-                {
-                    formatter: function(value) {
-                        return value + ' rating';
-                    }
-                },
-                {
-                    formatter: function(value) {
-                        return value + ' ★';
-                    }
-                }
-            ]
+            custom: function({series, seriesIndex, dataPointIndex, w}) {
+                const data = w.config.series[0].data[dataPointIndex];
+                return '<div class="px-3 py-2">' +
+                    '<div class="text-xs font-semibold text-gray-700 mb-1">' + data.x + '</div>' +
+                    '<div class="flex items-center gap-2 mb-1">' +
+                        '<span class="w-2 h-2 rounded-full bg-yellow-500"></span>' +
+                        '<span class="text-xs text-gray-600">Rata-rata Kumulatif:</span>' +
+                        '<span class="text-xs font-semibold text-gray-900">' + data.y + ' ★</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-2">' +
+                        '<span class="w-2 h-2 rounded-full bg-blue-500"></span>' +
+                        '<span class="text-xs text-gray-600">Total Rating s/d periode:</span>' +
+                        '<span class="text-xs font-semibold text-gray-900">' + data.jumlah + ' rating</span>' +
+                    '</div>' +
+                '</div>';
+            }
         }
     };
 
@@ -638,36 +630,96 @@ function changeTrendView(view) {
     renderTrendChart(view);
 }
 
-// Confirm delete
-function confirmDelete(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus rating ini?')) {
-        fetch(`<?= base_url('superadmin/rating-aplikasi/delete/') ?>${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat menghapus rating');
-        });
-    }
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     renderDistributionChart();
     renderTrendChart('month');
+    applyFilters(); // Initialize filter on load
 });
+
+// Apply filters without page refresh
+function applyFilters() {
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const ratingFilter = document.getElementById('ratingFilter').value;
+    const kabupatenFilter = document.getElementById('kabupatenFilter').value;
+    const dateFromFilter = document.getElementById('dateFromFilter').value;
+    const dateToFilter = document.getElementById('dateToFilter').value;
+
+    const rows = document.querySelectorAll('#tableBody tr');
+    let visibleCount = 0;
+    let totalRows = rows.length;
+
+    rows.forEach((row, index) => {
+        // Skip empty state row
+        if (row.querySelector('td[colspan="6"]')) {
+            return;
+        }
+
+        const searchData = row.getAttribute('data-search') || '';
+        const rowRating = row.getAttribute('data-rating') || '';
+        const rowKabupaten = row.getAttribute('data-kabupaten') || '';
+        const rowDate = row.getAttribute('data-date') || '';
+
+        let showRow = true;
+
+        // Filter by search
+        if (searchInput && !searchData.includes(searchInput)) {
+            showRow = false;
+        }
+
+        // Filter by rating
+        if (ratingFilter && rowRating !== ratingFilter) {
+            showRow = false;
+        }
+
+        // Filter by kabupaten
+        if (kabupatenFilter && rowKabupaten !== kabupatenFilter) {
+            showRow = false;
+        }
+
+        // Filter by date range
+        if (dateFromFilter && rowDate < dateFromFilter) {
+            showRow = false;
+        }
+
+        if (dateToFilter && rowDate > dateToFilter) {
+            showRow = false;
+        }
+
+        // Show/hide row
+        if (showRow) {
+            row.style.display = '';
+            visibleCount++;
+            // Update row number
+            row.querySelector('td:first-child').textContent = visibleCount;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Update pagination info
+    updatePaginationInfo(visibleCount, totalRows);
+}
+
+// Reset all filters
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('ratingFilter').value = '';
+    document.getElementById('kabupatenFilter').value = '';
+    document.getElementById('dateFromFilter').value = '';
+    document.getElementById('dateToFilter').value = '';
+    applyFilters();
+}
+
+// Update pagination info
+function updatePaginationInfo(visible, total) {
+    const startRange = visible > 0 ? 1 : 0;
+    const endRange = visible;
+    
+    document.getElementById('startRange').textContent = startRange;
+    document.getElementById('endRange').textContent = endRange;
+    document.getElementById('totalData').textContent = total;
+}
 </script>
 
 <?= $this->endSection() ?>

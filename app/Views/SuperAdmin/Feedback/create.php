@@ -41,31 +41,49 @@
 
                 <!-- Pilih User -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Pilih Pengguna <span class="text-red-500">*</span>
-                    </label>
-                    
-                    <!-- Search User -->
-                    <div class="relative mb-3">
-                        <input type="text" 
-                               id="searchUser" 
-                               placeholder="Cari berdasarkan nama atau Sobat ID..."
-                               class="input-field pl-10">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-
-                    <!-- User Select -->
-                    <select name="sobat_id" id="sobatId" class="input-field" required onchange="loadUserDetail()">
-                        <option value="">-- Pilih Pengguna --</option>
-                        <?php foreach ($users as $user): ?>
-                            <option value="<?= $user['sobat_id'] ?>" 
-                                    data-name="<?= esc($user['nama_user']) ?>"
-                                    data-kabupaten="<?= esc($user['nama_kabupaten'] ?? '-') ?>"
-                                    <?= old('sobat_id') == $user['sobat_id'] ? 'selected' : '' ?>>
-                                <?= esc($user['sobat_id']) ?> - <?= esc($user['nama_user']) ?> (<?= esc($user['nama_kabupaten'] ?? '-') ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <?php if (empty($users)): ?>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Pilih Pengguna <span class="text-red-500">*</span>
+                        </label>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+                                <p class="text-sm text-yellow-700">Tidak ada pengguna yang tersedia</p>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?= view('components/select_component', [
+                            'label' => 'Pilih Pengguna',
+                            'name' => 'sobat_id',
+                            'id' => 'sobat_id',
+                            'required' => true,
+                            'placeholder' => 'Cari berdasarkan nama atau Sobat ID...',
+                            'options' => $users,
+                            'optionValue' => 'sobat_id',
+                            'optionText' => function($user) {
+                                return esc($user['nama_user']) . ' (' . esc($user['sobat_id']) . ')';
+                            },
+                            'optionDataAttributes' => ['nama_user', 'sobat_id', 'nama_kabupaten'],
+                            'onchange' => 'loadUserDetail()',
+                            'emptyMessage' => 'Tidak ada pengguna yang tersedia',
+                            'enableSearch' => true,
+                            'value' => old('sobat_id')
+                        ]) ?>
+                        
+                        <!-- User Info Preview -->
+                        <div id="userInfoPreview" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hidden">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <span id="userInitialsSmall" class="text-white text-sm font-semibold"></span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900" id="previewNama"></p>
+                                    <p class="text-xs text-gray-600" id="previewKabupaten"></p>
+                                    <p class="text-xs text-gray-500" id="previewSobatId"></p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Feedback -->
@@ -90,7 +108,7 @@
                     <a href="<?= base_url('superadmin/feedback') ?>" class="btn-secondary">
                         <i class="fas fa-times mr-2"></i>Batal
                     </a>
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-primary" <?= empty($users) ? 'disabled' : '' ?>>
                         <i class="fas fa-paper-plane mr-2"></i>Kirim Feedback
                     </button>
                 </div>
@@ -158,41 +176,26 @@
 const feedbackTextarea = document.getElementById('feedback');
 const charCount = document.getElementById('charCount');
 
-feedbackTextarea.addEventListener('input', function() {
-    charCount.textContent = this.value.length;
-});
+if (feedbackTextarea) {
+    feedbackTextarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+    });
 
-// Initialize char count if old value exists
-if (feedbackTextarea.value) {
-    charCount.textContent = feedbackTextarea.value.length;
-}
-
-// Search user
-const searchUser = document.getElementById('searchUser');
-const sobatIdSelect = document.getElementById('sobatId');
-
-searchUser.addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
-    const options = sobatIdSelect.options;
-    
-    for (let i = 1; i < options.length; i++) {
-        const text = options[i].text.toLowerCase();
-        if (text.includes(searchTerm)) {
-            options[i].style.display = '';
-        } else {
-            options[i].style.display = 'none';
-        }
+    // Initialize char count if old value exists
+    if (feedbackTextarea.value) {
+        charCount.textContent = feedbackTextarea.value.length;
     }
-});
+}
 
 // Load user detail
 function loadUserDetail() {
-    const select = document.getElementById('sobatId');
-    const sobatId = select.value;
+    const select = document.getElementById('sobat_id');
+    const sobatId = select ? select.value : null;
     
     if (!sobatId) {
         document.getElementById('userInfoCard').style.display = 'none';
         document.getElementById('placeholderCard').style.display = 'block';
+        document.getElementById('userInfoPreview').classList.add('hidden');
         return;
     }
     
@@ -202,15 +205,16 @@ function loadUserDetail() {
     
     // Get selected option data
     const selectedOption = select.options[select.selectedIndex];
-    const userName = selectedOption.dataset.name;
-    const userKabupaten = selectedOption.dataset.kabupaten;
+    const userName = selectedOption.dataset.nama_user;
+    const userKabupaten = selectedOption.dataset.nama_kabupaten || '-';
     
-    // Update user info
-    document.getElementById('userName').textContent = userName;
-    document.getElementById('userKabupaten').textContent = userKabupaten;
-    document.getElementById('userSobatId').textContent = sobatId;
+    // Update preview card
+    document.getElementById('previewNama').textContent = userName;
+    document.getElementById('previewKabupaten').textContent = userKabupaten;
+    document.getElementById('previewSobatId').textContent = sobatId;
+    document.getElementById('userInfoPreview').classList.remove('hidden');
     
-    // Update initials
+    // Update initials for preview
     const nameParts = userName.split(' ');
     let initials = '';
     if (nameParts.length >= 2) {
@@ -218,6 +222,12 @@ function loadUserDetail() {
     } else {
         initials = userName.substring(0, 2);
     }
+    document.getElementById('userInitialsSmall').textContent = initials.toUpperCase();
+    
+    // Update user info card
+    document.getElementById('userName').textContent = userName;
+    document.getElementById('userKabupaten').textContent = userKabupaten;
+    document.getElementById('userSobatId').textContent = sobatId;
     document.getElementById('userInitials').textContent = initials.toUpperCase();
     
     // Load full user detail via AJAX
@@ -227,6 +237,10 @@ function loadUserDetail() {
             if (data.success) {
                 document.getElementById('userRoles').textContent = data.data.roles_display || '-';
             }
+        })
+        .catch(error => {
+            console.error('Error loading user detail:', error);
+            document.getElementById('userRoles').textContent = '-';
         });
     
     // Load feedback history
@@ -279,9 +293,13 @@ function loadFeedbackHistory(sobatId) {
 
 // Load user detail on page load if sobat_id is selected
 document.addEventListener('DOMContentLoaded', function() {
-    const sobatId = document.getElementById('sobatId').value;
-    if (sobatId) {
-        loadUserDetail();
+    const sobatIdValue = '<?= old('sobat_id') ?>';
+    if (sobatIdValue) {
+        const select = document.getElementById('sobat_id');
+        if (select) {
+            select.value = sobatIdValue;
+            loadUserDetail();
+        }
     }
 });
 </script>

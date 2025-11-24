@@ -2,6 +2,11 @@
 
 <?= $this->section('content') ?>
 
+<?php
+
+$assigned_ids = $assigned_ids ?? [];
+?>
+
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
