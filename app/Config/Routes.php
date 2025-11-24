@@ -22,8 +22,8 @@ $routes->post('login/process-switch-role', 'Auth\LoginController::processSwitchR
 // ================== HALAMAN TIDAK BERIZIN ==================
 $routes->get('unauthorized', 'ErrorController::unauthorized');
 
- // ================== HALAMAN COMING SOON ==================
-    $routes->get('comingsoon', 'ComingSoon::index');
+// ================== HALAMAN COMING SOON ==================
+$routes->get('comingsoon', 'ComingSoon::index');
 
 // ================== SUPER ADMIN (id_role = 1) ==================
 $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
@@ -100,6 +100,32 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
 
         // Additional helper endpoints
         $routes->get('detail/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::detail/$1');
+    });
+
+    // ===== Feedback  =====
+    $routes->group('feedback', static function ($routes) {
+        $routes->get('/', 'SuperAdmin\FeedbackController::index');
+        $routes->get('create', 'SuperAdmin\FeedbackController::create');
+        $routes->post('store', 'SuperAdmin\FeedbackController::store');
+        $routes->get('edit/(:num)', 'SuperAdmin\FeedbackController::edit/$1');
+        $routes->put('update/(:num)', 'SuperAdmin\FeedbackController::update/$1');
+        $routes->post('update/(:num)', 'SuperAdmin\FeedbackController::update/$1');
+        $routes->delete('delete/(:num)', 'SuperAdmin\FeedbackController::delete/$1');
+
+        // AJAX endpoints
+        $routes->get('get-user-detail', 'SuperAdmin\FeedbackController::getUserDetail');
+        $routes->get('get-user-feedback-history', 'SuperAdmin\FeedbackController::getUserFeedbackHistory');
+    });
+
+    // ===== Rating Aplikasi  =====
+    $routes->group('rating-aplikasi', static function ($routes) {
+        $routes->get('/', 'SuperAdmin\RatingAplikasiController::index');
+        $routes->get('show/(:num)', 'SuperAdmin\RatingAplikasiController::show/$1');
+        $routes->delete('delete/(:num)', 'SuperAdmin\RatingAplikasiController::delete/$1');
+        $routes->get('export-csv', 'SuperAdmin\RatingAplikasiController::exportCSV');
+
+        // AJAX endpoints
+        $routes->get('get-rating-trend', 'SuperAdmin\RatingAplikasiController::getRatingTrend');
     });
 
 });
@@ -190,7 +216,7 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
     $routes->get('kurva-kabupaten', 'PemantauProv\DashboardController::getKurvaKabupaten');
     $routes->get('kegiatan-wilayah', 'PemantauProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'PemantauProv\DashboardController::getPetugas');
-    
+
     // ===== Menu Lainnya (yang sudah ada sebelumnya) =====
     $routes->get('detail-proses', 'PemantauProv\MasterKegiatanDetailProsesController::index');
     $routes->get('kegiatan-wilayah-list', 'PemantauProv\MasterKegiatanWilayahController::index');
@@ -215,10 +241,10 @@ $routes->group('pemantau-kabupaten', ['filter' => 'role:3'], static function ($r
     $routes->get('/', 'PemantauKab\DashboardController::index');
     $routes->get('kurva-kabupaten', 'PemantauKab\DashboardController::getKurvaKabupaten');
     $routes->get('get-petugas', 'PemantauKab\DashboardController::getPetugas');
-    
+
     // ===== Kegiatan Wilayah =====
     $routes->get('kegiatan-wilayah', 'PemantauKab\MasterKegiatanWilayahController::index');
-    
+
     // ===== Data Petugas =====
     $routes->get('data-petugas', 'PemantauKab\DataPetugasController::index');
 
@@ -258,4 +284,4 @@ $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static f
         $routes->get('kurva-petugas/(:num)', 'KurvaPetugasController::show/$1');
         $routes->get('pcl/(:num)', 'PmlController::index/$1');        
 
-    });
+});

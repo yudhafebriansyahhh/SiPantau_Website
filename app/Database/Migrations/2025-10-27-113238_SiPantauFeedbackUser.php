@@ -40,7 +40,7 @@ class SiPantauFeedback extends Migration
 
         $this->forge->addKey('id_feedback', true);
         $this->forge->addForeignKey('sobat_id', 'sipantau_user', 'sobat_id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('sipantau_feedback');
+        $this->forge->createTable('sipantau_feedback_user');
     }
 
     public function down()

@@ -102,10 +102,17 @@
                     </a>
 
                     <!-- Feedback -->
-                    <a href="<?= base_url('superadmin/comingsoon') ?>"
-                        class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                    <a href="<?= base_url('superadmin/feedback') ?>"
+                        class="sidebar-link <?= ($active_menu ?? '') == 'feedback' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
                         <span class="ml-3">Feedback</span>
+                    </a>
+
+                    <!-- Rating Aplikasi -->
+                    <a href="<?= base_url('superadmin/rating-aplikasi') ?>"
+                        class="sidebar-link <?= ($active_menu ?? '') == 'rating-aplikasi' ? 'active' : '' ?>">
+                        <i class="fas fa-star w-5"></i>
+                        <span class="ml-3">Rating Aplikasi</span>
                     </a>
                 </div>
             </nav>
@@ -232,7 +239,7 @@
                                             <span class="ml-2">Switch Role</span>
                                         </a>
                                         <div class="border-t border-gray-200 my-1"></div>
-                                    <?php
+                                        <?php
                                     endif;
                                 }
                                 ?>

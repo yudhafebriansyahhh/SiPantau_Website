@@ -4,6 +4,8 @@ namespace App\Controllers\Api\Auth;
 
 use App\Controllers\BaseController;
 use App\Models\UserModel;
+use App\Models\PMLModel;
+use App\Models\PCLModel;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use CodeIgniter\API\ResponseTrait;
@@ -21,12 +23,9 @@ class AuthController extends BaseController
         $this->jwtExpiry = getenv('JWT_EXPIRY') ?: 604800; // default 7 hari
     }
 
-    /**
-     * LOGIN (Hanya untuk role Petugas Survei)
-     * Endpoint: POST /api/auth/login
-     */
     public function login()
     {
+        // Ambil payload
         if ($this->request->getHeaderLine('Content-Type') === 'application/json') {
             $data = $this->request->getJSON(true);
         } else {
@@ -40,6 +39,7 @@ class AuthController extends BaseController
             return $this->failValidationErrors('Email dan password wajib diisi');
         }
 
+        // Cari user
         $userModel = new UserModel();
         $user = $userModel->where('email', $email)
             ->where('is_active', 1)
@@ -49,20 +49,46 @@ class AuthController extends BaseController
             return $this->failNotFound('User tidak ditemukan atau tidak aktif');
         }
 
-        // 🔍 Decode role JSON
+        // Decode role JSON
         $roleIds = json_decode($user['role'], true) ?? [];
 
-        // 🔑 Verifikasi password hash
+        // Verifikasi password
         if (!password_verify($password, $user['password'])) {
             return $this->failUnauthorized('Password salah');
         }
 
-        // 🔐 Payload JWT
+        /**
+         * ==============================
+         * 🔍 AMBIL LIST ID PML & PCL
+         * ==============================
+         */
+        $pmlModel = new PMLModel();
+        $pclModel = new PCLModel();
+
+        // Ambil semua id_pml berdasarkan sobat_id
+        $listPML = $pmlModel->select('id_pml')
+            ->where('sobat_id', $user['sobat_id'])
+            ->findAll();
+
+        // Ambil semua id_pcl berdasarkan sobat_id
+        $listPCL = $pclModel->select('id_pcl')
+            ->where('sobat_id', $user['sobat_id'])
+            ->findAll();
+
+        // Convert ke array flat
+        $idPML = array_map('intval', array_column($listPML, 'id_pml'));
+        $idPCL = array_map('intval', array_column($listPCL, 'id_pcl'));
+
+        /**
+         * ==============================
+         * Generate JWT
+         * ==============================
+         */
         $issuedAt = time();
         $expireAt = $issuedAt + $this->jwtExpiry;
 
         $payload = [
-            'iss' => base_url(),  // issuer
+            'iss' => base_url(),
             'iat' => $issuedAt,
             'exp' => $expireAt,
             'data' => [
@@ -71,7 +97,9 @@ class AuthController extends BaseController
                 'email'        => $user['email'],
                 'hp'           => $user['hp'],
                 'id_kabupaten' => $user['id_kabupaten'],
-                'roles'        => $roleIds
+                'roles'        => $roleIds,
+                'id_pml'  => $idPML,  // <= Tambahan
+                'id_pcl'  => $idPCL   // <= Tambahan
             ]
         ];
 
@@ -85,10 +113,6 @@ class AuthController extends BaseController
         ]);
     }
 
-    /**
-     * 🔹 Endpoint untuk cek profil login (verifikasi token)
-     * Endpoint: GET /api/auth/me
-     */
     public function me()
     {
         $authHeader = $this->request->getHeaderLine('Authorization');
@@ -100,6 +124,7 @@ class AuthController extends BaseController
 
         try {
             $decoded = JWT::decode($token, new Key($this->jwtKey, 'HS256'));
+
             return $this->respond([
                 'status' => 'success',
                 'user'   => $decoded->data
