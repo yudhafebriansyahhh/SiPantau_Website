@@ -278,22 +278,23 @@ $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static f
     $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
 });
 
-//=================== Api Fitur Aplikasi Mobile ===============================
-$routes->group('api', [
-    'namespace' => 'App\Controllers\Api',
-    'filter' => 'jwt'
-], static function ($routes) {
-    $routes->get('pelaporan', 'PelaporanController::index');
-    $routes->post('pelaporan', 'PelaporanController::create');
-    $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
-    $routes->get('kegiatan', 'KegiatanController::index');
-    $routes->get('kecamatan', 'KecamatanController::index');
-    $routes->get('desa', 'DesaController::index');
-    $routes->post('progres', 'PantauProgressController::create');
-    $routes->get('progres', 'PantauProgressController::index');
-    $routes->delete('progres/(:num)', 'PantauProgressController::delete/$1');
-    $routes->get('feedback', 'FeedBackUserController::index');
-    $routes->post('feedback', 'FeedBackUserController::create');
-    $routes->get('kurva-petugas/(:num)', 'KurvaPetugasController::show/$1');
+    //=================== Api Fitur Aplikasi Mobile ===============================
+    $routes->group('api', [
+        'namespace' => 'App\Controllers\Api',
+        'filter'    => 'jwt'
+    ], static function ($routes) {
+        $routes->get('pelaporan', 'PelaporanController::index');
+        $routes->post('pelaporan', 'PelaporanController::create');
+        $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
+        $routes->get('kegiatan', 'KegiatanController::index');
+        $routes->get('kecamatan', 'KecamatanController::index');
+        $routes->get('desa', 'DesaController::index');
+        $routes->post('progres', 'PantauProgressController::create');
+        $routes->get('progres', 'PantauProgressController::index');
+        $routes->delete('progres/(:num)', 'PantauProgressController::delete/$1');
+        $routes->get('feedback', 'FeedBackUserController::index');
+        $routes->post('feedback', 'FeedBackUserController::create');
+        $routes->get('kurva-petugas/(:num)', 'KurvaPetugasController::show/$1');
+        $routes->get('pcl/(:num)', 'PmlController::index/$1');        
 
 });
