@@ -205,6 +205,19 @@ $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($rout
         $routes->post('get-available-pcl', 'AdminKab\AssignPetugasController::getAvailablePCL');
     });
 
+    // ===== Data Petugas Routes =====
+    $routes->group('data-petugas', static function ($routes) {
+        $routes->get('/', 'AdminKab\DataPetugasController::index');
+        $routes->get('detail/(:segment)', 'AdminKab\DataPetugasController::detailPetugas/$1');
+        $routes->get('detail-pcl/(:num)', 'AdminKab\DataPetugasController::detailPCL/$1');
+        $routes->get('detail-pml/(:num)', 'AdminKab\DataPetugasController::detailPML/$1');
+
+        // AJAX endpoints
+        $routes->get('get-pantau-progress', 'AdminKab\DataPetugasController::getPantauProgress');
+        $routes->get('get-laporan-transaksi', 'AdminKab\DataPetugasController::getLaporanTransaksi');
+        $routes->post('save-feedback-pcl', 'AdminKab\DataPetugasController::saveFeedbackPCL');
+    });
+
     $routes->get('approval-laporan', 'AdminKab\DashboardController::approve_laporan');
 });
 

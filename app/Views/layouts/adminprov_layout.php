@@ -93,12 +93,6 @@
                         <span class="ml-3">Assign Admin Survei Kab</span>
                     </a>
 
-                    <!-- Feedback -->
-                    <a href="<?= base_url('adminsurvei/comingsoon') ?>"
-                        class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
-                        <i class="fas fa-comment-dots w-5"></i>
-                        <span class="ml-3">Feedback</span>
-                    </a>
                 </div>
             </nav>
 
