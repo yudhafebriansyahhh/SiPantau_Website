@@ -511,4 +511,147 @@ class DashboardController extends Controller
             ];
         }
     }
+
+    // ======================================================
+// GET KURVA S WITH REALISASI (NEW METHOD)
+// ======================================================
+    public function getKurvaSWithRealisasi()
+    {
+        $idProses = $this->request->getGet('id_kegiatan_detail_proses');
+        $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
+
+        if (!$idProses) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ID Proses tidak valid'
+            ]);
+        }
+
+        // Get detail proses untuk config
+        $prosesModel = new MasterKegiatanDetailProsesModel();
+        $detailProses = $prosesModel->find($idProses);
+
+        if (!$detailProses) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Data proses tidak ditemukan'
+            ]);
+        }
+
+        // Get data kurva target
+        if ($idWilayah) {
+            $kurvaTarget = $this->db->table('kurva_kabupaten')
+                ->where('id_kegiatan_wilayah', $idWilayah)
+                ->orderBy('tanggal_target', 'ASC')
+                ->get()
+                ->getResultArray();
+        } else {
+            $kurvaTarget = $this->db->table('kurva_provinsi')
+                ->where('id_kegiatan_detail_proses', $idProses)
+                ->orderBy('tanggal_target', 'ASC')
+                ->get()
+                ->getResultArray();
+        }
+
+        // Get data realisasi
+        $realisasiData = $this->getRealisasiDataForChart($idProses, $idWilayah);
+
+        // Format data untuk chart
+        $chartData = $this->formatKurvaDataWithRealisasi($kurvaTarget, $realisasiData, $detailProses);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $chartData
+        ]);
+    }
+
+    // ======================================================
+    // GET REALISASI DATA FOR CHART
+    // ======================================================
+    private function getRealisasiDataForChart($idProses, $idWilayah = null)
+    {
+        $builder = $this->db->table('pantau_progress pp')
+            ->select('DATE(pp.created_at) as tanggal, MAX(pp.jumlah_realisasi_kumulatif) as realisasi_kumulatif')
+            ->join('pcl', 'pp.id_pcl = pcl.id_pcl')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->where('kw.id_kegiatan_detail_proses', $idProses);
+
+        if ($idWilayah) {
+            $builder->where('kw.id_kegiatan_wilayah', $idWilayah);
+        }
+
+        $builder->groupBy('DATE(pp.created_at)')
+            ->orderBy('DATE(pp.created_at)', 'ASC');
+
+        return $builder->get()->getResultArray();
+    }
+
+    // ======================================================
+    // FORMAT KURVA DATA WITH REALISASI
+    // ======================================================
+    private function formatKurvaDataWithRealisasi($kurvaTarget, $realisasiData, $detailProses)
+    {
+        if (empty($kurvaTarget)) {
+            return [
+                'labels' => [],
+                'target' => [],
+                'realisasi' => [],
+                'config' => [
+                    'nama' => $detailProses['nama_kegiatan_detail_proses'],
+                    'tanggal_mulai' => date('d', strtotime($detailProses['tanggal_mulai'])),
+                    'tanggal_selesai' => date('d', strtotime($detailProses['tanggal_selesai']))
+                ]
+            ];
+        }
+
+        // Build realisasi lookup
+        $realisasiLookup = [];
+        foreach ($realisasiData as $item) {
+            $realisasiLookup[$item['tanggal']] = (int) $item['realisasi_kumulatif'];
+        }
+
+        // Remove duplicate dates
+        $unique = [];
+        foreach ($kurvaTarget as $row) {
+            $tgl = $row['tanggal_target'];
+            $unique[$tgl] = $row;
+        }
+        ksort($unique);
+
+        $labels = [];
+        $targetData = [];
+        $realisasiDataFormatted = [];
+
+        $lastRealisasi = 0;
+
+        foreach ($unique as $tanggal => $row) {
+            $labels[] = date('d M', strtotime($tanggal));
+            $targetData[] = (int) $row['target_kumulatif_absolut'];
+
+            if (isset($realisasiLookup[$tanggal])) {
+                $lastRealisasi = $realisasiLookup[$tanggal];
+            }
+
+            $realisasiDataFormatted[] = $lastRealisasi;
+        }
+
+        // Ensure monotonic increase for target
+        for ($i = 1; $i < count($targetData); $i++) {
+            if ($targetData[$i] < $targetData[$i - 1]) {
+                $targetData[$i] = $targetData[$i - 1];
+            }
+        }
+
+        return [
+            'labels' => array_values($labels),
+            'target' => array_values($targetData),
+            'realisasi' => array_values($realisasiDataFormatted),
+            'config' => [
+                'nama' => $detailProses['nama_kegiatan_detail_proses'],
+                'tanggal_mulai' => date('d', strtotime($detailProses['tanggal_mulai'])),
+                'tanggal_selesai' => date('d', strtotime($detailProses['tanggal_selesai']))
+            ]
+        ];
+    }
 }

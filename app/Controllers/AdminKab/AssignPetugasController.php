@@ -72,6 +72,7 @@ class AssignPetugasController extends BaseController
 
         $data = [
             'title' => 'Assign Petugas Survei',
+            'active_menu' => 'assign-admin-kab',
             'admin' => $admin,
             'dataPML' => $dataPML,
             'kegiatanList' => $kegiatanList,
@@ -110,6 +111,7 @@ class AssignPetugasController extends BaseController
 
         $data = [
             'title' => 'Assign Petugas Survei',
+            'active_menu' => 'assign-admin-kab',
             'admin' => $admin,
             'kegiatanList' => $kegiatanList
         ];
@@ -168,6 +170,7 @@ class AssignPetugasController extends BaseController
 
         return view('AdminSurveiKab/AssignPetugasSurvei/edit', [
             'title' => 'Edit Assign Petugas Survei',
+            'active_menu' => 'assign-admin-kab',
             'pml' => $pml,
             'pcls' => $pcls,
             'kegiatanList' => $kegiatanList,
@@ -758,6 +761,7 @@ class AssignPetugasController extends BaseController
 
         $data = [
             'title' => 'Detail Assignment PML',
+            'active_menu' => 'assign-admin-kab',
             'pml' => $pml,
             'dataPCL' => $dataPCL
         ];
@@ -868,6 +872,7 @@ class AssignPetugasController extends BaseController
 
         return view('AdminSurveiKab/AssignPetugasSurvei/detail', [
             'pml' => $pml,
+            'active_menu' => 'assign-admin-kab',
             'pclList' => $pclList,
             'summary' => $summary
         ]);
@@ -924,6 +929,7 @@ class AssignPetugasController extends BaseController
 
         return view('AdminSurveiKab/AssignPetugasSurvei/kurva_s', [
             'pcl'              => $pcl,
+            'active_menu' => 'assign-admin-kab',
             'kurvaData'        => $kurvaData,
             'labels'           => $labels,
             'targetKumulatif'  => $targetKumulatif,

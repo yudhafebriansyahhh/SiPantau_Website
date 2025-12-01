@@ -101,13 +101,6 @@
                         <span class="ml-3">Kelola Admin Survey Provinsi</span>
                     </a>
 
-                    <!-- Feedback -->
-                    <a href="<?= base_url('superadmin/feedback') ?>"
-                        class="sidebar-link <?= ($active_menu ?? '') == 'feedback' ? 'active' : '' ?>">
-                        <i class="fas fa-comment-dots w-5"></i>
-                        <span class="ml-3">Feedback</span>
-                    </a>
-
                     <!-- Rating Aplikasi -->
                     <a href="<?= base_url('superadmin/rating-aplikasi') ?>"
                         class="sidebar-link <?= ($active_menu ?? '') == 'rating-aplikasi' ? 'active' : '' ?>">

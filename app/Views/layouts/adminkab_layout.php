@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="X-CSRF-TOKEN" content="<?= csrf_hash() ?>">
     <title>SiPantau - <?= $title ?? 'Dashboard' ?></title>
     <link rel="shortcut icon" type="image/png" href="<?= base_url('assets/gambar/LOGO_BPS.png') ?>">
 
@@ -54,6 +55,13 @@
                         <span class="ml-3">Dashboard</span>
                     </a>
 
+                    <!-- Data Petugas -->
+                    <a href="<?= base_url('adminsurvei-kab/data-petugas') ?>"
+                        class="sidebar-link <?= ($active_menu ?? '') == 'data-petugas' ? 'active' : '' ?>">
+                        <i class="fas fa-user-friends w-5"></i>
+                        <span class="ml-3">Data Petugas</span>
+                    </a>
+
                     <!-- Kelola Pengguna -->
                     <a href="<?= base_url('adminsurvei-kab/assign-petugas') ?>"
                         class="sidebar-link <?= ($active_menu ?? '') == 'assign-admin-kab' ? 'active' : '' ?>">
@@ -61,9 +69,9 @@
                         <span class="ml-3">Assign Petugas Survei</span>
                     </a>
 
-                    <!-- Feedback / Approval Laporan -->
+                    <!-- Approval Laporan -->
                     <a href="<?= base_url('adminsurvei-kab/approval-laporan') ?>"
-                        class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                        class="sidebar-link <?= ($active_menu ?? '') == 'approval-laporan' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
                         <span class="ml-3">Approval Laporan</span>
                     </a>
@@ -193,7 +201,7 @@
                                             <span class="ml-2">Switch Role</span>
                                         </a>
                                         <div class="border-t border-gray-200 my-1"></div>
-                                    <?php
+                                        <?php
                                     endif;
                                 }
                                 ?>

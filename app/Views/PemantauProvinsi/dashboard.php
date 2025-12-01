@@ -142,10 +142,11 @@
 <script>
   let chartInstance = null;
   const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
-  const baseProv = "<?= base_url('pemantau-provinsi/kurva-provinsi') ?>";
-  const baseKab = "<?= base_url('pemantau-provinsi/kurva-kabupaten') ?>";
+  const baseProv = "<?= base_url('pemantau-provinsi/get-kurva-s-with-realisasi') ?>";
   const baseWilayah = "<?= base_url('pemantau-provinsi/kegiatan-wilayah') ?>";
-  const basePetugas = "<?= base_url('pemantau-provinsi/get-petugas') ?>";
+  const basePetugas = "<?= base_url('pemantau-provinsi/get-petugas') ?>";  
+  const baseKab = "<?= base_url('pemantau-provinsi/kurva-kabupaten') ?>";
+
 
   // Load Kabupaten Dropdown
   async function loadKabupatenDropdown(idProses) {
@@ -173,12 +174,13 @@
     }
   }
 
-  // Load dan Render Kurva S
+  // Load dan Render Kurva S dengan Realisasi
   async function loadAndRenderKurvaS(idProses = "", idWilayah = "") {
     try {
-      const url = idWilayah
-        ? `${baseKab}?id_kegiatan_wilayah=${idWilayah}&nocache=${Date.now()}`
-        : `${baseProv}?id_kegiatan_detail_proses=${idProses}&nocache=${Date.now()}`;
+      let url = `${baseProv}?id_kegiatan_detail_proses=${idProses}&nocache=${Date.now()}`;
+      if (idWilayah) {
+        url += `&id_kegiatan_wilayah=${idWilayah}`;
+      }
 
       document.getElementById('chartLoadingState').style.display = 'flex';
       document.getElementById('kurvaSProvChart').style.display = 'none';
@@ -186,14 +188,14 @@
       document.getElementById('chartPlaceholder').style.display = 'none';
 
       const response = await fetch(url, { cache: "no-store" });
-      const data = await response.json();
+      const result = await response.json();
 
-      if (!data.labels.length) throw new Error('Empty data');
+      if (!result.success) throw new Error(result.message || 'Failed to load data');
 
       await new Promise(res => setTimeout(res, 200));
       document.getElementById('chartLoadingState').style.display = 'none';
       document.getElementById('kurvaSProvChart').style.display = 'block';
-      renderChart(data);
+      renderChart(result.data);
     } catch (e) {
       console.error(e);
       document.getElementById('chartLoadingState').style.display = 'none';
@@ -201,7 +203,7 @@
     }
   }
 
-  // Render Chart
+  // Render Chart dengan Target dan Realisasi
   function renderChart(data) {
     if (chartInstance) {
       chartInstance.destroy();
@@ -211,17 +213,65 @@
     const isMobile = window.innerWidth < 640;
 
     const options = {
+      series: [
+        {
+          name: 'Target (Kurva S)',
+          data: data.target,
+          type: 'area'
+        },
+        {
+          name: 'Realisasi (Kumulatif)',
+          data: data.realisasi,
+          type: 'area'
+        }
+      ],
       chart: {
         type: 'area',
         height: isMobile ? 300 : 420,
-        animations: { enabled: true, speed: 600 },
-        toolbar: { show: !isMobile },
-        fontFamily: 'Poppins, sans-serif'
+        fontFamily: 'Poppins, sans-serif',
+        toolbar: {
+          show: true,
+          tools: {
+            download: true,
+            selection: true,
+            zoom: true,
+            zoomin: true,
+            zoomout: true,
+            pan: true,
+            reset: true
+          },
+          autoSelected: 'zoom'
+        },
+        zoom: {
+          enabled: true,
+          type: 'x',
+          autoScaleYaxis: true,
+          zoomedArea: {
+            fill: { color: '#90CAF9', opacity: 0.4 },
+            stroke: { color: '#0D47A1', opacity: 0.4, width: 1 }
+          }
+        },
+        animations: { enabled: true, speed: 600 }
       },
-      series: [{
-        name: 'Target Kumulatif',
-        data: data.targetAbsolut
-      }],
+      colors: ['#1e88e5', '#e53935'],
+      dataLabels: { enabled: false },
+      stroke: {
+        width: isMobile ? [2, 2] : [3, 3],
+        curve: 'smooth',
+        dashArray: [0, 5]
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shade: 'light',
+          type: 'vertical',
+          shadeIntensity: 0.3,
+          gradientToColors: ['#bbdefb', '#ffcdd2'],
+          opacityFrom: 0.5,
+          opacityTo: 0.05
+        }
+      },
+      markers: { size: 0, hover: { size: isMobile ? 5 : 7 } },
       xaxis: {
         categories: data.labels,
         title: { text: 'Tanggal', style: { fontSize: isMobile ? '11px' : '12px' } },
@@ -231,10 +281,7 @@
         }
       },
       yaxis: {
-        title: {
-          text: isMobile ? '' : 'Target Kumulatif',
-          style: { fontSize: '12px' }
-        },
+        title: { text: isMobile ? '' : 'Jumlah', style: { fontSize: '12px' } },
         labels: {
           style: { fontSize: isMobile ? '9px' : '11px' },
           formatter: value => Math.round(value).toLocaleString('id-ID')
@@ -242,35 +289,42 @@
       },
       tooltip: {
         shared: true,
-        custom: ({ dataPointIndex }) => `
-        <div class="p-2">
-          <strong>${data.labels[dataPointIndex]}</strong><br>
-          Target Kumulatif: <b>${data.targetAbsolut[dataPointIndex].toLocaleString('id-ID')}</b><br>
-          Target Harian: <b>${data.targetHarian[dataPointIndex].toLocaleString('id-ID')}</b><br>
-          Persen Kumulatif: <b>${data.targetPersen[dataPointIndex].toFixed(2)}%</b>
-        </div>`
-      },
-      colors: ['#1e88e5'],
-      stroke: { curve: 'smooth', width: isMobile ? 2 : 3 },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          opacityFrom: 0.5,
-          opacityTo: 0.05
+        intersect: false,
+        y: {
+          formatter: value => value ? value.toLocaleString('id-ID') : '0'
         }
       },
-      dataLabels: { enabled: false },
       legend: {
         position: isMobile ? 'bottom' : 'top',
         horizontalAlign: isMobile ? 'center' : 'left',
         fontSize: isMobile ? '11px' : '13px'
+      },
+      grid: { borderColor: '#f3f4f6', strokeDashArray: 3 },
+      annotations: {
+        xaxis: isMobile ? [] : [
+          {
+            x: data.config.tanggal_mulai,
+            borderColor: '#43a047',
+            label: {
+              text: 'Mulai',
+              style: { color: '#fff', background: '#43a047', fontSize: '10px' }
+            }
+          },
+          {
+            x: data.config.tanggal_selesai,
+            borderColor: '#e53935',
+            label: {
+              text: 'Selesai',
+              style: { color: '#fff', background: '#e53935', fontSize: '10px' }
+            }
+          }
+        ]
       }
     };
 
     chartInstance = new ApexCharts(document.querySelector("#kurvaSProvChart"), options);
     chartInstance.render();
   }
-
   // Load Petugas
   async function loadPetugas() {
     const kegiatanId = document.getElementById('filterKegiatanProses').value;
