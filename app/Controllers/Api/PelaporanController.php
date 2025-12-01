@@ -24,7 +24,7 @@ class PelaporanController extends BaseController
      * 🟢 GET /api/pelaporan
      * Menampilkan semua laporan berdasarkan user (PCL) yang login
      */
-    public function index()
+   public function index()
 {
     $authHeader = $this->request->getHeaderLine('Authorization');
     if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
@@ -32,33 +32,14 @@ class PelaporanController extends BaseController
     }
 
     try {
-        // 🔐 Decode token JWT
+        // 🔐 Decode token JWT, tetap wajib login
         $decoded = JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
         $sobat_id = $decoded->data->sobat_id;
-
-        // 🔎 Pastikan user adalah PCL
-        $pclModel = new PCLModel();
-        $pclList = $pclModel->where('sobat_id', $sobat_id)->findAll();
-
-        if (empty($pclList)) {
-            return $this->failUnauthorized('Hanya PCL yang bisa mengakses pelaporan.');
-        }
-
-        // 🔹 Ambil semua id_pcl milik user ini
-        $pclIds = array_column($pclList, 'id_pcl');
-
-        // 🔸 Ambil parameter filter dari query string (opsional)
-        $filterIdPcl = $this->request->getGet('id_pcl');
-
-        // 🔒 Validasi jika id_pcl dikirim, pastikan milik user
-        if (!empty($filterIdPcl) && !in_array($filterIdPcl, $pclIds)) {
-            return $this->failForbidden('Anda tidak memiliki akses ke id_pcl tersebut.');
-        }
 
         // 🔍 Model transaksi
         $transaksiModel = new \App\Models\SipantauTransaksiModel();
 
-        // 🔧 Query dasar
+        // 🔧 Query semua laporan tanpa filter role
         $builder = $transaksiModel
             ->select("
                 sipantau_transaksi.id_sipantau_transaksi,
@@ -84,11 +65,10 @@ class PelaporanController extends BaseController
             ->join('master_desa des', 'des.id_desa = sipantau_transaksi.id_desa', 'left')
             ->orderBy('sipantau_transaksi.created_at', 'DESC');
 
-        // 🔹 Jika ada filter id_pcl, gunakan itu
+        // 🔹 Ambil parameter filter opsional
+        $filterIdPcl = $this->request->getGet('id_pcl');
         if (!empty($filterIdPcl)) {
             $builder->where('sipantau_transaksi.id_pcl', $filterIdPcl);
-        } else {
-            $builder->whereIn('sipantau_transaksi.id_pcl', $pclIds);
         }
 
         $laporan = $builder->findAll();
@@ -112,6 +92,7 @@ class PelaporanController extends BaseController
         return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
     }
 }
+
 
 
 

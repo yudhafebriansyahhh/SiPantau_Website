@@ -94,14 +94,14 @@ class PmlController extends BaseController
 
             // Push data
             $result[] = [
-                'id_pcl' => $pcl['id_pcl'],
+                'id_pcl' => (int) $pcl['id_pcl'],
                 'sobat_id' => $pcl['sobat_id'],
                 'nama_pcl' => $user['nama_user'] ?? '-',
                 'hp' => $user['hp'] ?? '-',
                 'id_pml' => $id_pml,
                 'status_approval' => $pcl['status_approval'],
-                'target' => $pcl['target'],
-                'total_realisasi_kumulatif' => $totalRealisasi,
+                'target' =>(int) $pcl['target'],
+                'total_realisasi_kumulatif' =>(int) $totalRealisasi,
                 'persentase' => $persentase . '%',
             ];
         }
@@ -115,4 +115,60 @@ class PmlController extends BaseController
             'data' => $result
         ]);
     }
+
+    /**
+ * POST /api/pcl/approve
+ * Update status_approval PCL
+ * Request: multipart/form-data
+ * Fields:
+ * - id_pcl (int, required)
+ * - status_approval (string, required, contoh: "approved" / "rejected")
+ */
+public function approvePCL($id_pcl = null)
+{
+    // 1. Validasi JWT
+    $authHeader = $this->request->getHeaderLine('Authorization');
+    if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        return $this->failUnauthorized('Token tidak ditemukan');
+    }
+
+    try {
+        $decoded = JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
+    } catch (\Exception $e) {
+        return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
+    }
+
+    // 2. Ambil status_approval dari JSON body
+    $input = $this->request->getJSON(true); // true = array
+    $status_approval = $input['status_approval'] ?? null;
+
+    if (!$id_pcl || !$status_approval) {
+        return $this->failValidationErrors('id_pcl dan status_approval wajib diisi');
+    }
+
+    // 3. Update PCL
+    $pclModel = new PclModel();
+    $pcl = $pclModel->find($id_pcl);
+
+    if (!$pcl) {
+        return $this->failNotFound('PCL tidak ditemukan');
+    }
+
+    $pclModel->update($id_pcl, [
+        'status_approval' => $status_approval
+    ]);
+
+    // 4. Response sukses
+    return $this->respond([
+        'status' => true,
+        'message' => 'Status approval berhasil diupdate',
+        'data' => [
+            'id_pcl' => (int) $id_pcl,
+            'status_approval' => $status_approval
+        ]
+    ]);
+}
+
+
+
 }

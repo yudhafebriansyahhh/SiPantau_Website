@@ -127,7 +127,6 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
         // AJAX endpoints
         $routes->get('get-rating-trend', 'SuperAdmin\RatingAplikasiController::getRatingTrend');
     });
-
 });
 
 // ================== ADMIN SURVEI PROVINSI (id_role = 2) ==================
@@ -232,7 +231,6 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
     $routes->get('detail-petugas/(:num)', 'PemantauProv\DetailPetugasController::index/$1');
     $routes->get('detail-petugas/get-pantau-progress', 'PemantauProv\DetailPetugasController::getPantauProgress');
     $routes->get('detail-petugas/get-laporan-transaksi', 'PemantauProv\DetailPetugasController::getLaporanTransaksi');
-
 });
 
 // ================== PEMANTAU KABUPATEN (id_role = 3) ==================
@@ -256,7 +254,6 @@ $routes->group('pemantau-kabupaten', ['filter' => 'role:3'], static function ($r
     $routes->get('detail-petugas/(:num)', 'PemantauKab\DetailPetugasController::index/$1');
     $routes->get('detail-petugas/get-pantau-progress', 'PemantauKab\DetailPetugasController::getPantauProgress');
     $routes->get('detail-petugas/get-laporan-transaksi', 'PemantauKab\DetailPetugasController::getLaporanTransaksi');
-
 });
 
 // ================== API AUTH LOGIN ==================
@@ -265,23 +262,26 @@ $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static f
     $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
 });
 
-    //=================== Api Fitur Aplikasi Mobile ===============================
-    $routes->group('api', [
-        'namespace' => 'App\Controllers\Api',
-        'filter'    => 'jwt'
-    ], static function ($routes) {
-        $routes->get('pelaporan', 'PelaporanController::index');
-        $routes->post('pelaporan', 'PelaporanController::create');
-        $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
-        $routes->get('kegiatan', 'KegiatanController::index');
-        $routes->get('kecamatan', 'KecamatanController::index');
-        $routes->get('desa', 'DesaController::index');
-        $routes->post('progres', 'PantauProgressController::create');
-        $routes->get('progres', 'PantauProgressController::index');
-        $routes->delete('progres/(:num)', 'PantauProgressController::delete/$1');
-        $routes->get('feedback', 'FeedBackUserController::index');
-        $routes->post('feedback', 'FeedBackUserController::create');
-        $routes->get('kurva-petugas/(:num)', 'KurvaPetugasController::show/$1');
-        $routes->get('pcl/(:num)', 'PmlController::index/$1');        
-
+//=================== Api Fitur Aplikasi Mobile ===============================
+$routes->group('api', [
+    'namespace' => 'App\Controllers\Api',
+    'filter'    => 'jwt'
+], static function ($routes) {
+    $routes->get('pelaporan', 'PelaporanController::index');
+    $routes->post('pelaporan', 'PelaporanController::create');
+    $routes->delete('pelaporan/(:num)', 'PelaporanController::delete/$1');
+    $routes->get('kegiatan', 'KegiatanController::index');
+    $routes->get('kecamatan', 'KecamatanController::index');
+    $routes->get('desa', 'DesaController::index');
+    $routes->post('progres', 'PantauProgressController::create');
+    $routes->get('progres', 'PantauProgressController::index');
+    $routes->delete('progres/(:num)', 'PantauProgressController::delete/$1');
+    $routes->get('feedback', 'FeedBackUserController::index');
+    $routes->post('feedback', 'FeedBackUserController::create');
+    $routes->get('kurva-petugas/(:num)', 'KurvaPetugasController::show/$1');
+    $routes->get('pcl/(:num)', 'PmlController::index/$1');
+    $routes->get('total-kegiatan-pcl', 'KegiatanController::totalKegiatanPCL');
+    $routes->get('total-kegiatan-pml', 'KegiatanController::totalKegiatanPML');
+    $routes->post('pcl/approve/(:num)', 'PmlController::approvePCL/$1');
+    $routes->get('cek/','ReminderController::show');
 });
