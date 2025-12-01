@@ -102,20 +102,6 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
         $routes->get('detail/(:num)', 'SuperAdmin\KelolaSurveiProvinsiController::detail/$1');
     });
 
-    // ===== Feedback  =====
-    $routes->group('feedback', static function ($routes) {
-        $routes->get('/', 'SuperAdmin\FeedbackController::index');
-        $routes->get('create', 'SuperAdmin\FeedbackController::create');
-        $routes->post('store', 'SuperAdmin\FeedbackController::store');
-        $routes->get('edit/(:num)', 'SuperAdmin\FeedbackController::edit/$1');
-        $routes->put('update/(:num)', 'SuperAdmin\FeedbackController::update/$1');
-        $routes->post('update/(:num)', 'SuperAdmin\FeedbackController::update/$1');
-        $routes->delete('delete/(:num)', 'SuperAdmin\FeedbackController::delete/$1');
-
-        // AJAX endpoints
-        $routes->get('get-user-detail', 'SuperAdmin\FeedbackController::getUserDetail');
-        $routes->get('get-user-feedback-history', 'SuperAdmin\FeedbackController::getUserFeedbackHistory');
-    });
 
     // ===== Rating Aplikasi  =====
     $routes->group('rating-aplikasi', static function ($routes) {
@@ -139,6 +125,8 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
     $routes->get('kurva-kabupaten', 'AdminProv\DashboardController::getKurvaKabupaten');
     $routes->get('kegiatan-wilayah', 'AdminProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'AdminProv\DashboardController::getPetugas');
+    $routes->get('get-kurva-s-with-realisasi', 'AdminProv\DashboardController::getKurvaSWithRealisasi');
+
 
     // ===== Master Kegiatan Detail Proses =====
     $routes->group('master-kegiatan-detail-proses', static function ($routes) {
@@ -162,6 +150,10 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->get('sisa-target/(:num)', 'AdminProv\MasterKegiatanWilayahController::getSisaTarget/$1');
         $routes->get('get-kegiatan-detail-proses/(:num)', 'AdminProv\MasterKegiatanWilayahController::getKegiatanDetailProses/$1');
         $routes->get('clear-filter', 'AdminProv\MasterKegiatanWilayahController::clearFilter');
+        
+        // Import Excel
+        $routes->get('download-template/(:num)', 'AdminProv\MasterKegiatanWilayahController::downloadTemplate/$1');
+        $routes->post('import', 'AdminProv\MasterKegiatanWilayahController::import');
     });
 
     // ===== Assign Admin Survei Kabupaten =====
@@ -218,7 +210,13 @@ $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($rout
         $routes->post('save-feedback-pcl', 'AdminKab\DataPetugasController::saveFeedbackPCL');
     });
 
-    $routes->get('approval-laporan', 'AdminKab\DashboardController::approve_laporan');
+    // ===== Approval Laporan =====
+    $routes->group('approval-laporan', static function ($routes) {
+        $routes->get('/', 'AdminKab\ApprovalLaporanController::index');
+        $routes->get('detail/(:num)', 'AdminKab\ApprovalLaporanController::detail/$1');
+        $routes->post('approve', 'AdminKab\ApprovalLaporanController::approve');
+        $routes->post('reject', 'AdminKab\ApprovalLaporanController::reject');
+    });
 });
 
 // ================== PEMANTAU PROVINSI (id_role = 2) ==================
@@ -229,6 +227,7 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
     $routes->get('kurva-kabupaten', 'PemantauProv\DashboardController::getKurvaKabupaten');
     $routes->get('kegiatan-wilayah', 'PemantauProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'PemantauProv\DashboardController::getPetugas');
+    $routes->get('get-kurva-s-with-realisasi', 'PemantauProv\DashboardController::getKurvaSWithRealisasi');
 
     // ===== Menu Lainnya (yang sudah ada sebelumnya) =====
     $routes->get('detail-proses', 'PemantauProv\MasterKegiatanDetailProsesController::index');
@@ -254,6 +253,7 @@ $routes->group('pemantau-kabupaten', ['filter' => 'role:3'], static function ($r
     $routes->get('/', 'PemantauKab\DashboardController::index');
     $routes->get('kurva-kabupaten', 'PemantauKab\DashboardController::getKurvaKabupaten');
     $routes->get('get-petugas', 'PemantauKab\DashboardController::getPetugas');
+    $routes->get('get-kurva-s-with-realisasi', 'PemantauKab\DashboardController::getKurvaSWithRealisasi');
 
     // ===== Kegiatan Wilayah =====
     $routes->get('kegiatan-wilayah', 'PemantauKab\MasterKegiatanWilayahController::index');

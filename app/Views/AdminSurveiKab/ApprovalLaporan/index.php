@@ -4,456 +4,679 @@
 
 <!-- Page Header -->
 <div class="mb-6">
-    <div class="flex items-center mb-2">
-        <a href="<?= base_url('adminsurvei') ?>" class="text-gray-600 hover:text-gray-900 mr-2">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
     <h1 class="text-2xl font-bold text-gray-900">Approval Laporan</h1>
+    <p class="text-gray-600 mt-1">Setujui laporan PML yang sudah memenuhi syarat</p>
 </div>
 
-<!-- Main Content Card -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-    
-    <!-- Filter Section -->
-    <div class="flex flex-col sm:flex-row gap-4 mb-6">
-        <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kegiatan</label>
-            <select id="filterKegiatan" onchange="filterTable()" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="">-- Pilih Kegiatan --</option>
-                <option value="SUSENAS SEPT 2025 (SEPTEMBER)">SUSENAS SEPT 2025 (SEPTEMBER)</option>
-                <option value="SAKERNAS 2025">SAKERNAS 2025</option>
-                <option value="SUNSENAS 2025">SUNSENAS 2025</option>
-            </select>
-        </div>
-        <div class="flex items-end">
-            <button onclick="tampilkanData()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-                <i class="fas fa-filter mr-2"></i>Tampilkan
-            </button>
-        </div>
-    </div>
-    
-    <!-- Export Buttons -->
-    <div class="flex gap-2 mb-4">
-        <button class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
-            <i class="far fa-copy mr-1"></i>Copy
-        </button>
-        <button class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
-            <i class="far fa-file-alt mr-1"></i>CSV
-        </button>
-        <button class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
-            <i class="far fa-file-excel mr-1"></i>Excel
-        </button>
-        <button class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
-            <i class="fas fa-print mr-1"></i>Print
-        </button>
-        
-        <!-- Search Box -->
-        <div class="ml-auto">
-            <div class="relative">
-                <input type="text" id="searchInput" placeholder="Search..." 
-                    class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    onkeyup="searchTable()">
-                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Table -->
-    <div class="overflow-x-auto">
-        <table class="w-full border-collapse" id="approvalTable">
-            <thead>
-                <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">No</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border border-gray-200">Nama PML</th>
-                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">Target</th>
-                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">Progress (%)</th>
-                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200" id="tableBody">
-                <!-- Data akan dimuat via JavaScript -->
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4">
-        <div class="text-sm text-gray-600">
-            Showing <span id="showingInfo">1 to 10 of 21</span> entries
-        </div>
-        <div class="flex gap-2">
-            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>
-                Previous
-            </button>
-            <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded">1</button>
-            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">2</button>
-            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">3</button>
-            <button class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
-                Next
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Detail PCL -->
-<div id="pclModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+<!-- Filter Section -->
+<div class="card mb-6">
+    <form method="GET" action="<?= base_url('adminsurvei-kab/approval-laporan') ?>" id="filterForm">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Filter Kegiatan -->
             <div>
-                <h3 class="text-lg font-semibold text-gray-900">Detail PCL - <span id="modalPMLName"></span></h3>
-                <p class="text-sm text-gray-600 mt-1">Daftar PCL dan Status Approval</p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Kegiatan Wilayah</label>
+                <select name="kegiatan_wilayah" class="input-field" onchange="this.form.submit()">
+                    <option value="">Semua Kegiatan</option>
+                    <?php foreach ($kegiatanWilayahList as $kw): ?>
+                        <option value="<?= $kw['id_kegiatan_wilayah'] ?>" 
+                            <?= ($filterKegiatan == $kw['id_kegiatan_wilayah']) ? 'selected' : '' ?>>
+                            <?= esc($kw['nama_kegiatan_detail_proses']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
+
+            <!-- Filter Status -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" class="input-field" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="eligible" <?= ($filterStatus == 'eligible') ? 'selected' : '' ?>>
+                        Siap Disetujui
+                    </option>
+                    <option value="approved" <?= ($filterStatus == 'approved') ? 'selected' : '' ?>>
+                        Sudah Disetujui
+                    </option>
+                    <option value="not_eligible" <?= ($filterStatus == 'not_eligible') ? 'selected' : '' ?>>
+                        Belum Memenuhi Syarat
+                    </option>
+                </select>
+            </div>
+
+            <!-- Reset Filter -->
+            <div class="flex items-end">
+                <?php if (!empty($filterKegiatan) || !empty($filterStatus)): ?>
+                    <a href="<?= base_url('adminsurvei-kab/approval-laporan') ?>" 
+                       class="btn-secondary w-full text-center">
+                        <i class="fas fa-times-circle mr-2"></i>
+                        Reset Filter
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
-        
-        <!-- Modal Body -->
-        <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 140px);">
-            <table class="w-full border-collapse">
+    </form>
+</div>
+
+<!-- PML List -->
+<div class="card">
+    <?php if (empty($pmlData)): ?>
+        <div class="text-center py-12">
+            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Belum ada data PML</p>
+        </div>
+    <?php else: ?>
+        <div class="overflow-x-auto">
+            <table class="w-full">
                 <thead>
-                    <tr class="bg-gray-50 border-b border-gray-200">
-                        <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">No</th>
-                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border border-gray-200">Nama PCL</th>
-                        <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">Target</th>
-                        <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">Progress</th>
-                        <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200">Status Approval PML</th>
+                    <tr class="border-b border-gray-200 bg-gray-50">
+                        <th class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            No
+                        </th>
+                        <th class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Nama PML
+                        </th>
+                        <th class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Kegiatan
+                        </th>
+                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Jumlah PCL
+                        </th>
+                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Progress PCL
+                        </th>
+                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Aksi
+                        </th>
                     </tr>
                 </thead>
-                <tbody id="modalTableBody">
-                    <!-- Data akan dimuat via JavaScript -->
+                <tbody class="divide-y divide-gray-100">
+                    <?php foreach ($pmlData as $index => $pml): ?>
+                        <?php 
+                        // Debug: Check if is_eligible is set
+                        $isEligible = isset($pml['is_eligible']) ? $pml['is_eligible'] : false;
+                        ?>
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-4 py-3 border-r border-gray text-sm text-gray-900"><?= $index + 1 ?></td>
+                            <td class="px-4 py-3 border-r border-gray">
+                                <button onclick="showDetail(<?= $pml['id_pml'] ?>)" 
+                                        class="text-left hover:text-blue-600 transition-colors duration-150">
+                                    <div class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                                        <?= esc($pml['nama_pml']) ?>
+                                    </div>
+                                    <div class="text-xs text-gray-500"><?= esc($pml['email']) ?></div>
+                                </button>
+                            </td>
+                            <td class="px-4 py-3 border-r border-gray">
+                                <div class="text-sm text-gray-900"><?= esc($pml['nama_kegiatan_detail_proses']) ?></div>
+                                <div class="text-xs text-gray-500"><?= esc($pml['nama_kegiatan']) ?></div>
+                            </td>
+                            <td class="px-4 py-3 border-r border-gray text-center">
+                                <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                                    <i class="fas fa-users mr-1"></i>
+                                    <?= $pml['total_pcl'] ?> PCL
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 border-r border-gray">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-full max-w-xs">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-xs text-gray-600 font-medium">Progress Rata-rata</span>
+                                            <span class="text-xs font-semibold text-gray-900">
+                                                <?= number_format($pml['average_progress'], 1) ?>%
+                                            </span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-3">
+                                            <?php 
+                                            $avgProgress = $pml['average_progress'];
+                                            $progressColor = $avgProgress >= 80 ? '#10b981' : ($avgProgress >= 50 ? '#3b82f6' : '#f59e0b');
+                                            ?>
+                                            <div class="h-3 rounded-full transition-all duration-300" 
+                                                 style="width: <?= min(100, $avgProgress) ?>%; background-color: <?= $progressColor ?>;"></div>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-1 text-center">
+                                            <?= $pml['pcl_completed'] ?> dari <?= $pml['total_pcl'] ?> PCL selesai
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 border-r border-gray text-center">
+                                <span class="badge <?= $pml['status_class'] ?>">
+                                    <?= $pml['status_label'] ?>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 border-r border-gray text-center">
+                                <div class="flex items-center justify-center gap-3">
+                                    <!-- Switch Button untuk Approval - Selalu tampil -->
+                                    <label class="switch-button" title="<?= $isEligible ? 'Klik untuk approve/reject' : 'Belum memenuhi syarat untuk disetujui' ?>">
+                                        <input type="checkbox" 
+                                               <?= $pml['pml_status_approval'] == 1 ? 'checked' : '' ?>
+                                               <?= !$isEligible ? 'disabled' : '' ?>
+                                               onchange="toggleApproval(<?= $pml['id_pml'] ?>, '<?= esc($pml['nama_pml']) ?>', this)">
+                                        <span class="switch-slider">
+                                            <span class="switch-on">ON</span>
+                                            <span class="switch-off">OFF</span>
+                                        </span>
+                                    </label>
+
+                                    <?php if ($pml['pml_status_approval'] == 1 && !empty($pml['feedback_admin'])): ?>
+                                        <button onclick="showFeedback('<?= esc($pml['feedback_admin']) ?>', '<?= esc($pml['tanggal_approval']) ?>')" 
+                                                class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
+                                                title="Lihat Feedback">
+                                            <i class="fas fa-comment text-sm"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
+    <?php endif; ?>
+</div>
+
+<!-- Modal Detail PML -->
+<div id="modalDetail" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">Detail PML</h3>
+            <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="detailContent" class="p-6">
+            <!-- Content will be loaded here -->
+        </div>
     </div>
 </div>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+/* Switch Button Styles */
+.switch-button {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 28px;
+    vertical-align: middle;
+}
+
+.switch-button input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e0;
+    transition: all .3s ease;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: all .3s ease;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+
+.switch-on,
+.switch-off {
+    font-size: 9px;
+    font-weight: 700;
+    color: white;
+    z-index: 1;
+    transition: opacity .3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.switch-on {
+    opacity: 0;
+    margin-left: 2px;
+}
+
+.switch-off {
+    opacity: 1;
+    margin-right: 2px;
+}
+
+input:checked + .switch-slider {
+    background-color: #3b82f6;
+    box-shadow: inset 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+input:checked + .switch-slider:before {
+    transform: translateX(32px);
+}
+
+input:checked + .switch-slider .switch-on {
+    opacity: 1;
+}
+
+input:checked + .switch-slider .switch-off {
+    opacity: 0;
+}
+
+input:disabled + .switch-slider {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: #e5e7eb;
+}
+
+input:disabled + .switch-slider:before {
+    background-color: #f3f4f6;
+}
+
+input:disabled + .switch-slider .switch-off {
+    color: #9ca3af;
+}
+
+.switch-button:has(input:disabled) {
+    cursor: not-allowed;
+}
+
+.switch-slider:has(input:disabled):hover {
+    box-shadow: none;
+}
+
+input:focus + .switch-slider {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.switch-slider:hover:not(:has(input:disabled)) {
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+</style>
+</style>
+
 <script>
-// Data dummy PML dan PCL
-const dataLaporan = {
-    "SUSENAS SEPT 2025 (SEPTEMBER)": [
-        {
-            no: 1,
-            nama: "AHMAD SYAHRUL S",
-            target: 150,
-            progress: 85,
-            pcl: [
-                { nama: "Siti Aminah", target: 50, progress: 30, status: "Approved" },
-                { nama: "Budi Santoso", target: 50, progress: 45, status: "Pending" },
-                { nama: "Dewi Lestari", target: 50, progress: 53, status: "Approved" }
-            ]
-        },
-        {
-            no: 2,
-            nama: "AMIN WAHYU",
-            target: 100,
-            progress: 75,
-            pcl: [
-                { nama: "Rizki Ahmad", target: 50, progress: 35, status: "Approved" },
-                { nama: "Linda Permata", target: 50, progress: 40, status: "Approved" }
-            ]
-        },
-        {
-            no: 3,
-            nama: "ARRESTI MAYA SARI",
-            target: 100,
-            progress: 60,
-            pcl: [
-                { nama: "Maya Kusuma", target: 50, progress: 28, status: "Pending" },
-                { nama: "Hendra Wijaya", target: 50, progress: 32, status: "Rejected" }
-            ]
-        },
-        {
-            no: 4,
-            nama: "DESRINA GUSRIANTI",
-            target: 50,
-            progress: 76,
-            pcl: [
-                { nama: "Fitri Handayani", target: 50, progress: 38, status: "Approved" }
-            ]
-        },
-        {
-            no: 5,
-            nama: "DESI MAHRANI",
-            target: 100,
-            progress: 84,
-            pcl: [
-                { nama: "Agus Widodo", target: 50, progress: 42, status: "Approved" },
-                { nama: "Rini Setiawati", target: 50, progress: 42, status: "Pending" }
-            ]
-        },
-        {
-            no: 6,
-            nama: "DITA MIRANDA",
-            target: 50,
-            progress: 70,
-            pcl: [
-                { nama: "Bambang Suryanto", target: 50, progress: 35, status: "Approved" }
-            ]
-        },
-        {
-            no: 7,
-            nama: "Edimuron SE",
-            target: 50,
-            progress: 30,
-            pcl: [
-                { nama: "Eko Prasetyo", target: 50, progress: 15, status: "Pending" }
-            ]
-        },
-        {
-            no: 8,
-            nama: "GEANGO EKA RAMADHANA",
-            target: 50,
-            progress: 40,
-            pcl: [
-                { nama: "Siti Nurhaliza", target: 50, progress: 20, status: "Rejected" }
-            ]
-        },
-        {
-            no: 9,
-            nama: "INDAH OKTILIANI",
-            target: 100,
-            progress: 75,
-            pcl: [
-                { nama: "Muhammad Rizki", target: 50, progress: 40, status: "Approved" },
-                { nama: "Dewi Lestari", target: 50, progress: 35, status: "Approved" }
-            ]
-        },
-        {
-            no: 10,
-            nama: "Irfwan, A.Md",
-            target: 50,
-            progress: 0,
-            pcl: []
-        },
-        {
-            no: 11,
-            nama: "RINI SETIAWATI",
-            target: 120,
-            progress: 92,
-            pcl: [
-                { nama: "Ahmad Fauzi", target: 60, progress: 55, status: "Approved" },
-                { nama: "Siti Khadijah", target: 60, progress: 55, status: "Approved" }
-            ]
-        },
-        {
-            no: 12,
-            nama: "BAMBANG SURYANTO",
-            target: 80,
-            progress: 65,
-            pcl: [
-                { nama: "Rina Wijaya", target: 40, progress: 28, status: "Pending" },
-                { nama: "Dedi Hermawan", target: 40, progress: 24, status: "Approved" }
-            ]
-        }
-    ],
-    "SAKERNAS 2025": [
-        {
-            no: 1,
-            nama: "HENDRA WIJAYA",
-            target: 200,
-            progress: 88,
-            pcl: [
-                { nama: "Lisa Andriani", target: 100, progress: 88, status: "Approved" },
-                { nama: "Tono Sutrisno", target: 100, progress: 88, status: "Approved" }
-            ]
-        },
-        {
-            no: 2,
-            nama: "MAYA KUSUMA",
-            target: 150,
-            progress: 72,
-            pcl: [
-                { nama: "Ratna Sari", target: 75, progress: 54, status: "Pending" },
-                { nama: "Adi Nugroho", target: 75, progress: 54, status: "Approved" }
-            ]
-        },
-        {
-            no: 3,
-            nama: "EKO PRASETYO",
-            target: 180,
-            progress: 55,
-            pcl: [
-                { nama: "Dian Pertiwi", target: 60, progress: 33, status: "Rejected" },
-                { nama: "Rudi Hartono", target: 60, progress: 33, status: "Pending" },
-                { nama: "Wati Kusuma", target: 60, progress: 33, status: "Approved" }
-            ]
-        }
-    ],
-    "SUNSENAS 2025": [
-        {
-            no: 1,
-            nama: "FITRI HANDAYANI",
-            target: 160,
-            progress: 90,
-            pcl: [
-                { nama: "Yoga Pratama", target: 80, progress: 72, status: "Approved" },
-                { nama: "Nina Marlina", target: 80, progress: 72, status: "Approved" }
-            ]
-        },
-        {
-            no: 2,
-            nama: "AGUS WIDODO",
-            target: 140,
-            progress: 68,
-            pcl: [
-                { nama: "Budi Santoso", target: 70, progress: 48, status: "Pending" },
-                { nama: "Sari Dewi", target: 70, progress: 47, status: "Approved" }
-            ]
-        }
-    ]
-};
-
-// Fungsi tampilkan data
-function tampilkanData() {
-    const kegiatan = document.getElementById('filterKegiatan').value;
+// Toggle Approval
+function toggleApproval(idPML, namaPML, checkbox) {
+    const isApproving = checkbox.checked;
     
-    if (!kegiatan) {
-        alert('Silakan pilih kegiatan terlebih dahulu!');
-        return;
-    }
-    
-    const data = dataLaporan[kegiatan];
-    const tbody = document.getElementById('tableBody');
-    
-    if (!data) {
-        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Data tidak ditemukan</td></tr>';
-        return;
-    }
-    
-    let html = '';
-    data.forEach((item, index) => {
-        const hasPCL = item.pcl && item.pcl.length > 0;
-        const rowClass = hasPCL ? 'cursor-pointer hover:bg-blue-50' : '';
-        const onclick = hasPCL ? `onclick="showPCLDetail('${item.nama}', ${index})"` : '';
-        
-        // Warna progress berdasarkan persentase
-        let progressColor = 'text-red-600';
-        if (item.progress >= 90) {
-            progressColor = 'text-green-600';
-        } else if (item.progress >= 70) {
-            progressColor = 'text-yellow-600';
-        }
-        
-        html += `
-            <tr class="${rowClass}" ${onclick}>
-                <td class="px-4 py-3 text-center text-sm text-gray-700 border border-gray-200">${item.no}</td>
-                <td class="px-4 py-3 text-sm border border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <span class="${hasPCL ? 'text-blue-600 hover:text-blue-800 font-medium' : 'text-gray-900'}">${item.nama}</span>
-                        ${hasPCL ? '<i class="fas fa-chevron-right text-gray-400"></i>' : ''}
-                    </div>
-                </td>
-                <td class="px-4 py-3 text-center text-sm font-semibold text-gray-900 border border-gray-200">${item.target}</td>
-                <td class="px-4 py-3 text-center text-sm font-bold ${progressColor} border border-gray-200">${item.progress}%</td>
-                <td class="px-4 py-3 text-center border border-gray-200">
-                    <button onclick="event.stopPropagation(); approveData(${item.no})" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-colors">
-                        <i class="fas fa-check mr-1"></i>Approve
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    tbody.innerHTML = html;
-    
-    // Update showing info
-    document.getElementById('showingInfo').textContent = `1 to ${data.length} of ${data.length}`;
-}
-
-// Fungsi tampilkan modal detail PCL
-function showPCLDetail(pmlName, index) {
-    const kegiatan = document.getElementById('filterKegiatan').value;
-    const data = dataLaporan[kegiatan][index];
-    
-    document.getElementById('modalPMLName').textContent = pmlName;
-    
-    let html = '';
-    data.pcl.forEach((pcl, i) => {
-        const progressPercent = (pcl.progress / pcl.target * 100).toFixed(0);
-        
-        let statusBadge = '';
-        if (pcl.status === 'Approved') {
-            statusBadge = '<span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full"><i class="fas fa-check-circle mr-1"></i>Approved</span>';
-        } else if (pcl.status === 'Pending') {
-            statusBadge = '<span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full"><i class="fas fa-clock mr-1"></i>Pending</span>';
-        } else {
-            statusBadge = '<span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full"><i class="fas fa-times-circle mr-1"></i>Rejected</span>';
-        }
-        
-        html += `
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-center text-sm text-gray-700 border border-gray-200">${i + 1}</td>
-                <td class="px-4 py-3 text-sm text-gray-900 border border-gray-200">${pcl.nama}</td>
-                <td class="px-4 py-3 text-center text-sm text-gray-700 border border-gray-200">${pcl.target}</td>
-                <td class="px-4 py-3 border border-gray-200">
-                    <div class="flex items-center gap-2">
-                        <div class="flex-1 bg-gray-200 rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: ${progressPercent}%"></div>
-                        </div>
-                        <span class="text-sm font-medium text-gray-700 whitespace-nowrap">${pcl.progress}/${pcl.target}</span>
-                    </div>
-                </td>
-                <td class="px-4 py-3 text-center border border-gray-200">
-                    ${statusBadge}
-                </td>
-            </tr>
-        `;
-    });
-    
-    document.getElementById('modalTableBody').innerHTML = html;
-    document.getElementById('pclModal').classList.remove('hidden');
-}
-
-// Fungsi close modal
-function closeModal() {
-    document.getElementById('pclModal').classList.add('hidden');
-}
-
-// Fungsi search
-function searchTable() {
-    const input = document.getElementById('searchInput');
-    const filter = input.value.toLowerCase();
-    const table = document.getElementById('approvalTable');
-    const tbody = table.getElementsByTagName('tbody')[0];
-    const rows = tbody.getElementsByTagName('tr');
-    
-    for (let i = 0; i < rows.length; i++) {
-        const nameCell = rows[i].getElementsByTagName('td')[1];
-        if (nameCell) {
-            const txtValue = nameCell.textContent || nameCell.innerText;
-            if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                rows[i].style.display = '';
-            } else {
-                rows[i].style.display = 'none';
+    if (isApproving) {
+        // Show approval modal with feedback
+        Swal.fire({
+            title: 'Setujui Laporan PML?',
+            html: `Anda akan menyetujui laporan dari <strong>${namaPML}</strong>`,
+            icon: 'question',
+            input: 'textarea',
+            inputLabel: 'Catatan (Opsional)',
+            inputPlaceholder: 'Tambahkan catatan jika diperlukan...',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-check mr-2"></i>Ya, Setujui',
+            cancelButtonText: 'Batal',
+            preConfirm: (feedback) => {
+                return { feedback: feedback || '' };
             }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                processApproval(idPML, result.value.feedback, checkbox);
+            } else {
+                // Reset checkbox if cancelled
+                checkbox.checked = false;
+            }
+        });
+    } else {
+        // Show rejection modal
+        Swal.fire({
+            title: 'Batalkan Approval?',
+            html: `Anda akan membatalkan approval untuk <strong>${namaPML}</strong>`,
+            icon: 'warning',
+            input: 'textarea',
+            inputLabel: 'Alasan Pembatalan (Wajib)',
+            inputPlaceholder: 'Jelaskan alasan pembatalan...',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Alasan pembatalan harus diisi!';
+                }
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-times mr-2"></i>Ya, Batalkan',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                processReject(idPML, result.value, checkbox);
+            } else {
+                // Reset checkbox if cancelled
+                checkbox.checked = true;
+            }
+        });
+    }
+}
+
+// Show Detail Modal
+function showDetail(idPML) {
+    console.log('Opening detail for PML ID:', idPML);
+    
+    Swal.fire({
+        title: 'Memuat Data...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
-    }
+    });
+
+    const url = `<?= base_url('adminsurvei-kab/approval-laporan/detail/') ?>${idPML}`;
+    console.log('Fetching URL:', url);
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers.get('content-type'));
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return response.json();
+        })
+        .then(result => {
+            console.log('Result:', result);
+            Swal.close();
+            
+            if (result.success) {
+                displayDetail(result.data);
+                document.getElementById('modalDetail').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message,
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error details:', error);
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Terjadi kesalahan saat memuat data: ' + error.message,
+                confirmButtonColor: '#ef4444'
+            });
+        });
 }
 
-// Fungsi filter table
-function filterTable() {
-    // Reset table saat ganti filter
-    document.getElementById('tableBody').innerHTML = '';
+function displayDetail(data) {
+    let pclHTML = '';
+    let allCompleted = true;
+    let allApproved = true;
+
+    data.pcl_list.forEach((pcl, index) => {
+        const statusBadge = pcl.is_completed 
+            ? '<span class="badge badge-success">Selesai</span>' 
+            : '<span class="badge badge-warning">Belum Selesai</span>';
+        
+        const approvalBadge = pcl.status_approval == 1
+            ? '<span class="badge badge-success">Disetujui</span>'
+            : '<span class="badge badge-secondary">Belum Disetujui</span>';
+
+        if (!pcl.is_completed) allCompleted = false;
+        if (pcl.status_approval != 1) allApproved = false;
+
+        pclHTML += `
+            <tr class="border-b border-gray-100">
+                <td class="px-4 py-3 text-sm text-gray-900">${index + 1}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">${pcl.nama_user}</td>
+                <td class="px-4 py-3 text-center text-sm text-gray-900">${pcl.target.toLocaleString()}</td>
+                <td class="px-4 py-3 text-center text-sm text-gray-900">${pcl.realisasi.toLocaleString()}</td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex items-center justify-center">
+                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: ${Math.min(100, pcl.progress)}%"></div>
+                        </div>
+                        <span class="text-sm font-semibold">${pcl.progress}%</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3 text-center">${statusBadge}</td>
+                <td class="px-4 py-3 text-center">${approvalBadge}</td>
+            </tr>
+        `;
+    });
+
+    const eligibilityHTML = (allCompleted && allApproved)
+        ? '<div class="bg-green-50 border border-green-200 rounded-lg p-4"><p class="text-sm text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>Memenuhi Syarat:</strong> Semua PCL sudah menyelesaikan target 100% dan telah disetujui oleh PML.</p></div>'
+        : '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><p class="text-sm text-yellow-700"><i class="fas fa-exclamation-triangle mr-2"></i><strong>Belum Memenuhi Syarat:</strong> PML ini belum bisa disetujui karena belum semua PCL menyelesaikan target atau belum semua PCL disetujui oleh PML.</p></div>';
+
+    const content = `
+        <div class="space-y-6">
+            <!-- PML Info -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-semibold text-gray-900 mb-3">Informasi PML</h4>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Nama PML</p>
+                        <p class="text-sm font-medium text-gray-900">${data.nama_pml}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Email</p>
+                        <p class="text-sm font-medium text-gray-900">${data.email}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Kegiatan</p>
+                        <p class="text-sm font-medium text-gray-900">${data.nama_kegiatan_detail_proses}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Target PML</p>
+                        <p class="text-sm font-medium text-gray-900">${data.target.toLocaleString()}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eligibility Status -->
+            ${eligibilityHTML}
+
+            <!-- PCL List -->
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-3">Daftar PCL</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">No</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nama PCL</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Target</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Realisasi</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Progress</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Status</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Approval</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${pclHTML}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('detailContent').innerHTML = content;
 }
 
-// Close modal when clicking outside
-document.getElementById('pclModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
-
-// Fungsi approve data
-function approveData(id) {
-    if (confirm('Apakah Anda yakin ingin menyetujui laporan ini?')) {
-        alert(`Laporan PML ID ${id} telah disetujui!`);
-        // TODO: Kirim request ke server untuk approve
-        // fetch('/approval-laporan/approve/' + id, { method: 'POST' })
-    }
+function closeDetailModal() {
+    document.getElementById('modalDetail').classList.add('hidden');
+    document.body.style.overflow = 'auto';
 }
+
+function processApproval(idPML, feedback, checkbox) {
+    Swal.fire({
+        title: 'Memproses...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const formData = new FormData();
+    formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+    formData.append('id_pml', idPML);
+    formData.append('feedback', feedback);
+
+    fetch('<?= base_url('adminsurvei-kab/approval-laporan/approve') ?>', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: result.message,
+                confirmButtonColor: '#3b82f6'
+            }).then(() => {
+                window.location.reload();
+            });
+        } else {
+            checkbox.checked = false;
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: result.message,
+                confirmButtonColor: '#ef4444'
+            });
+        }
+    })
+    .catch(error => {
+        checkbox.checked = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Terjadi kesalahan pada sistem',
+            confirmButtonColor: '#ef4444'
+        });
+    });
+}
+
+function processReject(idPML, feedback, checkbox) {
+    Swal.fire({
+        title: 'Memproses...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const formData = new FormData();
+    formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+    formData.append('id_pml', idPML);
+    formData.append('feedback', feedback);
+
+    fetch('<?= base_url('adminsurvei-kab/approval-laporan/reject') ?>', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: result.message,
+                confirmButtonColor: '#3b82f6'
+            }).then(() => {
+                window.location.reload();
+            });
+        } else {
+            checkbox.checked = true;
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: result.message,
+                confirmButtonColor: '#ef4444'
+            });
+        }
+    })
+    .catch(error => {
+        checkbox.checked = true;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Terjadi kesalahan pada sistem',
+            confirmButtonColor: '#ef4444'
+        });
+    });
+}
+
+// Show Feedback
+function showFeedback(feedback, tanggalApproval) {
+    Swal.fire({
+        title: 'Feedback Approval',
+        html: `
+            <div class="text-left">
+                <p class="text-sm text-gray-600 mb-2">
+                    <i class="fas fa-calendar mr-2"></i>
+                    <strong>Tanggal Approval:</strong> ${new Date(tanggalApproval).toLocaleDateString('id-ID')}
+                </p>
+                <div class="bg-gray-50 rounded-lg p-4 mt-3">
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap">${feedback}</p>
+                </div>
+            </div>
+        `,
+        icon: 'info',
+        confirmButtonColor: '#3b82f6',
+        confirmButtonText: 'Tutup'
+    });
+}
+
+// Flashdata
+<?php if (session()->getFlashdata('success')): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: "<?= session()->getFlashdata('success') ?>",
+        confirmButtonColor: '#3b82f6'
+    });
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: "<?= session()->getFlashdata('error') ?>",
+        confirmButtonColor: '#ef4444'
+    });
+<?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

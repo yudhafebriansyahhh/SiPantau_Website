@@ -245,7 +245,7 @@ async function updateChart() {
     }
 }
 
-// Render chart
+// Render chart with zoom functionality
 function renderChart(data) {
     if (chartInstance) {
         chartInstance.destroy();
@@ -272,15 +272,34 @@ function renderChart(data) {
             type: 'area',
             fontFamily: 'Poppins, sans-serif',
             toolbar: {
-                show: !isMobile,
+                show: true,
+                offsetX: 0,
+                offsetY: 0,
                 tools: {
                     download: true,
-                    selection: false,
-                    zoom: false,
-                    zoomin: false,
-                    zoomout: false,
-                    pan: false,
-                    reset: false
+                    selection: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
+                },
+                autoSelected: 'zoom'
+            },
+            zoom: {
+                enabled: true,
+                type: 'x',
+                autoScaleYaxis: true,
+                zoomedArea: {
+                    fill: {
+                        color: '#90CAF9',
+                        opacity: 0.4
+                    },
+                    stroke: {
+                        color: '#0D47A1',
+                        opacity: 0.4,
+                        width: 1
+                    }
                 }
             },
             animations: {
@@ -494,17 +513,34 @@ function renderPetugasTable(data) {
   `).join('');
 }
 
-// Window resize handler
+// Enhanced resize handler with debounce
 let resizeTimer;
 window.addEventListener('resize', function() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function() {
         if (chartInstance) {
-            updateChart();
+            const kegiatanId = document.getElementById('filterKegiatan').value;
+            if (kegiatanId) {
+                updateChart();
+            }
         }
     }, 250);
 });
 
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate progress bars
+    setTimeout(function() {
+        const progressBars = document.querySelectorAll('.card .h-2.rounded-full[style*="width"]');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    }, 100);
+});
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Animate progress bars

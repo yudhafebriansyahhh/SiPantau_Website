@@ -69,9 +69,9 @@
                         <span class="ml-3">Assign Petugas Survei</span>
                     </a>
 
-                    <!-- Feedback / Approval Laporan -->
+                    <!-- Approval Laporan -->
                     <a href="<?= base_url('adminsurvei-kab/approval-laporan') ?>"
-                        class="sidebar-link <?= ($active_menu ?? '') == 'comingsoon' ? 'active' : '' ?>">
+                        class="sidebar-link <?= ($active_menu ?? '') == 'approval-laporan' ? 'active' : '' ?>">
                         <i class="fas fa-comment-dots w-5"></i>
                         <span class="ml-3">Approval Laporan</span>
                     </a>

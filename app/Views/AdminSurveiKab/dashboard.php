@@ -175,22 +175,28 @@
         document.getElementById('kegiatanChart').style.display = 'none';
         document.getElementById('chartErrorState').style.display = 'none';
 
-        const response = await fetch(`${baseKurvaS}?id_kegiatan_detail_proses=${kegiatan}`);
-        const result = await response.json();
+        try {
+            const response = await fetch(`${baseKurvaS}?id_kegiatan_detail_proses=${kegiatan}`);
+            const result = await response.json();
 
-        if (result.success) {
-            document.getElementById('chartLoadingState').style.display = 'none';
-            document.getElementById('kegiatanChart').style.display = 'block';
+            if (result.success) {
+                document.getElementById('chartLoadingState').style.display = 'none';
+                document.getElementById('kegiatanChart').style.display = 'block';
 
-            renderChart(result.data);
-            loadPetugas();
-        } else {
+                renderChart(result.data);
+                loadPetugas();
+            } else {
+                document.getElementById('chartLoadingState').style.display = 'none';
+                document.getElementById('chartErrorState').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading chart:', error);
             document.getElementById('chartLoadingState').style.display = 'none';
             document.getElementById('chartErrorState').style.display = 'block';
         }
     }
 
-    // Render Chart
+    // Render Chart with Zoom Toggle
     function renderChart(data) {
         if (chartInstance) {
             chartInstance.destroy();
@@ -216,20 +222,47 @@
                 type: 'area',
                 fontFamily: 'Poppins, sans-serif',
                 toolbar: {
-                    show: !isMobile,
+                    show: true, // Selalu tampilkan toolbar
+                    offsetX: 0,
+                    offsetY: 0,
                     tools: {
                         download: true,
-                        selection: false,
-                        zoom: false,
-                        zoomin: false,
-                        zoomout: false,
-                        pan: false,
-                        reset: false
+                        selection: true,
+                        zoom: true,
+                        zoomin: true,
+                        zoomout: true,
+                        pan: true,
+                        reset: true
+                    },
+                    autoSelected: 'zoom'
+                },
+                zoom: {
+                    enabled: true,
+                    type: 'x',
+                    autoScaleYaxis: true,
+                    zoomedArea: {
+                        fill: {
+                            color: '#90CAF9',
+                            opacity: 0.4
+                        },
+                        stroke: {
+                            color: '#0D47A1',
+                            opacity: 0.4,
+                            width: 1
+                        }
                     }
                 },
                 animations: {
                     enabled: true,
-                    speed: 800
+                    speed: 800,
+                    animateGradually: {
+                        enabled: true,
+                        delay: 150
+                    },
+                    dynamicAnimation: {
+                        enabled: true,
+                        speed: 350
+                    }
                 }
             },
             colors: ['#1e88e5', '#e53935'],
@@ -263,7 +296,7 @@
             xaxis: {
                 categories: data.labels,
                 title: {
-                    text: 'Tanggal',
+                    text: 'Periode',
                     style: {
                         fontSize: isMobile ? '11px' : '12px',
                         fontWeight: 600
@@ -362,11 +395,15 @@
             return;
         }
 
-        const response = await fetch(`${basePetugas}?id_kegiatan_detail_proses=${kegiatanId}`);
-        const result = await response.json();
+        try {
+            const response = await fetch(`${basePetugas}?id_kegiatan_detail_proses=${kegiatanId}`);
+            const result = await response.json();
 
-        if (result.success) {
-            renderPetugasTable(result.data);
+            if (result.success) {
+                renderPetugasTable(result.data);
+            }
+        } catch (error) {
+            console.error('Error loading petugas:', error);
         }
     }
 
@@ -375,18 +412,6 @@
         const tbody = document.getElementById('petugasTableBody');
         const statusInfo = document.getElementById('kegiatanStatusInfo');
         const badgeStatus = document.getElementById('badgeStatusKegiatan');
-
-        // DEBUG: Cek data yang diterima
-        console.log('=== DEBUG PETUGAS DATA ===');
-        console.log('Total data:', data.length);
-        if (data.length > 0) {
-            console.log('Sample data pertama:', data[0]);
-            console.log('Status Harian:', data[0].status_harian);
-            console.log('Status Harian Class:', data[0].status_harian_class);
-            console.log('Target Harian:', data[0].target_harian);
-            console.log('Realisasi Hari Ini:', data[0].realisasi_hari_ini);
-        }
-        console.log('========================');
 
         if (data.length === 0) {
             tbody.innerHTML = `
@@ -430,7 +455,7 @@
             
             <!-- Status Kegiatan -->
             <td class="px-4 py-4">
-                <span class="badge ${p.status_kegiatan_class}">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_kegiatan_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_kegiatan_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_kegiatan_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_kegiatan_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
                     ${p.status_kegiatan}
                 </span>
             </td>
@@ -438,7 +463,7 @@
             <!-- Status Harian -->
             <td class="px-4 py-4">
                 <div class="flex flex-col gap-1 items-start">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_harian_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_harian_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_harian_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_harian_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_harian_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_harian_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_harian_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_harian_class === 'badge-info' ? 'bg-blue-100 text-blue-800' : ''} ${p.status_harian_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
                         ${p.status_harian}
                     </span>
                     ${p.status_harian === 'Belum Lapor' && p.target_harian > 0 ? `

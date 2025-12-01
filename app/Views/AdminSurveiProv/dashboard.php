@@ -142,8 +142,7 @@
 <script>
   let chartInstance = null;
   const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
-  const baseProv = "<?= base_url('adminsurvei/kurva-provinsi') ?>";
-  const baseKab = "<?= base_url('adminsurvei/kurva-kabupaten') ?>";
+  const baseKurvaS = "<?= base_url('adminsurvei/get-kurva-s-with-realisasi') ?>";
   const baseWilayah = "<?= base_url('adminsurvei/kegiatan-wilayah') ?>";
   const basePetugas = "<?= base_url('adminsurvei/get-petugas') ?>";
 
@@ -173,12 +172,13 @@
     }
   }
 
-  // Load dan Render Kurva S
+  // Load dan Render Kurva S dengan Realisasi
   async function loadAndRenderKurvaS(idProses = "", idWilayah = "") {
     try {
-      const url = idWilayah
-        ? `${baseKab}?id_kegiatan_wilayah=${idWilayah}&nocache=${Date.now()}`
-        : `${baseProv}?id_kegiatan_detail_proses=${idProses}&nocache=${Date.now()}`;
+      let url = `${baseKurvaS}?id_kegiatan_detail_proses=${idProses}&nocache=${Date.now()}`;
+      if (idWilayah) {
+        url += `&id_kegiatan_wilayah=${idWilayah}`;
+      }
 
       document.getElementById('chartLoadingState').style.display = 'flex';
       document.getElementById('kurvaSProvChart').style.display = 'none';
@@ -186,14 +186,14 @@
       document.getElementById('chartPlaceholder').style.display = 'none';
 
       const response = await fetch(url, { cache: "no-store" });
-      const data = await response.json();
+      const result = await response.json();
 
-      if (!data.labels.length) throw new Error('Empty data');
+      if (!result.success) throw new Error(result.message || 'Failed to load data');
 
       await new Promise(res => setTimeout(res, 200));
       document.getElementById('chartLoadingState').style.display = 'none';
       document.getElementById('kurvaSProvChart').style.display = 'block';
-      renderChart(data);
+      renderChart(result.data);
     } catch (e) {
       console.error(e);
       document.getElementById('chartLoadingState').style.display = 'none';
@@ -201,7 +201,7 @@
     }
   }
 
-  // Render Chart
+  // Render Chart dengan Target dan Realisasi
   function renderChart(data) {
     if (chartInstance) {
       chartInstance.destroy();
@@ -211,59 +211,162 @@
     const isMobile = window.innerWidth < 640;
 
     const options = {
+      series: [
+        {
+          name: 'Target (Kurva S)',
+          data: data.target,
+          type: 'area'
+        },
+        {
+          name: 'Realisasi (Kumulatif)',
+          data: data.realisasi,
+          type: 'area'
+        }
+      ],
       chart: {
         type: 'area',
-        height: isMobile ? 300 : 420,
-        animations: { enabled: true, speed: 600 },
-        toolbar: { show: !isMobile },
-        fontFamily: 'Poppins, sans-serif'
+        height: isMobile ? 300 : 380,
+        fontFamily: 'Poppins, sans-serif',
+        toolbar: {
+          show: true,
+          offsetX: 0,
+          offsetY: 0,
+          tools: {
+            download: true,
+            selection: true,
+            zoom: true,
+            zoomin: true,
+            zoomout: true,
+            pan: true,
+            reset: true
+          },
+          autoSelected: 'zoom'
+        },
+        zoom: {
+          enabled: true,
+          type: 'x',
+          autoScaleYaxis: true,
+          zoomedArea: {
+            fill: {
+              color: '#90CAF9',
+              opacity: 0.4
+            },
+            stroke: {
+              color: '#0D47A1',
+              opacity: 0.4,
+              width: 1
+            }
+          }
+        },
+        animations: {
+          enabled: true,
+          speed: 800
+        }
       },
-      series: [{
-        name: 'Target Kumulatif',
-        data: data.targetAbsolut
-      }],
+      colors: ['#1e88e5', '#e53935'],
+      dataLabels: { enabled: false },
+      stroke: {
+        width: isMobile ? [2, 2] : [3, 3],
+        curve: 'smooth',
+        dashArray: [0, 5]
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shade: 'light',
+          type: 'vertical',
+          shadeIntensity: 0.3,
+          gradientToColors: ['#bbdefb', '#ffcdd2'],
+          inverseColors: false,
+          opacityFrom: 0.5,
+          opacityTo: 0.1,
+          stops: [0, 100]
+        }
+      },
+      markers: {
+        size: 0,
+        hover: {
+          size: isMobile ? 5 : 7
+        }
+      },
       xaxis: {
         categories: data.labels,
-        title: { text: 'Tanggal', style: { fontSize: isMobile ? '11px' : '12px' } },
+        title: {
+          text: 'Periode',
+          style: {
+            fontSize: isMobile ? '11px' : '12px',
+            fontWeight: 600
+          }
+        },
         labels: {
           rotate: isMobile ? -45 : 0,
-          style: { fontSize: isMobile ? '10px' : '11px' }
+          style: {
+            fontSize: isMobile ? '10px' : '11px'
+          }
         }
       },
       yaxis: {
         title: {
-          text: isMobile ? '' : 'Target Kumulatif',
-          style: { fontSize: '12px' }
+          text: isMobile ? '' : 'Jumlah',
+          style: {
+            fontSize: '12px',
+            fontWeight: 600
+          }
         },
         labels: {
-          style: { fontSize: isMobile ? '9px' : '11px' },
-          formatter: value => Math.round(value).toLocaleString('id-ID')
+          style: {
+            fontSize: isMobile ? '9px' : '11px'
+          },
+          formatter: function(value) {
+            return Math.round(value).toLocaleString('id-ID');
+          }
         }
       },
       tooltip: {
         shared: true,
-        custom: ({ dataPointIndex }) => `
-        <div class="p-2">
-          <strong>${data.labels[dataPointIndex]}</strong><br>
-          Target Kumulatif: <b>${data.targetAbsolut[dataPointIndex].toLocaleString('id-ID')}</b><br>
-          Target Harian: <b>${data.targetHarian[dataPointIndex].toLocaleString('id-ID')}</b><br>
-          Persen Kumulatif: <b>${data.targetPersen[dataPointIndex].toFixed(2)}%</b>
-        </div>`
-      },
-      colors: ['#1e88e5'],
-      stroke: { curve: 'smooth', width: isMobile ? 2 : 3 },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          opacityFrom: 0.5,
-          opacityTo: 0.05
+        intersect: false,
+        y: {
+          formatter: function(value) {
+            return value ? value.toLocaleString('id-ID') : '0';
+          }
         }
       },
-      dataLabels: { enabled: false },
       legend: {
         position: isMobile ? 'bottom' : 'top',
         horizontalAlign: isMobile ? 'center' : 'left',
         fontSize: isMobile ? '11px' : '13px'
+      },
+      grid: {
+        borderColor: '#f3f4f6',
+        strokeDashArray: 3
+      },
+      annotations: {
+        xaxis: isMobile ? [] : [
+          {
+            x: data.config.tanggal_mulai,
+            borderColor: '#43a047',
+            label: {
+              text: 'Mulai',
+              style: {
+                color: '#fff',
+                background: '#43a047',
+                fontSize: '10px'
+              }
+            }
+          },
+          {
+            x: data.config.tanggal_selesai,
+            borderColor: '#e53935',
+            label: {
+              text: 'Selesai',
+              style: {
+                color: '#fff',
+                background: '#e53935',
+                fontSize: '10px'
+              }
+            }
+          }
+        ]
       }
     };
 
@@ -279,7 +382,7 @@
     if (!kegiatanId) {
       document.getElementById('petugasTableBody').innerHTML = `
       <tr>
-        <td colspan="3" class="px-4 py-12 text-center">
+        <td colspan="4" class="px-4 py-12 text-center">
           <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
           <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
         </td>
@@ -320,7 +423,6 @@
 
     tbody.innerHTML = data.map((p, index) => `
     <tr class="hover:bg-gray-50 transition-colors duration-150">
-      <!-- Petugas Info -->
       <td class="px-4 py-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
@@ -333,15 +435,11 @@
           </div>
         </div>
       </td>
-      
-      <!-- Status Kegiatan -->
       <td class="px-4 py-4">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_kegiatan_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_kegiatan_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_kegiatan_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_kegiatan_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
           ${p.status_kegiatan}
         </span>
       </td>
-      
-      <!-- Status Harian -->
       <td class="px-4 py-4">
         <div class="flex flex-col gap-1 items-start">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status_harian_class === 'badge-danger' ? 'bg-red-100 text-red-800' : ''} ${p.status_harian_class === 'badge-success' ? 'bg-green-100 text-green-800' : ''} ${p.status_harian_class === 'badge-warning' ? 'bg-yellow-100 text-yellow-800' : ''} ${p.status_harian_class === 'badge-info' ? 'bg-blue-100 text-blue-800' : ''} ${p.status_harian_class === 'badge-secondary' ? 'bg-gray-100 text-gray-700' : ''}">
@@ -361,8 +459,6 @@
           ` : ''}
         </div>
       </td>
-      
-      <!-- Progress Keseluruhan -->
       <td class="px-4 py-4">
         <div class="flex items-center gap-3">
           <div class="flex-1">
