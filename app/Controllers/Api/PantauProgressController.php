@@ -24,90 +24,62 @@ class PantauProgressController extends BaseController
      * GET /api/pantau-progress
      */
     public function index()
-    {
-        $authHeader = $this->request->getHeaderLine('Authorization');
-        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-            return $this->failUnauthorized('Token tidak ditemukan');
-        }
+{
+    $authHeader = $this->request->getHeaderLine('Authorization');
+    if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        return $this->failUnauthorized('Token tidak ditemukan');
+    }
 
-        try {
-            // Decode JWT
-            $decoded = JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
-            $sobat_id = $decoded->data->sobat_id;
+    try {
+        // Decode JWT tetap wajib login
+        $decoded = JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
+        $sobat_id = $decoded->data->sobat_id;
 
-            // Validasi PCL
-            $pclModel = new PCLModel();
-            $pclList = $pclModel->where('sobat_id', $sobat_id)->findAll();
+        $progressModel = new PantauProgressModel();
 
-            if (empty($pclList)) {
-                return $this->failUnauthorized('Hanya PCL yang bisa mengakses data progress.');
-            }
+        // Ambil filter opsional id_pcl
+        $filterIdPcl = $this->request->getGet('id_pcl');
 
-            $pclIds = array_column($pclList, 'id_pcl');
+        if (!empty($filterIdPcl)) {
+            // Jika ada filter id_pcl → ambil data progress sesuai id_pcl
+            $data = $progressModel
+                ->where('id_pcl', $filterIdPcl)
+                ->orderBy('created_at', 'DESC')
+                ->findAll();
 
-            // Optional filter
-            $filterIdPcl = $this->request->getGet('id_pcl');
-
-            if (!empty($filterIdPcl) && !in_array($filterIdPcl, $pclIds)) {
-                return $this->failForbidden('Anda tidak memiliki akses ke id_pcl tersebut.');
-            }
-
-            $progressModel = new PantauProgressModel();
-
-            // Jika ada filter id_pcl → ambil data progres id_pcl tsb
-            if (!empty($filterIdPcl)) {
-                $data = $progressModel
-                    ->where('id_pcl', $filterIdPcl)
-                    ->orderBy('created_at', 'DESC')
-                    ->findAll();
-
-                $totalKumulatif = (int) $progressModel
-                    ->where('id_pcl', $filterIdPcl)
-                    ->selectSum('jumlah_realisasi_absolut')
-                    ->first()['jumlah_realisasi_absolut'] ?? 0;
-
-                return $this->respond([
-                    'status' => 'success',
-                    'id_pcl' => (int) $filterIdPcl,
-                    'total_kumulatif' => $totalKumulatif,
-                    'total_entry' => count($data),
-                    'data' => $data
-                ]);
-            }
-
-            // Tanpa filter → tampilkan seluruh PCL user
-            $data = [];
-            foreach ($pclIds as $idPcl) {
-                $records = $progressModel
-                    ->where('id_pcl', $idPcl)
-                    ->orderBy('created_at', 'DESC')
-                    ->findAll();
-
-                $totalKumulatif = (int) $progressModel
-                    ->where('id_pcl', $idPcl)
-                    ->selectSum('jumlah_realisasi_absolut')
-                    ->first()['jumlah_realisasi_absolut'] ?? 0;
-
-                $data[] = [
-                    'id_pcl' => $idPcl,
-                    'total_kumulatif' => $totalKumulatif,
-                    'total_entry' => count($records),
-                    'records' => $records
-                ];
-            }
+            $totalKumulatif = (int) $progressModel
+                ->where('id_pcl', $filterIdPcl)
+                ->selectSum('jumlah_realisasi_absolut')
+                ->first()['jumlah_realisasi_absolut'] ?? 0;
 
             return $this->respond([
                 'status' => 'success',
-                'total_pcl' => count($data),
+                'id_pcl' => (int) $filterIdPcl,
+                'total_kumulatif' => $totalKumulatif,
+                'total_entry' => count($data),
                 'data' => $data
             ]);
-
-        } catch (\Firebase\JWT\ExpiredException $e) {
-            return $this->failUnauthorized('Token kadaluarsa');
-        } catch (\Exception $e) {
-            return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
         }
+
+        // Tanpa filter → tampilkan seluruh progress
+        $allRecords = $progressModel->orderBy('created_at', 'DESC')->findAll();
+
+        $totalKumulatif = (int) $progressModel->selectSum('jumlah_realisasi_absolut')->first()['jumlah_realisasi_absolut'] ?? 0;
+
+        return $this->respond([
+            'status' => 'success',
+            'total_entry' => count($allRecords),
+            'total_kumulatif' => $totalKumulatif,
+            'data' => $allRecords
+        ]);
+
+    } catch (\Firebase\JWT\ExpiredException $e) {
+        return $this->failUnauthorized('Token kadaluarsa');
+    } catch (\Exception $e) {
+        return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
     }
+}
+
 
     /**
      * POST /api/pantau-progress
