@@ -149,7 +149,7 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
         $routes->get('sisa-target/(:num)', 'AdminProv\MasterKegiatanWilayahController::getSisaTarget/$1');
         $routes->get('get-kegiatan-detail-proses/(:num)', 'AdminProv\MasterKegiatanWilayahController::getKegiatanDetailProses/$1');
         $routes->get('clear-filter', 'AdminProv\MasterKegiatanWilayahController::clearFilter');
-        
+
         // Import Excel
         $routes->get('download-template/(:num)', 'AdminProv\MasterKegiatanWilayahController::downloadTemplate/$1');
         $routes->post('import', 'AdminProv\MasterKegiatanWilayahController::import');
@@ -296,5 +296,10 @@ $routes->group('api', [
     $routes->get('total-kegiatan-pcl', 'KegiatanController::totalKegiatanPCL');
     $routes->get('total-kegiatan-pml', 'KegiatanController::totalKegiatanPML');
     $routes->post('pcl/approve/(:num)', 'PmlController::approvePCL/$1');
-    $routes->get('cek/','ReminderController::show');
+    $routes->get('cek/', 'ReminderController::show');
+    $routes->get('achievement/(:num)', 'AchievementController::show/$1');
+    $routes->get('achievement/master/list', 'AchievementMasterController::index');
+    $routes->get('achievement/history/(:num)', 'AchievementHistoryController::userHistory/$1');
+    $routes->get('achievement/leaderboard', 'AchievementLeaderboardController::index');
+    $routes->delete('achievement/reset/(:num)', 'AchievementResetController::resetUser/$1');
 });

@@ -4,61 +4,54 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class SiPantauAchievement extends Migration
+class SipantauAchievement extends Migration
 {
     public function up()
     {
         $this->forge->addField([
             'id_achievement' => [
-                'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
+                'type'           => 'INT',
+                'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'sobat_id' => [
+
+            'nama_achievement' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+                'null'       => true,
+            ],
+
+            'deskripsi' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
+
+            'kategori' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
+
+            'streak_diperlukan' => [
                 'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
+                'null' => false,
             ],
-            'total_lapor_aktivitas' => [
-                'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
-            ],
-            'total_lapor_progress' => [
-                'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
-            ],
-            'persentase_kepatuhan' => [
-                'type' => 'DECIMAL',
-                'constraint' => '5,2',
-                'unsigned' => true,
-            ],
-            'kategori_kepatuhan' => [
-                'type' => 'ENUM',
-                'constraint' => ['tinggi', 'sedang', 'rendah'],
-                'null' => true                
-            ],
-            'persentase_performa' => [
-                'type' => 'DECIMAL',
-                'constraint' => '5,2',
-                'unsigned' => true,
-            ],
-            'kategori_performa' => [
-                'type' => 'ENUM',
-                'constraint' => ['sangat bagus', 'bagus', 'tidak bagus'],
-                'null' => true                
+
+            'created_at' => [
+                'type'    => 'DATETIME',
+                'null'    => true,
+                'default' => 'CURRENT_TIMESTAMP',
             ],
         ]);
 
         $this->forge->addKey('id_achievement', true);
-        $this->forge->addForeignKey('sobat_id', 'sipantau_user', 'sobat_id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('sipantau_achievement');
+
+        $this->forge->createTable('sipantau_achievement', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('sipantau_achievement');
+        $this->forge->dropTable('sipantau_achievement', true);
     }
 }
