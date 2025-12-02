@@ -33,6 +33,11 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     $routes->get('get-kurva-s', 'SuperAdmin\DashboardController::getKurvaS');
     $routes->get('get-kegiatan-wilayah', 'SuperAdmin\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'SuperAdmin\DashboardController::getPetugas');
+    // ===== Dashboard Kepatuhan Routes =====
+    $routes->get('get-kepatuhan-data', 'SuperAdmin\DashboardController::getKepatuhanData');
+    $routes->get('get-detail-kepatuhan-pcl', 'SuperAdmin\DashboardController::getDetailKepatuhanPCL');
+    $routes->get('export-kepatuhan-csv', 'SuperAdmin\DashboardController::exportKepatuhanCSV');
+    $routes->get('rebuild-kepatuhan', 'SuperAdmin\DashboardController::rebuildKepatuhanSummary');
 
     // ===== Master Output =====
     $routes->group('master-output', static function ($routes) {

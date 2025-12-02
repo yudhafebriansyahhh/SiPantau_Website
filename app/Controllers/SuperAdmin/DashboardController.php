@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\MasterKegiatanDetailModel;
 use App\Models\MasterKegiatanDetailProsesModel;
 use App\Models\MasterKegiatanWilayahModel;
+use App\Models\KepatuhanModel;
 use App\Models\KurvaSProvinsiModel;
 use App\Models\PantauProgressModel;
 use App\Models\PCLModel;
@@ -15,12 +16,14 @@ class DashboardController extends BaseController
 {
     protected $masterKegiatanDetailModel;
     protected $masterKegiatanDetailProsesModel;
-    protected $masterKegiatanWilayahModel;
+    protected $kepatuhanModel;
+    protected $kegiatanDetailProsesModel;
     protected $kurvaSProvinsiModel;
     protected $pantauProgressModel;
     protected $pclModel;
     protected $pmlModel;
     protected $db;
+
 
     public function __construct()
     {
@@ -29,6 +32,7 @@ class DashboardController extends BaseController
         $this->masterKegiatanWilayahModel = new MasterKegiatanWilayahModel();
         $this->kurvaSProvinsiModel = new KurvaSProvinsiModel();
         $this->pantauProgressModel = new PantauProgressModel();
+        $this->kepatuhanModel = new KepatuhanModel();
         $this->pclModel = new PCLModel();
         $this->pmlModel = new PMLModel();
         $this->db = \Config\Database::connect();
@@ -38,7 +42,7 @@ class DashboardController extends BaseController
     {
         // Get statistik dashboard
         $stats = $this->getDashboardStats();
-        
+
         // Get kegiatan detail proses untuk filter
         $kegiatanDetailProses = $this->masterKegiatanDetailProsesModel
             ->select('master_kegiatan_detail_proses.*, master_kegiatan_detail.nama_kegiatan_detail')
@@ -91,7 +95,7 @@ class DashboardController extends BaseController
     private function calculateOverallProgress()
     {
         $kegiatanDetails = $this->masterKegiatanDetailModel->findAll();
-        
+
         if (empty($kegiatanDetails)) {
             return 0;
         }
@@ -106,8 +110,8 @@ class DashboardController extends BaseController
                 ->findAll();
 
             foreach ($prosesList as $proses) {
-                $targetTotal = (int)$proses['target'];
-                
+                $targetTotal = (int) $proses['target'];
+
                 if ($targetTotal > 0) {
                     $realisasiTotal = $this->getRealisasiByProses($proses['id_kegiatan_detail_proses']);
                     $progress = ($realisasiTotal / $targetTotal) * 100;
@@ -131,7 +135,7 @@ class DashboardController extends BaseController
             WHERE kw.id_kegiatan_detail_proses = ?
         ", [$idProses])->getRowArray();
 
-        return (int)($result['total_realisasi'] ?? 0);
+        return (int) ($result['total_realisasi'] ?? 0);
     }
 
     private function getProgressKegiatanBerjalan()
@@ -156,19 +160,19 @@ class DashboardController extends BaseController
             $totalRealisasi = 0;
 
             foreach ($prosesList as $proses) {
-                $totalTarget += (int)$proses['target'];
+                $totalTarget += (int) $proses['target'];
                 $totalRealisasi += $this->getRealisasiByProses($proses['id_kegiatan_detail_proses']);
             }
 
             if ($totalTarget > 0) {
                 $progress = ($totalRealisasi / $totalTarget) * 100;
-                
+
                 $progressData[] = [
                     'nama' => $detail['nama_kegiatan_detail'],
                     'progress' => min(100, round($progress, 0)),
                     'color' => $colors[$colorIndex % count($colors)]
                 ];
-                
+
                 $colorIndex++;
             }
         }
@@ -191,7 +195,7 @@ class DashboardController extends BaseController
 
         // Get detail proses
         $detailProses = $this->masterKegiatanDetailProsesModel->find($idProses);
-        
+
         if (!$detailProses) {
             return $this->response->setJSON([
                 'success' => false,
@@ -231,7 +235,7 @@ class DashboardController extends BaseController
         }
 
         $builder->groupBy('DATE(pp.created_at)')
-                ->orderBy('DATE(pp.created_at)', 'ASC');
+            ->orderBy('DATE(pp.created_at)', 'ASC');
 
         return $builder->get()->getResultArray();
     }
@@ -245,7 +249,7 @@ class DashboardController extends BaseController
         // Build realisasi lookup
         $realisasiLookup = [];
         foreach ($realisasiData as $item) {
-            $realisasiLookup[$item['tanggal']] = (int)$item['total_realisasi'];
+            $realisasiLookup[$item['tanggal']] = (int) $item['total_realisasi'];
         }
 
         // Build chart data
@@ -253,7 +257,7 @@ class DashboardController extends BaseController
         foreach ($kurvaTarget as $item) {
             $tanggal = $item['tanggal_target'];
             $labels[] = date('d M', strtotime($tanggal));
-            $targetData[] = (int)$item['target_kumulatif_absolut'];
+            $targetData[] = (int) $item['target_kumulatif_absolut'];
 
             // Add realisasi for this date
             if (isset($realisasiLookup[$tanggal])) {
@@ -393,8 +397,8 @@ class DashboardController extends BaseController
 
         // Process setiap petugas
         foreach ($petugas as &$p) {
-            $target = (int)$p['target'];
-            $realisasiTotal = (int)$p['realisasi_total'];
+            $target = (int) $p['target'];
+            $realisasiTotal = (int) $p['realisasi_total'];
 
             // Hitung progress keseluruhan
             $progress = $target > 0 ? round(($realisasiTotal / $target) * 100, 0) : 0;
@@ -471,7 +475,7 @@ class DashboardController extends BaseController
             AND is_hari_kerja = 1
         ", [$idPCL, $today])->getRowArray();
 
-        $targetHarianValue = $targetHarian ? (int)$targetHarian['target_harian_absolut'] : 0;
+        $targetHarianValue = $targetHarian ? (int) $targetHarian['target_harian_absolut'] : 0;
 
         // Jika belum lapor
         if (!$laporanHariIni) {
@@ -483,7 +487,7 @@ class DashboardController extends BaseController
             ];
         }
 
-        $realisasiHariIni = (int)$laporanHariIni['jumlah_realisasi_absolut'];
+        $realisasiHariIni = (int) $laporanHariIni['jumlah_realisasi_absolut'];
 
         // Jika tidak ada target harian (hari libur atau belum ada kurva)
         if ($targetHarianValue === 0) {
@@ -517,6 +521,156 @@ class DashboardController extends BaseController
                 'realisasi_hari_ini' => $realisasiHariIni,
                 'target_harian' => $targetHarianValue
             ];
+        }
+    }
+
+
+    public function getKepatuhanData()
+    {
+        try {
+            // Get parameters
+            $idKegiatanDetailProses = $this->request->getGet('id_kegiatan_detail_proses');
+            $idKegiatanWilayah = $this->request->getGet('id_kegiatan_wilayah') ?? 'all';
+
+            // Validation
+            if (!$idKegiatanDetailProses) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'ID Kegiatan Detail Proses diperlukan'
+                ]);
+            }
+
+            // SUPERADMIN tidak perlu pengecekan kabupaten - bisa akses semua data
+
+            // 1. Get Statistik
+            $stats = $this->kepatuhanModel->getStatistikKepatuhan(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah
+            );
+
+            // 2. Get Chart Data
+            $chartData = [];
+            $chartType = 'line'; // Default
+
+            if ($idKegiatanWilayah === 'all') {
+                // Bar chart untuk perbandingan antar kabupaten
+                $chartData = $this->kepatuhanModel->getKepatuhanPerKabupaten(
+                    $idKegiatanDetailProses
+                );
+                $chartType = 'bar';
+            } else {
+                // Line chart untuk trend harian satu wilayah
+                // Get id_kabupaten from kegiatan_wilayah
+                $kegiatanWilayah = $this->db->table('kegiatan_wilayah')
+                    ->select('id_kabupaten')
+                    ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
+                    ->get()
+                    ->getRowArray();
+
+                if ($kegiatanWilayah) {
+                    $chartData = $this->kepatuhanModel->getTrendKepatuhanHarian(
+                        $idKegiatanDetailProses,
+                        $kegiatanWilayah['id_kabupaten']
+                    );
+                }
+                $chartType = 'line';
+            }
+
+            // 3. Get Leaderboard
+            $leaderboard = $this->kepatuhanModel->getLeaderboardKepatuhan(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah,
+                10 // Top 10
+            );
+
+            // 4. Get Petugas Tidak Patuh
+            $tidakPatuh = $this->kepatuhanModel->getPetugasTidakPatuh(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah
+            );
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [
+                    'stats' => $stats,
+                    'chart' => [
+                        'type' => $chartType,
+                        'data' => $chartData
+                    ],
+                    'leaderboard' => $leaderboard,
+                    'tidak_patuh' => $tidakPatuh
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error in getKepatuhanData: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get Detail Kepatuhan PCL (optional - untuk modal detail)
+     */
+    public function getDetailKepatuhanPCL()
+    {
+        try {
+            $idPCL = $this->request->getGet('id_pcl');
+            $idKegiatanDetailProses = $this->request->getGet('id_kegiatan_detail_proses');
+
+            if (!$idPCL || !$idKegiatanDetailProses) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Parameter tidak lengkap'
+                ]);
+            }
+
+            $detail = $this->kepatuhanModel->getDetailKepatuhanPCL(
+                $idPCL,
+                $idKegiatanDetailProses
+            );
+
+            if (!$detail) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Data tidak ditemukan'
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $detail
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Force Refresh Kepatuhan Summary (untuk debugging)
+     */
+    public function rebuildKepatuhanSummary()
+    {
+        // Only allow for admin with specific permission
+        if (!session()->get('is_admin')) {
+            return redirect()->back()->with('error', 'Unauthorized');
+        }
+
+        $idKegiatanDetailProses = $this->request->getGet('id_kegiatan');
+
+        $result = $this->kepatuhanModel->rebuildKepatuhanSummary($idKegiatanDetailProses);
+
+        if ($result['success']) {
+            return redirect()->back()->with('success', $result['message']);
+        } else {
+            return redirect()->back()->with('error', $result['message']);
         }
     }
 }
