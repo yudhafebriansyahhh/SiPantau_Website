@@ -145,7 +145,7 @@
                 <i class="fas fa-users mr-2"></i>Data Petugas
             </button>
             <button onclick="switchDataTab('kepatuhan')" id="datatab-kepatuhan"
-                class="data-tab-button whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm">
+                class="data-tab-button whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm text-gray-600">
                 <i class="fas fa-chart-bar mr-2"></i>Tingkat Kepatuhan
             </button>
         </nav>
@@ -153,6 +153,44 @@
 
     <!-- Tab Content: Data Petugas -->
     <div id="datacontent-petugas" class="data-tab-content">
+
+        <!-- Search dan Per Page Section -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <!-- Search Box -->
+            <div class="flex-1 ">
+                <label for="searchPetugasInput" class="block text-sm font-medium text-gray-700 mb-1">
+                    Pencarian
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchPetugasInput" class="input-field w-full pl-10"
+                        placeholder="Cari nama atau sobat ID..." onkeyup="handlePetugasSearch(event)">
+                </div>
+            </div>
+
+            <!-- Per Page Selector -->
+            <div class="w-full sm:w-48">
+                <label for="perPagePetugasSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                    Data per Halaman
+                </label>
+                <div class="relative">
+                    <select id="perPagePetugasSelect" class="input-field w-full pr-10 appearance-none cursor-pointer"
+                        onchange="handlePetugasPerPageChange()">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full" id="petugasTable">
                 <thead>
@@ -167,7 +205,12 @@
                             <i class="fas fa-clipboard-check mr-2"></i>Status Harian
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-tasks mr-2"></i>Progress
+                            <button onclick="toggleProgressSort()"
+                                class="flex items-center gap-2 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-tasks"></i>
+                                <span>Progress</span>
+                                <i id="sortIcon" class="fas fa-sort text-gray-400"></i>
+                            </button>
                         </th>
                     </tr>
                 </thead>
@@ -180,6 +223,16 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Footer dengan Pagination -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-gray-600" id="petugasDataInfo">
+                Menampilkan 0 dari 0 total data
+            </p>
+
+            <!-- Pagination -->
+            <div id="petugasPagination" class="flex gap-1"></div>
         </div>
     </div>
 
@@ -214,7 +267,7 @@
                         <i class="fas fa-trophy text-yellow-500 mr-2"></i>Leaderboard Kepatuhan
                     </h4>
                 </div>
-                <div id="leaderboardContainer" class="space-y-3">
+                <div id="leaderboardContainer" class="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                     <p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>
                 </div>
             </div>
@@ -226,7 +279,7 @@
                         <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Petugas Tidak Patuh
                     </h4>
                 </div>
-                <div id="tidakPatuhContainer" class="space-y-3">
+                <div id="tidakPatuhContainer" class="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                     <p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>
                 </div>
             </div>
@@ -245,6 +298,11 @@
     let currentWilayahId = null;
     let isLoading = false;
     let abortController = null;
+    let currentPetugasPage = 1;
+    let petugasPerPage = 10;
+    let petugasSearchQuery = '';
+    let totalPetugasData = 0;
+    let totalPetugasPages = 0;
 
     // ==================== TAB SWITCHING (Inside Card) ====================
     function switchDataTab(tabName) {
@@ -289,13 +347,24 @@
         currentKegiatanId = kegiatanId;
         currentWilayahId = wilayahId;
 
+        // Reset search, per page, dan sorting
+        document.getElementById('searchPetugasInput').value = '';
+        document.getElementById('perPagePetugasSelect').value = '10';
+
+        // Reset sorting state
+        currentSortOrder = 'none';
+        const sortIcon = document.getElementById('sortIcon');
+        if (sortIcon) {
+            sortIcon.className = 'fas fa-sort text-gray-400';
+        }
+
         if (kegiatanId) {
             // Update semua data secara sekuensial dengan delay kecil
             updateChart();
 
             setTimeout(() => {
                 if (currentKegiatanId === kegiatanId && currentWilayahId === wilayahId) {
-                    loadPetugas();
+                    loadPetugas(1); // Load halaman 1
                 }
             }, 100);
 
@@ -327,6 +396,13 @@
         currentKegiatanId = kegiatanId;
         currentWilayahId = 'all';
 
+        // Reset sorting state
+        currentSortOrder = 'none';
+        const sortIcon = document.getElementById('sortIcon');
+        if (sortIcon) {
+            sortIcon.className = 'fas fa-sort text-gray-400';
+        }
+
         if (!kegiatanId) {
             wilayahSelect.disabled = true;
             wilayahSelect.innerHTML = '<option value="all">Semua Wilayah</option>';
@@ -345,6 +421,13 @@
                 </td>
             </tr>
         `;
+
+            // Reset pagination info dan controls
+            document.getElementById('petugasDataInfo').innerHTML = 'Menampilkan 0 dari 0 total data';
+            document.getElementById('petugasPagination').innerHTML = '';
+            document.getElementById('searchPetugasInput').value = '';
+            document.getElementById('perPagePetugasSelect').value = '10';
+
             resetKepatuhanDisplay();
             return;
         }
@@ -378,7 +461,7 @@
                 setTimeout(() => {
                     if (currentKegiatanId === kegiatanId && currentWilayahId === 'all') {
                         updateChart();
-                        loadPetugas();
+                        loadPetugas(1); // Load halaman 1
 
                         const activeTab = document.querySelector('.data-tab-button.active');
                         if (activeTab && activeTab.id === 'datatab-kepatuhan') {
@@ -553,9 +636,11 @@
         chartInstance.render();
     }
 
-    async function loadPetugas() {
+    async function loadPetugas(page = 1) {
         const kegiatanId = document.getElementById('filterKegiatan').value;
         const wilayahId = document.getElementById('filterWilayah').value;
+        const perPage = document.getElementById('perPagePetugasSelect').value;
+        const search = document.getElementById('searchPetugasInput').value;
 
         if (!kegiatanId) return;
 
@@ -563,9 +648,14 @@
         const requestKegiatanId = kegiatanId;
         const requestWilayahId = wilayahId;
 
+        // Update state
+        currentPetugasPage = page;
+        petugasPerPage = perPage;
+        petugasSearchQuery = search;
+
         try {
             const response = await fetch(
-                `<?= base_url('superadmin/get-petugas') ?>?id_kegiatan_detail_proses=${kegiatanId}&id_kegiatan_wilayah=${wilayahId}`,
+                `<?= base_url('superadmin/get-petugas') ?>?id_kegiatan_detail_proses=${kegiatanId}&id_kegiatan_wilayah=${wilayahId}&page=${page}&perPage=${perPage}&search=${encodeURIComponent(search)}`,
                 { signal: abortController?.signal }
             );
             const result = await response.json();
@@ -577,13 +667,122 @@
             }
 
             if (result.success) {
+                totalPetugasData = result.pagination.total;
+                totalPetugasPages = result.pagination.total_pages;
+
                 renderPetugasTable(result.data);
+                renderPetugasPagination(result.pagination);
+                updatePetugasDataInfo(result.data.length, result.pagination.total, result.pagination.current_page, result.pagination.per_page);
             }
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error('Error loading petugas:', error);
             }
         }
+    }
+
+    function updatePetugasDataInfo(showing, total, currentPage, perPage) {
+        const infoElement = document.getElementById('petugasDataInfo');
+
+        if (total === 0) {
+            infoElement.innerHTML = 'Menampilkan 0 dari 0 total data';
+            return;
+        }
+
+        const start = (currentPage - 1) * perPage + 1;
+        const end = Math.min(currentPage * perPage, total);
+
+        infoElement.innerHTML = `
+        Menampilkan data <span class="font-medium">${start}-${end}</span> dari 
+        <span class="font-medium">${total}</span> data
+    `;
+    }
+
+    function renderPetugasPagination(pagination) {
+        const container = document.getElementById('petugasPagination');
+
+        if (pagination.total_pages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        const currentPage = pagination.current_page;
+        const totalPages = pagination.total_pages;
+
+        // Previous button
+        html += `
+        <button onclick="loadPetugas(${currentPage - 1})" 
+                class="px-3 py-2 text-sm font-medium rounded-lg ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}"
+                ${currentPage === 1 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    `;
+
+        // Page numbers
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        if (startPage > 1) {
+            html += `
+            <button onclick="loadPetugas(1)" 
+                    class="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">
+                1
+            </button>
+        `;
+            if (startPage > 2) {
+                html += `<span class="px-2 py-2 text-gray-400">...</span>`;
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+            <button onclick="loadPetugas(${i})" 
+                    class="px-3 py-2 text-sm font-medium rounded-lg ${i === currentPage ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}">
+                ${i}
+            </button>
+        `;
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<span class="px-2 py-2 text-gray-400">...</span>`;
+            }
+            html += `
+            <button onclick="loadPetugas(${totalPages})" 
+                    class="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">
+                ${totalPages}
+            </button>
+        `;
+        }
+
+        // Next button
+        html += `
+        <button onclick="loadPetugas(${currentPage + 1})" 
+                class="px-3 py-2 text-sm font-medium rounded-lg ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}"
+                ${currentPage === totalPages ? 'disabled' : ''}>
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
+
+        container.innerHTML = html;
+    }
+
+    let petugasSearchTimeout;
+    function handlePetugasSearch(event) {
+        clearTimeout(petugasSearchTimeout);
+        petugasSearchTimeout = setTimeout(function () {
+            loadPetugas(1); // Reset ke halaman 1 saat search
+        }, 500);
+    }
+
+    function handlePetugasPerPageChange() {
+        loadPetugas(1); // Reset ke halaman 1 saat ganti per page
     }
 
     function renderPetugasTable(data) {
@@ -598,6 +797,11 @@
                 </td>
             </tr>
         `;
+
+            // Update info untuk kasus tidak ada data
+            document.getElementById('petugasDataInfo').innerHTML = 'Menampilkan 0 dari 0 total data';
+            document.getElementById('petugasPagination').innerHTML = '';
+
             return;
         }
 
@@ -608,7 +812,7 @@
             <td class="px-4 py-4">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
-                         style="background-color: ${colors[index % colors.length]};">
+                        style="background-color: ${colors[index % colors.length]};">
                         <span class="text-white text-sm font-semibold">${p.nama_user.substring(0, 2).toUpperCase()}</span>
                     </div>
                     <div class="min-w-0">
@@ -644,7 +848,7 @@
                     <div class="flex-1">
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="h-2 rounded-full transition-all duration-300" 
-                                 style="width: ${p.progress}%; background-color: ${colors[index % colors.length]};"></div>
+                                style="width: ${p.progress}%; background-color: ${colors[index % colors.length]};"></div>
                         </div>
                     </div>
                     <span class="text-sm font-semibold text-gray-900 min-w-[3rem] text-right">${p.progress}%</span>
@@ -652,6 +856,11 @@
             </td>
         </tr>
     `).join('');
+
+        // Apply current sorting if active
+        if (currentSortOrder !== 'none') {
+            applySorting();
+        }
     }
 
     function getStatusClass(badgeClass) {
@@ -702,6 +911,18 @@
                     return;
                 }
 
+                // Hide no-data message jika ada
+                const noDataMsg = document.querySelector('.no-data-kepatuhan-message');
+                if (noDataMsg) {
+                    noDataMsg.style.display = 'none';
+                }
+
+                // Show semua sections
+                document.getElementById('kepatuhanStatsCards').style.display = 'grid';
+                document.getElementById('kepatuhanChartContainer').style.display = 'block';
+                const leaderboardParent = document.getElementById('leaderboardContainer').parentElement.parentElement;
+                leaderboardParent.style.display = 'grid';
+
                 renderKepatuhanStats(result.data.stats);
                 renderKepatuhanChart(result.data.chart);
                 renderLeaderboard(result.data.leaderboard);
@@ -719,14 +940,31 @@
     }
 
     function showNoDataKepatuhan() {
+        // Clear data dari leaderboard dan tidak patuh DULU sebelum hide
+        document.getElementById('leaderboardContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Belum ada data</p>';
+        document.getElementById('tidakPatuhContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Belum ada data</p>';
+
+        // Clear stats cards
+        document.getElementById('kepatuhanStatsCards').innerHTML = '';
+
+        // Destroy chart
+        if (kepatuhanChartInstance) {
+            kepatuhanChartInstance.destroy();
+            kepatuhanChartInstance = null;
+        }
+
+        // Reset chart placeholder
+        document.getElementById('kepatuhanChartPlaceholder').innerHTML = '<p class="text-gray-400">Pilih kegiatan untuk menampilkan grafik kepatuhan</p>';
+
         // Hide all kepatuhan sections
         document.getElementById('kepatuhanStatsCards').style.display = 'none';
         document.getElementById('kepatuhanChartContainer').style.display = 'none';
-        document.getElementById('leaderboardContainer').parentElement.parentElement.style.display = 'none';
+        const leaderboardParent = document.getElementById('leaderboardContainer').parentElement.parentElement;
+        leaderboardParent.style.display = 'none';
 
         // Show single centered message
         const contentDiv = document.getElementById('datacontent-kepatuhan');
-        const existingMessage = contentDiv.querySelector('.no-data-kepatuhan-message');
+        let existingMessage = contentDiv.querySelector('.no-data-kepatuhan-message');
 
         if (!existingMessage) {
             const messageDiv = document.createElement('div');
@@ -739,25 +977,22 @@
         } else {
             existingMessage.style.display = 'flex';
         }
-
-        if (kepatuhanChartInstance) {
-            kepatuhanChartInstance.destroy();
-            kepatuhanChartInstance = null;
-        }
     }
 
     function resetKepatuhanDisplay() {
+        // Clear semua data terlebih dahulu
         document.getElementById('kepatuhanStatsCards').innerHTML = '';
-        document.getElementById('kepatuhanChartPlaceholder').style.display = 'flex';
-        document.getElementById('kepatuhanChartPlaceholder').innerHTML = '<p class="text-gray-400">Pilih kegiatan untuk menampilkan grafik kepatuhan</p>';
+        document.getElementById('leaderboardContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>';
+        document.getElementById('tidakPatuhContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>';
 
+        // Reset chart
         if (kepatuhanChartInstance) {
             kepatuhanChartInstance.destroy();
             kepatuhanChartInstance = null;
         }
 
-        document.getElementById('leaderboardContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>';
-        document.getElementById('tidakPatuhContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>';
+        document.getElementById('kepatuhanChartPlaceholder').style.display = 'flex';
+        document.getElementById('kepatuhanChartPlaceholder').innerHTML = '<p class="text-gray-400">Pilih kegiatan untuk menampilkan grafik kepatuhan</p>';
     }
 
     function renderKepatuhanStats(stats) {
@@ -771,75 +1006,75 @@
         const rataRata = stats.rata_rata_kepatuhan || 0;
 
         const statsHtml = `
-    <!-- Total PCL -->
-    <div class="card hover:shadow-lg transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Total PCL</p>
-                <h3 class="text-3xl font-bold text-gray-900">${stats.total_pcl || 0}</h3>
-            </div>
-            <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-user-friends text-2xl text-blue-600"></i>
+        <!-- Total PCL -->
+        <div class="card hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Total PCL</p>
+                    <h3 class="text-3xl font-bold text-gray-900">${stats.total_pcl || 0}</h3>
+                </div>
+                <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-friends text-2xl text-blue-600"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Patuh -->
-    <div class="card hover:shadow-lg transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Patuh</p>
-                <h3 class="text-3xl font-bold text-gray-900">${stats.patuh || 0}</h3>
-                <p class="text-xs text-gray-500 mt-1">${persentasePatuh.toFixed(1)}% dari total</p>
-            </div>
-            <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-check-circle text-2xl text-green-600"></i>
+        <!-- Patuh -->
+        <div class="card hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Patuh</p>
+                    <h3 class="text-3xl font-bold text-gray-900">${stats.patuh || 0}</h3>
+                    <p class="text-xs text-gray-500 mt-1">${persentasePatuh.toFixed(1)}% dari total</p>
+                </div>
+                <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Kurang Patuh -->
-    <div class="card hover:shadow-lg transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Kurang Patuh</p>
-                <h3 class="text-3xl font-bold text-gray-900">${stats.kurang_patuh || 0}</h3>
-                <p class="text-xs text-gray-500 mt-1">${persentaseKurangPatuh.toFixed(1)}% dari total</p>
-            </div>
-            <div class="w-14 h-14 bg-amber-50 rounded-lg flex items-center justify-center">
-                <i class="fas fa-exclamation-circle text-2xl text-amber-600"></i>
+        <!-- Kurang Patuh -->
+        <div class="card hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Kurang Patuh</p>
+                    <h3 class="text-3xl font-bold text-gray-900">${stats.kurang_patuh || 0}</h3>
+                    <p class="text-xs text-gray-500 mt-1">${persentaseKurangPatuh.toFixed(1)}% dari total</p>
+                </div>
+                <div class="w-14 h-14 bg-amber-50 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-exclamation-circle text-2xl text-amber-600"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Tidak Patuh -->
-    <div class="card hover:shadow-lg transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Tidak Patuh</p>
-                <h3 class="text-3xl font-bold text-gray-900">${stats.tidak_patuh || 0}</h3>
-                <p class="text-xs text-gray-500 mt-1">${persentaseTidakPatuh.toFixed(1)}% dari total</p>
-            </div>
-            <div class="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-times-circle text-2xl text-red-600"></i>
+        <!-- Tidak Patuh -->
+        <div class="card hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Tidak Patuh</p>
+                    <h3 class="text-3xl font-bold text-gray-900">${stats.tidak_patuh || 0}</h3>
+                    <p class="text-xs text-gray-500 mt-1">${persentaseTidakPatuh.toFixed(1)}% dari total</p>
+                </div>
+                <div class="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-times-circle text-2xl text-red-600"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Rata-rata -->
-    <div class="card hover:shadow-lg transition-shadow duration-200">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600 mb-1">Rata-rata</p>
-                <h3 class="text-3xl font-bold text-gray-900">${rataRata.toFixed(1)}%</h3>
-                <p class="text-xs text-gray-500 mt-1">Tingkat kepatuhan</p>
-            </div>
-            <div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-chart-bar text-2xl text-purple-600"></i>
+        <!-- Rata-rata -->
+        <div class="card hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Rata-rata</p>
+                    <h3 class="text-3xl font-bold text-gray-900">${rataRata.toFixed(1)}%</h3>
+                    <p class="text-xs text-gray-500 mt-1">Tingkat kepatuhan</p>
+                </div>
+                <div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-chart-bar text-2xl text-purple-600"></i>
+                </div>
             </div>
         </div>
-    </div>
-`;
+    `;
 
         container.innerHTML = statsHtml;
     }
@@ -1000,27 +1235,27 @@
             const namaKabupaten = item.nama_kabupaten || '';
 
             return `
-        <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
-            <div class="flex items-center gap-3 flex-1">
-                <div class="w-8 h-8 rounded-full ${rankColor} flex items-center justify-center font-bold text-sm flex-shrink-0">
-                    ${index + 1}
+            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+                <div class="flex items-center gap-3 flex-1">
+                    <div class="w-8 h-8 rounded-full ${rankColor} flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        ${index + 1}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-900 truncate">${item.nama_pcl || '-'}</p>
+                        ${namaKabupaten ? `<p class="text-xs text-gray-500">${namaKabupaten}</p>` : ''}
+                    </div>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-gray-900 truncate">${item.nama_pcl || '-'}</p>
-                    ${namaKabupaten ? `<p class="text-xs text-gray-500">${namaKabupaten}</p>` : ''}
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-gray-900">${jumlahLaporan} / ${totalHari}</p>
+                        <p class="text-xs text-gray-500">hari</p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">
+                        ${persentase.toFixed(1)}%
+                    </span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <p class="text-sm font-semibold text-gray-900">${jumlahLaporan} / ${totalHari}</p>
-                    <p class="text-xs text-gray-500">hari</p>
-                </div>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">
-                    ${persentase.toFixed(1)}%
-                </span>
-            </div>
-        </div>
-    `;
+        `;
         }).join('');
 
         container.innerHTML = html;
@@ -1030,11 +1265,11 @@
         const container = document.getElementById('tidakPatuhContainer');
         if (!data || data.length === 0) {
             container.innerHTML = `
-        <div class="text-center py-8">
-            <i class="fas fa-check-circle text-green-300 text-4xl mb-2"></i>
-            <p class="text-gray-500">Semua petugas patuh!</p>
-        </div>
-    `;
+            <div class="text-center py-8">
+                <i class="fas fa-check-circle text-green-300 text-4xl mb-2"></i>
+                <p class="text-gray-500">Semua petugas patuh!</p>
+            </div>
+        `;
             return;
         }
 
@@ -1046,32 +1281,32 @@
             const terakhirLapor = item.terakhir_lapor || 'Belum pernah lapor';
             const namaKabupaten = item.nama_kabupaten || '';
             return `
-    <div class="p-4 rounded-lg border-2 border-red-200 bg-red-50">
-        <div class="flex items-start justify-between mb-2">
-            <div class="flex-1">
-                <p class="font-medium text-gray-900">${item.nama_pcl || '-'}</p>
-                ${namaKabupaten ? `<p class="text-xs text-gray-600">${namaKabupaten}</p>` : ''}
+        <div class="p-4 rounded-lg border-2 border-red-200 bg-red-50">
+            <div class="flex items-start justify-between mb-2">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-900">${item.nama_pcl || '-'}</p>
+                    ${namaKabupaten ? `<p class="text-xs text-gray-600">${namaKabupaten}</p>` : ''}
+                </div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    ${persentase.toFixed(1)}%
+                </span>
             </div>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                ${persentase.toFixed(1)}%
-            </span>
+            <div class="space-y-1">
+                <div class="flex items-center text-sm text-gray-700">
+                    <i class="fas fa-calendar-times text-red-500 mr-2 w-4"></i>
+                    <span>Terakhir lapor: ${terakhirLapor}</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-700">
+                    <i class="fas fa-clock text-red-500 mr-2 w-4"></i>
+                    <span>Tidak lapor: ${hariTidakLapor} hari</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-700">
+                    <i class="fas fa-chart-line text-red-500 mr-2 w-4"></i>
+                    <span>Laporan: ${jumlahLaporan} / ${totalHari} hari</span>
+                </div>
+            </div>
         </div>
-        <div class="space-y-1">
-            <div class="flex items-center text-sm text-gray-700">
-                <i class="fas fa-calendar-times text-red-500 mr-2 w-4"></i>
-                <span>Terakhir lapor: ${terakhirLapor}</span>
-            </div>
-            <div class="flex items-center text-sm text-gray-700">
-                <i class="fas fa-clock text-red-500 mr-2 w-4"></i>
-                <span>Tidak lapor: ${hariTidakLapor} hari</span>
-            </div>
-            <div class="flex items-center text-sm text-gray-700">
-                <i class="fas fa-chart-line text-red-500 mr-2 w-4"></i>
-                <span>Laporan: ${jumlahLaporan} / ${totalHari} hari</span>
-            </div>
-        </div>
-    </div>
-`;
+    `;
         }).join('');
 
         container.innerHTML = html;
@@ -1111,6 +1346,60 @@
             });
         }, 100);
     });
+
+    // ==================== SORTING VARIABLES ====================
+    let currentSortOrder = 'none'; // 'none', 'asc', 'desc'
+
+    // ==================== TOGGLE PROGRESS SORT ====================
+    function toggleProgressSort() {
+        const sortIcon = document.getElementById('sortIcon');
+
+        // Cycle through: none -> desc (high to low) -> asc (low to high) -> none
+        if (currentSortOrder === 'none') {
+            currentSortOrder = 'desc';
+            sortIcon.className = 'fas fa-sort-down text-blue-600';
+        } else if (currentSortOrder === 'desc') {
+            currentSortOrder = 'asc';
+            sortIcon.className = 'fas fa-sort-up text-blue-600';
+        } else {
+            currentSortOrder = 'none';
+            sortIcon.className = 'fas fa-sort text-gray-400';
+        }
+
+        applySorting();
+    }
+
+    // ==================== APPLY SORTING ====================
+    function applySorting() {
+        const tbody = document.getElementById('petugasTableBody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        if (rows.length === 0 || rows[0].cells.length === 1) {
+            return; // No data or placeholder row
+        }
+
+        if (currentSortOrder === 'none') {
+            // Restore original order - reload data
+            loadPetugas(currentPetugasPage);
+            return;
+        }
+
+        // Sort rows based on progress value
+        rows.sort((a, b) => {
+            const progressA = parseFloat(a.cells[3].querySelector('.text-gray-900').textContent);
+            const progressB = parseFloat(b.cells[3].querySelector('.text-gray-900').textContent);
+
+            if (currentSortOrder === 'asc') {
+                return progressA - progressB;
+            } else {
+                return progressB - progressA;
+            }
+        });
+
+        // Clear and re-append sorted rows
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+    }
 </script>
 
 <style>
@@ -1160,6 +1449,31 @@
         #kepatuhanStatsCards {
             grid-template-columns: repeat(3, 1fr);
         }
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+    /* Firefox */
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f1f1f1;
     }
 </style>
 <?= $this->endSection() ?>

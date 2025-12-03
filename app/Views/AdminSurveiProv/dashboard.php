@@ -98,42 +98,155 @@
   </div>
 </div>
 
-<!-- Data Petugas -->
+<!-- Data Petugas dengan Tabs -->
 <div class="card">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
     <div>
       <h3 class="text-lg font-semibold text-gray-900">Data Petugas</h3>
       <p class="text-sm text-gray-600 mt-1">Monitoring progres petugas lapangan</p>
     </div>
   </div>
 
-  <div class="overflow-x-auto">
-    <table class="w-full" id="petugasTable">
-      <thead>
-        <tr class="border-b border-gray-200">
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            <i class="fas fa-user mr-2"></i>Petugas
-          </th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            <i class="fas fa-calendar-check mr-2"></i>Status Kegiatan
-          </th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            <i class="fas fa-clipboard-check mr-2"></i>Status Harian
-          </th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            <i class="fas fa-tasks mr-2"></i>Progress
-          </th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-100" id="petugasTableBody">
-        <tr>
-          <td colspan="4" class="px-4 py-12 text-center">
-            <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
-            <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Tabs Navigation Inside Card -->
+  <div class="border-b border-gray-200 mb-6">
+    <nav class="-mb-px flex flex-wrap gap-4 sm:gap-8" aria-label="Tabs">
+      <button onclick="switchDataTab('petugas')" id="datatab-petugas"
+        class="data-tab-button active whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm">
+        <i class="fas fa-users mr-2"></i>Data Petugas
+      </button>
+      <button onclick="switchDataTab('kepatuhan')" id="datatab-kepatuhan"
+        class="data-tab-button whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm text-gray-600">
+        <i class="fas fa-chart-bar mr-2"></i>Tingkat Kepatuhan
+      </button>
+    </nav>
+  </div>
+
+  <!-- Tab Content: Data Petugas -->
+  <div id="datacontent-petugas" class="data-tab-content">
+    <!-- Search dan Per Page Section -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+      <!-- Search Box -->
+      <div class="flex-1">
+        <label for="searchPetugasInput" class="block text-sm font-medium text-gray-700 mb-1">
+          Pencarian
+        </label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-400"></i>
+          </div>
+          <input type="text" id="searchPetugasInput" class="input-field w-full pl-10"
+            placeholder="Cari nama atau sobat ID..." onkeyup="handlePetugasSearch(event)">
+        </div>
+      </div>
+
+      <!-- Per Page Selector -->
+      <div class="w-full sm:w-48">
+        <label for="perPagePetugasSelect" class="block text-sm font-medium text-gray-700 mb-1">
+          Data per Halaman
+        </label>
+        <div class="relative">
+          <select id="perPagePetugasSelect" class="input-field w-full pr-10 appearance-none cursor-pointer"
+            onchange="handlePetugasPerPageChange()">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full" id="petugasTable">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <i class="fas fa-user mr-2"></i>Petugas
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <i class="fas fa-calendar-check mr-2"></i>Status Kegiatan
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <i class="fas fa-clipboard-check mr-2"></i>Status Harian
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <button onclick="toggleProgressSort()"
+                class="flex items-center gap-2 hover:text-blue-600 transition-colors">
+                <i class="fas fa-tasks"></i>
+                <span>Progress</span>
+                <i id="sortIcon" class="fas fa-sort text-gray-400"></i>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100" id="petugasTableBody">
+          <tr>
+            <td colspan="4" class="px-4 py-12 text-center">
+              <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
+              <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer dengan Pagination -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-gray-600" id="petugasDataInfo">
+        Menampilkan 0 dari 0 total data
+      </p>
+      <div id="petugasPagination" class="flex gap-1"></div>
+    </div>
+  </div>
+
+  <!-- Tab Content: Tingkat Kepatuhan -->
+  <div id="datacontent-kepatuhan" class="data-tab-content hidden">
+    <!-- Statistik Cards Kepatuhan -->
+    <div id="kepatuhanStatsCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6"></div>
+
+    <!-- Chart Section Kepatuhan -->
+    <div class="mb-6">
+      <h4 class="text-base font-semibold text-gray-900 mb-4">
+        <i class="fas fa-chart-line mr-2"></i>Grafik Kepatuhan
+      </h4>
+      <div id="kepatuhanChartContainer" class="relative">
+        <div id="kepatuhanChart"></div>
+        <div id="kepatuhanChartPlaceholder" class="flex justify-center items-center py-16">
+          <p class="text-gray-400">Pilih kegiatan untuk menampilkan grafik kepatuhan</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Grid: Leaderboard & Tidak Patuh -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Leaderboard Kepatuhan -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="text-base font-semibold text-gray-900">
+            <i class="fas fa-trophy text-yellow-500 mr-2"></i>Leaderboard Kepatuhan
+          </h4>
+        </div>
+        <div id="leaderboardContainer" class="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+          <p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>
+        </div>
+      </div>
+
+      <!-- Petugas Tidak Patuh -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="text-base font-semibold text-gray-900">
+            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Petugas Tidak Patuh
+          </h4>
+        </div>
+        <div id="tidakPatuhContainer" class="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+          <p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -141,6 +254,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js"></script>
 <script>
   let chartInstance = null;
+
   const defaultKegiatan = "<?= esc($latestKegiatanId) ?>";
   const baseKurvaS = "<?= base_url('adminsurvei/get-kurva-s-with-realisasi') ?>";
   const baseWilayah = "<?= base_url('adminsurvei/kegiatan-wilayah') ?>";
@@ -317,7 +431,7 @@
           style: {
             fontSize: isMobile ? '9px' : '11px'
           },
-          formatter: function(value) {
+          formatter: function (value) {
             return Math.round(value).toLocaleString('id-ID');
           }
         }
@@ -326,7 +440,7 @@
         shared: true,
         intersect: false,
         y: {
-          formatter: function(value) {
+          formatter: function (value) {
             return value ? value.toLocaleString('id-ID') : '0';
           }
         }
@@ -472,15 +586,25 @@
       </td>
     </tr>
   `).join('');
+
+    // Apply current sorting if active
+    if (currentSortOrder !== 'none') {
+      applySorting();
+    }
   }
 
   // Event Listeners
   document.addEventListener("DOMContentLoaded", function () {
     if (defaultKegiatan) {
       document.getElementById('filterKegiatanProses').value = defaultKegiatan;
-      loadAndRenderKurvaS(defaultKegiatan);
+      currentKegiatanId = defaultKegiatan;
+      currentWilayahId = 'all';
+
+      loadAndRenderKurvaS(defaultKegiatan, '');
       loadKabupatenDropdown(defaultKegiatan);
-      loadPetugas();
+
+      // Load petugas langsung tanpa setTimeout
+      loadPetugas(1);
     } else {
       document.getElementById('chartLoadingState').style.display = 'none';
       document.getElementById('chartPlaceholder').style.display = 'flex';
@@ -488,6 +612,27 @@
 
     document.getElementById('filterKegiatanProses').addEventListener('change', function () {
       const idProses = this.value;
+
+      // Cancel any ongoing requests
+      if (abortController) {
+        abortController.abort();
+      }
+      abortController = new AbortController();
+
+      // Simpan state filter SEGERA
+      currentKegiatanId = idProses;
+      currentWilayahId = 'all';
+
+      // Reset search dan per page
+      document.getElementById('searchPetugasInput').value = '';
+      document.getElementById('perPagePetugasSelect').value = '10';
+
+      // Reset sorting state
+      currentSortOrder = 'none';
+      const sortIcon = document.getElementById('sortIcon');
+      if (sortIcon) {
+        sortIcon.className = 'fas fa-sort text-gray-400';
+      }
 
       if (!idProses) {
         if (chartInstance) {
@@ -498,20 +643,75 @@
         document.getElementById('chartPlaceholder').style.display = 'flex';
         document.getElementById('filterKabupaten').disabled = true;
         document.getElementById('filterKabupaten').innerHTML = '<option value="">-- Pilih Kabupaten --</option>';
-        loadPetugas();
+
+        document.getElementById('petugasTableBody').innerHTML = `
+    <tr>
+      <td colspan="4" class="px-4 py-12 text-center">
+        <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
+        <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
+      </td>
+    </tr>
+  `;
+        document.getElementById('petugasDataInfo').innerHTML = 'Menampilkan 0 dari 0 total data';
+        document.getElementById('petugasPagination').innerHTML = '';
+
+        resetKepatuhanDisplay();
         return;
       }
 
+      // Reset dropdown kabupaten
+      document.getElementById('filterKabupaten').value = '';
+
       loadKabupatenDropdown(idProses);
-      loadAndRenderKurvaS(idProses);
-      loadPetugas();
+      loadAndRenderKurvaS(idProses, '');
+
+      // Load petugas tanpa setTimeout untuk response lebih cepat
+      loadPetugas(1);
+
+      // Load kepatuhan jika tab aktif
+      const activeTab = document.querySelector('.data-tab-button.active');
+      if (activeTab && activeTab.id === 'datatab-kepatuhan') {
+        loadKepatuhanData(idProses, 'all');
+      }
     });
 
     document.getElementById('filterKabupaten').addEventListener('change', function () {
       const idKab = this.value;
       const idProses = document.getElementById('filterKegiatanProses').value;
+
+      if (!idProses) return;
+
+      // Cancel any ongoing requests
+      if (abortController) {
+        abortController.abort();
+      }
+      abortController = new AbortController();
+
+      // Simpan state filter
+      currentKegiatanId = idProses;
+      currentWilayahId = idKab || 'all';
+
+      // Reset search dan per page
+      document.getElementById('searchPetugasInput').value = '';
+      document.getElementById('perPagePetugasSelect').value = '10';
+
+      // Reset sorting state
+      currentSortOrder = 'none';
+      const sortIcon = document.getElementById('sortIcon');
+      if (sortIcon) {
+        sortIcon.className = 'fas fa-sort text-gray-400';
+      }
+
       loadAndRenderKurvaS(idProses, idKab);
-      loadPetugas();
+
+      // Load petugas tanpa setTimeout
+      loadPetugas(1);
+
+      // Load kepatuhan jika tab aktif
+      const activeTab = document.querySelector('.data-tab-button.active');
+      if (activeTab && activeTab.id === 'datatab-kepatuhan') {
+        loadKepatuhanData(idProses, idKab || 'all');
+      }
     });
 
     // Animate progress bars
@@ -534,6 +734,604 @@
       }
     }, 250);
   });
+
+  // ==================== PAGINATION & SEARCH VARIABLES ====================
+  let currentPetugasPage = 1;
+  let petugasPerPage = 10;
+  let petugasSearchQuery = '';
+  let totalPetugasData = 0;
+  let totalPetugasPages = 0;
+  let kepatuhanChartInstance = null;
+  let currentKegiatanId = null;
+  let currentWilayahId = null;
+  let abortController = null;
+
+  // ==================== TAB SWITCHING ====================
+  function switchDataTab(tabName) {
+    const tabs = document.querySelectorAll('.data-tab-button');
+    tabs.forEach(tab => {
+      tab.classList.remove('active', 'border-[#1e88e5]', 'text-[#1e88e5]');
+      tab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+    });
+
+    const activeTab = document.getElementById(`datatab-${tabName}`);
+    activeTab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+    activeTab.classList.add('active', 'border-[#1e88e5]', 'text-[#1e88e5]');
+
+    const contents = document.querySelectorAll('.data-tab-content');
+    contents.forEach(content => content.classList.add('hidden'));
+    document.getElementById(`datacontent-${tabName}`).classList.remove('hidden');
+
+    if (tabName === 'kepatuhan') {
+      const kegiatanId = document.getElementById('filterKegiatanProses').value;
+      const wilayahId = document.getElementById('filterKabupaten').value;
+      if (kegiatanId) {
+        loadKepatuhanData(kegiatanId, wilayahId);
+      }
+    }
+  }
+
+  // ==================== loadPetugas FUNCTION ====================
+  async function loadPetugas(page = 1) {
+    const kegiatanId = document.getElementById('filterKegiatanProses').value;
+    const wilayahId = document.getElementById('filterKabupaten').value;
+    const perPage = document.getElementById('perPagePetugasSelect').value;
+    const search = document.getElementById('searchPetugasInput').value;
+
+    if (!kegiatanId) {
+      document.getElementById('petugasTableBody').innerHTML = `
+      <tr>
+        <td colspan="4" class="px-4 py-12 text-center">
+          <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
+          <p class="text-gray-500">Pilih kegiatan untuk menampilkan data petugas</p>
+        </td>
+      </tr>
+    `;
+      document.getElementById('petugasDataInfo').innerHTML = 'Menampilkan 0 dari 0 total data';
+      document.getElementById('petugasPagination').innerHTML = '';
+      return;
+    }
+
+    // Simpan filter saat request dimulai
+    const requestKegiatanId = kegiatanId;
+    const requestWilayahId = wilayahId || 'all';
+
+    currentPetugasPage = page;
+    petugasPerPage = perPage;
+    petugasSearchQuery = search;
+
+    try {
+      // Pastikan wilayahId dikirim sebagai 'all' jika kosong
+      const wilayahParam = wilayahId || 'all';
+
+      const response = await fetch(
+        `${basePetugas}?id_kegiatan_detail_proses=${kegiatanId}&id_kegiatan_wilayah=${wilayahParam}&page=${page}&perPage=${perPage}&search=${encodeURIComponent(search)}`,
+        { signal: abortController?.signal }
+      );
+      const result = await response.json();
+
+      // VALIDASI: Pastikan filter belum berubah
+      const currentWilayahCheck = currentWilayahId || 'all';
+      if (currentKegiatanId !== requestKegiatanId || currentWilayahCheck !== requestWilayahId) {
+        console.log('Petugas filter changed, ignoring old data');
+        return;
+      }
+
+      if (result.success) {
+        totalPetugasData = result.pagination.total;
+        totalPetugasPages = result.pagination.total_pages;
+
+        renderPetugasTable(result.data);
+        renderPetugasPagination(result.pagination);
+        updatePetugasDataInfo(result.data.length, result.pagination.total, result.pagination.current_page, result.pagination.per_page);
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        console.error('Error loading petugas:', e);
+      }
+    }
+  }
+
+  function updatePetugasDataInfo(showing, total, currentPage, perPage) {
+    const infoElement = document.getElementById('petugasDataInfo');
+    if (total === 0) {
+      infoElement.innerHTML = 'Menampilkan 0 dari 0 total data';
+      return;
+    }
+    const start = (currentPage - 1) * perPage + 1;
+    const end = Math.min(currentPage * perPage, total);
+    infoElement.innerHTML = `Menampilkan data <span class="font-medium">${start}-${end}</span> dari <span class="font-medium">${total}</span> data`;
+  }
+
+  function renderPetugasPagination(pagination) {
+    const container = document.getElementById('petugasPagination');
+    if (pagination.total_pages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    const currentPage = pagination.current_page;
+    const totalPages = pagination.total_pages;
+
+    html += `<button onclick="loadPetugas(${currentPage - 1})" class="px-3 py-2 text-sm font-medium rounded-lg ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
+
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 1) {
+      html += `<button onclick="loadPetugas(1)" class="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">1</button>`;
+      if (startPage > 2) html += `<span class="px-2 py-2 text-gray-400">...</span>`;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      html += `<button onclick="loadPetugas(${i})" class="px-3 py-2 text-sm font-medium rounded-lg ${i === currentPage ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}">${i}</button>`;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) html += `<span class="px-2 py-2 text-gray-400">...</span>`;
+      html += `<button onclick="loadPetugas(${totalPages})" class="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">${totalPages}</button>`;
+    }
+
+    html += `<button onclick="loadPetugas(${currentPage + 1})" class="px-3 py-2 text-sm font-medium rounded-lg ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}" ${currentPage === totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>`;
+
+    container.innerHTML = html;
+  }
+
+  let petugasSearchTimeout;
+  function handlePetugasSearch(event) {
+    clearTimeout(petugasSearchTimeout);
+    petugasSearchTimeout = setTimeout(function () {
+      loadPetugas(1);
+    }, 500);
+  }
+
+  function handlePetugasPerPageChange() {
+    loadPetugas(1);
+  }
+
+  // ==================== KEPATUHAN FUNCTIONS ====================
+  async function loadKepatuhanData(kegiatanId = null, wilayahId = null) {
+    if (!kegiatanId) {
+      kegiatanId = document.getElementById('filterKegiatanProses').value;
+    }
+    if (!wilayahId) {
+      wilayahId = document.getElementById('filterKabupaten').value || 'all';
+    }
+
+    if (!kegiatanId) {
+      resetKepatuhanDisplay();
+      return;
+    }
+
+    // Simpan filter saat request dimulai
+    const requestKegiatanId = kegiatanId;
+    const requestWilayahId = wilayahId || 'all';
+
+    try {
+      // Pastikan wilayahId dikirim sebagai 'all' jika kosong
+      const wilayahParam = wilayahId || 'all';
+
+      const response = await fetch(
+        `<?= base_url('adminsurvei/get-kepatuhan-data') ?>?id_kegiatan_detail_proses=${kegiatanId}&id_kegiatan_wilayah=${wilayahParam}`,
+        { signal: abortController?.signal }
+      );
+      const result = await response.json();
+
+      // VALIDASI: Pastikan filter belum berubah
+      const currentWilayahCheck = currentWilayahId || 'all';
+      if (currentKegiatanId !== requestKegiatanId || currentWilayahCheck !== requestWilayahId) {
+        console.log('Kepatuhan filter changed, ignoring old data');
+        return;
+      }
+
+      if (result.success) {
+        if (result.data.stats.total_pcl === 0) {
+          showNoDataKepatuhan();
+          return;
+        }
+
+        const noDataMsg = document.querySelector('.no-data-kepatuhan-message');
+        if (noDataMsg) noDataMsg.style.display = 'none';
+
+        document.getElementById('kepatuhanStatsCards').style.display = 'grid';
+        document.getElementById('kepatuhanChartContainer').style.display = 'block';
+        const leaderboardParent = document.getElementById('leaderboardContainer').parentElement.parentElement;
+        leaderboardParent.style.display = 'grid';
+
+        renderKepatuhanStats(result.data.stats);
+        renderKepatuhanChart(result.data.chart);
+        renderLeaderboard(result.data.leaderboard);
+        renderTidakPatuh(result.data.tidak_patuh);
+      } else {
+        console.error('Error loading kepatuhan data:', result.message);
+        showNoDataKepatuhan();
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error loading kepatuhan data:', error);
+        showNoDataKepatuhan();
+      }
+    }
+  }
+
+  function showNoDataKepatuhan() {
+    document.getElementById('leaderboardContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Belum ada data</p>';
+    document.getElementById('tidakPatuhContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Belum ada data</p>';
+    document.getElementById('kepatuhanStatsCards').innerHTML = '';
+
+    if (kepatuhanChartInstance) {
+      kepatuhanChartInstance.destroy();
+      kepatuhanChartInstance = null;
+    }
+
+    document.getElementById('kepatuhanChartPlaceholder').innerHTML = '<p class="text-gray-400">Pilih kegiatan untuk menampilkan grafik kepatuhan</p>';
+    document.getElementById('kepatuhanStatsCards').style.display = 'none';
+    document.getElementById('kepatuhanChartContainer').style.display = 'none';
+    const leaderboardParent = document.getElementById('leaderboardContainer').parentElement.parentElement;
+    leaderboardParent.style.display = 'none';
+
+    const contentDiv = document.getElementById('datacontent-kepatuhan');
+    let existingMessage = contentDiv.querySelector('.no-data-kepatuhan-message');
+
+    if (!existingMessage) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'no-data-kepatuhan-message flex flex-col items-center justify-center py-20';
+      messageDiv.innerHTML = `
+      <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+      <p class="text-gray-500 text-lg">Belum ada data petugas</p>
+    `;
+      contentDiv.appendChild(messageDiv);
+    } else {
+      existingMessage.style.display = 'flex';
+    }
+  }
+
+  function resetKepatuhanDisplay() {
+    document.getElementById('kepatuhanStatsCards').innerHTML = '';
+    document.getElementById('leaderboardContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>';
+    document.getElementById('tidakPatuhContainer').innerHTML = '<p class="text-center text-gray-400 py-8">Pilih kegiatan untuk melihat data</p>';
+    if (kepatuhanChartInstance) {
+      kepatuhanChartInstance.destroy();
+      kepatuhanChartInstance = null;
+    }
+    document.getElementById('kepatuhanChartPlaceholder').style.display = 'flex';
+    document.getElementById('kepatuhanChartPlaceholder').innerHTML = '<p class="text-gray-400">Pilih kegiatan untuk menampilkan grafik kepatuhan</p>';
+  }
+
+  function renderKepatuhanStats(stats) {
+    const container = document.getElementById('kepatuhanStatsCards');
+    container.style.display = 'grid';
+
+    const persentasePatuh = stats.persentase_patuh || 0;
+    const persentaseKurangPatuh = stats.persentase_kurang_patuh || 0;
+    const persentaseTidakPatuh = stats.persentase_tidak_patuh || 0;
+    const rataRata = stats.rata_rata_kepatuhan || 0;
+
+    const statsHtml = `
+    <div class="card hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-600 mb-1">Total PCL</p>
+          <h3 class="text-3xl font-bold text-gray-900">${stats.total_pcl || 0}</h3>
+        </div>
+        <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center">
+          <i class="fas fa-user-friends text-2xl text-blue-600"></i>
+        </div>
+      </div>
+    </div>
+    <div class="card hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-600 mb-1">Patuh</p>
+          <h3 class="text-3xl font-bold text-gray-900">${stats.patuh || 0}</h3>
+          <p class="text-xs text-gray-500 mt-1">${persentasePatuh.toFixed(1)}% dari total</p>
+        </div>
+        <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center">
+          <i class="fas fa-check-circle text-2xl text-green-600"></i>
+        </div>
+      </div>
+    </div>
+    <div class="card hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-600 mb-1">Kurang Patuh</p>
+          <h3 class="text-3xl font-bold text-gray-900">${stats.kurang_patuh || 0}</h3>
+          <p class="text-xs text-gray-500 mt-1">${persentaseKurangPatuh.toFixed(1)}% dari total</p>
+        </div>
+        <div class="w-14 h-14 bg-amber-50 rounded-lg flex items-center justify-center">
+          <i class="fas fa-exclamation-circle text-2xl text-amber-600"></i>
+        </div>
+      </div>
+    </div>
+    <div class="card hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-600 mb-1">Tidak Patuh</p>
+          <h3 class="text-3xl font-bold text-gray-900">${stats.tidak_patuh || 0}</h3>
+          <p class="text-xs text-gray-500 mt-1">${persentaseTidakPatuh.toFixed(1)}% dari total</p>
+        </div>
+        <div class="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center">
+          <i class="fas fa-times-circle text-2xl text-red-600"></i>
+        </div>
+      </div>
+    </div>
+    <div class="card hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-600 mb-1">Rata-rata</p>
+          <h3 class="text-3xl font-bold text-gray-900">${rataRata.toFixed(1)}%</h3>
+          <p class="text-xs text-gray-500 mt-1">Tingkat kepatuhan</p>
+        </div>
+        <div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center">
+          <i class="fas fa-chart-bar text-2xl text-purple-600"></i>
+        </div>
+      </div>
+    </div>
+  `;
+
+    container.innerHTML = statsHtml;
+  }
+
+  function renderKepatuhanChart(chartData) {
+    document.getElementById('kepatuhanChartContainer').style.display = 'block';
+    document.getElementById('kepatuhanChartPlaceholder').style.display = 'none';
+
+    if (kepatuhanChartInstance) {
+      kepatuhanChartInstance.destroy();
+    }
+
+    const isMobile = window.innerWidth < 640;
+
+    if (chartData.type === 'bar') {
+      const options = {
+        series: [{ name: 'Kepatuhan (%)', data: chartData.data.map(item => item.persentase) }],
+        chart: { type: 'bar', height: 400, fontFamily: 'Poppins, sans-serif', toolbar: { show: true } },
+        plotOptions: { bar: { horizontal: true, distributed: true, dataLabels: { position: 'top' } } },
+        colors: chartData.data.map(item => item.persentase >= 80 ? '#10b981' : item.persentase >= 50 ? '#f59e0b' : '#ef4444'),
+        dataLabels: { enabled: true, formatter: val => val.toFixed(1) + '%', offsetX: -6, style: { fontSize: '12px', colors: ['#fff'] } },
+        xaxis: { categories: chartData.data.map(item => item.nama_kabupaten), max: 100 },
+        yaxis: { labels: { style: { fontSize: isMobile ? '10px' : '12px' } } },
+        legend: { show: false },
+        tooltip: { y: { formatter: val => val.toFixed(1) + '%' } }
+      };
+
+      kepatuhanChartInstance = new ApexCharts(document.querySelector("#kepatuhanChart"), options);
+      kepatuhanChartInstance.render();
+    } else {
+      const options = {
+        series: [{ name: 'Kepatuhan Harian', data: chartData.data.map(item => item.persentase) }],
+        chart: { type: 'area', height: 380, fontFamily: 'Poppins, sans-serif', toolbar: { show: true }, zoom: { enabled: true } },
+        colors: ['#10b981'],
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 3 },
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 100] } },
+        xaxis: { categories: chartData.data.map(item => item.label || item.tanggal), labels: { style: { fontSize: isMobile ? '10px' : '11px' } } },
+        yaxis: { max: 100, labels: { formatter: val => val.toFixed(0) + '%' } },
+        tooltip: {
+          y: {
+            formatter: function (val, opts) {
+              const dataPoint = chartData.data[opts.dataPointIndex];
+              return val.toFixed(1) + '% (' + dataPoint.jumlah_lapor + '/' + dataPoint.total_pcl + ' PCL)';
+            }
+          }
+        },
+        markers: { size: 4, hover: { size: 6 } },
+        grid: { borderColor: '#f3f4f6' }
+      };
+
+      kepatuhanChartInstance = new ApexCharts(document.querySelector("#kepatuhanChart"), options);
+      kepatuhanChartInstance.render();
+    }
+  }
+
+  function renderLeaderboard(data) {
+    const container = document.getElementById('leaderboardContainer');
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p class="text-center text-gray-400 py-8">Belum ada data</p>';
+      return;
+    }
+    const html = data.map((item, index) => {
+      const rankColor = index === 0 ? 'bg-yellow-100 text-yellow-800' : index === 1 ? 'bg-gray-100 text-gray-700' : index === 2 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-700';
+      const persentase = parseFloat(item.persentase_kepatuhan || 0);
+      const statusClass = persentase >= 80 ? 'bg-green-100 text-green-800' : persentase >= 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+      return `
+  <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+    <div class="flex items-center gap-3 flex-1">
+      <div class="w-8 h-8 rounded-full ${rankColor} flex items-center justify-center font-bold text-sm flex-shrink-0">${index + 1}</div>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-medium text-gray-900 truncate">${item.nama_pcl || '-'}</p>
+        ${item.nama_kabupaten ? `<p class="text-xs text-gray-500">${item.nama_kabupaten}</p>` : ''}
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="text-right">
+        <p class="text-sm font-semibold text-gray-900">${item.jumlah_laporan || 0} / ${item.total_hari_kerja || 0}</p>
+        <p class="text-xs text-gray-500">hari</p>
+      </div>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">${persentase.toFixed(1)}%</span>
+    </div>
+  </div>
+`;
+    }).join('');
+    container.innerHTML = html;
+  }
+
+  function renderTidakPatuh(data) {
+    const container = document.getElementById('tidakPatuhContainer');
+    if (!data || data.length === 0) {
+      container.innerHTML = `
+      <div class="text-center py-8">
+        <i class="fas fa-check-circle text-green-300 text-4xl mb-2"></i>
+        <p class="text-gray-500">Semua petugas patuh!</p>
+      </div>
+    `;
+      return;
+    }
+
+    const html = data.map(item => {
+      const persentase = parseFloat(item.persentase_kepatuhan || 0);
+      return `
+      <div class="p-4 rounded-lg border-2 border-red-200 bg-red-50">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex-1">
+            <p class="font-medium text-gray-900">${item.nama_pcl || '-'}</p>
+            ${item.nama_kabupaten ? `<p class="text-xs text-gray-600">${item.nama_kabupaten}</p>` : ''}
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">${persentase.toFixed(1)}%</span>
+        </div>
+        <div class="space-y-1">
+          <div class="flex items-center text-sm text-gray-700">
+            <i class="fas fa-calendar-times text-red-500 mr-2 w-4"></i>
+            <span>Terakhir lapor: ${item.terakhir_lapor || 'Belum pernah lapor'}</span>
+          </div>
+          <div class="flex items-center text-sm text-gray-700">
+            <i class="fas fa-clock text-red-500 mr-2 w-4"></i>
+            <span>Tidak lapor: ${item.hari_tidak_lapor || 0} hari</span>
+          </div>
+          <div class="flex items-center text-sm text-gray-700">
+            <i class="fas fa-chart-line text-red-500 mr-2 w-4"></i>
+            <span>Laporan: ${item.jumlah_laporan || 0} / ${item.total_hari_kerja || 0} hari</span>
+          </div>
+        </div>
+      </div>
+    `;
+    }).join('');
+
+    container.innerHTML = html;
+  }
+
+  // ==================== SORTING VARIABLES ====================
+  let currentSortOrder = 'none'; // 'none', 'asc', 'desc'
+  let originalPetugasData = [];
+
+  // ==================== TOGGLE PROGRESS SORT ====================
+  function toggleProgressSort() {
+    const sortIcon = document.getElementById('sortIcon');
+
+    // Cycle through: none -> desc (high to low) -> asc (low to high) -> none
+    if (currentSortOrder === 'none') {
+      currentSortOrder = 'desc';
+      sortIcon.className = 'fas fa-sort-down text-blue-600';
+    } else if (currentSortOrder === 'desc') {
+      currentSortOrder = 'asc';
+      sortIcon.className = 'fas fa-sort-up text-blue-600';
+    } else {
+      currentSortOrder = 'none';
+      sortIcon.className = 'fas fa-sort text-gray-400';
+    }
+
+    applySorting();
+  }
+
+  // ==================== APPLY SORTING ====================
+  function applySorting() {
+    const tbody = document.getElementById('petugasTableBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    if (rows.length === 0 || rows[0].cells.length === 1) {
+      return; // No data or placeholder row
+    }
+
+    if (currentSortOrder === 'none') {
+      // Restore original order - reload data
+      loadPetugas(currentPetugasPage);
+      return;
+    }
+
+    // Sort rows based on progress value
+    rows.sort((a, b) => {
+      const progressA = parseFloat(a.cells[3].querySelector('.text-gray-900').textContent);
+      const progressB = parseFloat(b.cells[3].querySelector('.text-gray-900').textContent);
+
+      if (currentSortOrder === 'asc') {
+        return progressA - progressB;
+      } else {
+        return progressB - progressA;
+      }
+    });
+
+    // Clear and re-append sorted rows
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+  }
 </script>
+
+<style>
+  .data-tab-button {
+    transition: all 0.2s ease;
+    min-width: 140px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .data-tab-button.active {
+    border-color: #1e88e5 !important;
+    color: #1e88e5 !important;
+  }
+
+  #kepatuhanStatsCards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+  }
+
+  #kepatuhanStatsCards>div {
+    transition: all 0.3s ease;
+  }
+
+  #kepatuhanStatsCards>div:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 1024px) {
+    #kepatuhanStatsCards {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .data-tab-button {
+      min-width: 120px;
+      font-size: 0.813rem;
+    }
+
+    #kepatuhanStatsCards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+
+  /* Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f1f1f1;
+  }
+</style>
 
 <?= $this->endSection() ?>

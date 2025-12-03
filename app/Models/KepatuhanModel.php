@@ -274,14 +274,13 @@ class KepatuhanModel extends Model
     /**
      * Get Daftar Petugas Tidak Patuh (persentase < 50%)
      */
-    public function getPetugasTidakPatuh($idKegiatanDetailProses, $idKegiatanWilayah = 'all')
+    public function getPetugasTidakPatuh($idKegiatanDetailProses, $idKegiatanWilayah = 'all', $idKabupaten = null)
     {
         $kegiatan = $this->getKegiatanInfo($idKegiatanDetailProses);
         if (!$kegiatan) {
             return [];
         }
 
-        $idKabupaten = ($idKegiatanWilayah === 'all') ? null : $this->getKabupatenFromKegiatanWilayah($idKegiatanWilayah);
         $petugas = $this->getPetugasList($idKegiatanDetailProses, $idKegiatanWilayah, $idKabupaten);
 
         $tidakPatuh = [];
@@ -295,6 +294,7 @@ class KepatuhanModel extends Model
             );
 
             if ($kepatuhan['persentase'] < 50) {
+                // Get tanggal laporan terakhir
                 $laporanTerakhir = $this->db->query("
                 SELECT MAX(tanggal) as terakhir_lapor
                 FROM kepatuhan_summary
@@ -306,13 +306,19 @@ class KepatuhanModel extends Model
                 $hariTidakLapor = 0;
 
                 if ($terakhirLapor) {
+                    // Hitung hari kerja sejak terakhir lapor sampai hari ini
                     $lastDate = new \DateTime($terakhirLapor);
                     $today = new \DateTime();
-                    $hariTidakLapor = $today->diff($lastDate)->days;
+                    $today = min($today, new \DateTime($kegiatan['tanggal_selesai']));
+
+                    $hariTidakLapor = $this->hitungHariKerja($lastDate, $today) - 1; // -1 karena tidak hitung hari terakhir lapor
                 } else {
+                    // Belum pernah lapor, hitung dari tanggal mulai kegiatan
                     $mulai = new \DateTime($kegiatan['tanggal_mulai']);
                     $today = new \DateTime();
-                    $hariTidakLapor = $today->diff($mulai)->days;
+                    $today = min($today, new \DateTime($kegiatan['tanggal_selesai']));
+
+                    $hariTidakLapor = $this->hitungHariKerja($mulai, $today);
                 }
 
                 // Get nama kabupaten
@@ -356,6 +362,27 @@ class KepatuhanModel extends Model
      * Hitung Kepatuhan PCL dalam periode tertentu
      * Menggunakan kepatuhan_summary untuk performa optimal
      */
+
+    private function hitungHariKerja($startDate, $endDate)
+    {
+        $start = clone $startDate;
+        $end = clone $endDate;
+        $hariKerja = 0;
+
+        while ($start <= $end) {
+            $dayOfWeek = $start->format('N'); // 1 (Monday) to 7 (Sunday)
+
+            // Hanya hitung Senin-Jumat (1-5)
+            if ($dayOfWeek >= 1 && $dayOfWeek <= 5) {
+                $hariKerja++;
+            }
+
+            $start->modify('+1 day');
+        }
+
+        return $hariKerja;
+    }
+
     private function hitungKepatuhanPCL($idPCL, $idKegiatanDetailProses, $tanggalMulai, $tanggalSelesai)
     {
         $today = date('Y-m-d');
@@ -366,26 +393,28 @@ class KepatuhanModel extends Model
             $endDate = $today;
         }
 
-        // Hitung total hari dalam periode
+        // Hitung total hari KERJA dalam periode (Senin-Jumat saja)
         $start = new \DateTime($tanggalMulai);
         $end = new \DateTime($endDate);
-        $totalHari = $end->diff($start)->days + 1;
+        $totalHariKerja = $this->hitungHariKerja($start, $end);
 
         // Hitung jumlah hari PCL melakukan laporan (DISTINCT tanggal dari kepatuhan_summary)
+        // HANYA hari kerja (Senin-Jumat)
         $result = $this->db->query("
-            SELECT COUNT(DISTINCT tanggal) as jumlah_laporan
-            FROM kepatuhan_summary
-            WHERE id_pcl = ?
-            AND id_kegiatan_detail_proses = ?
-            AND tanggal BETWEEN ? AND ?
-        ", [$idPCL, $idKegiatanDetailProses, $tanggalMulai, $endDate])->getRowArray();
+        SELECT COUNT(DISTINCT ks.tanggal) as jumlah_laporan
+        FROM kepatuhan_summary ks
+        WHERE ks.id_pcl = ?
+        AND ks.id_kegiatan_detail_proses = ?
+        AND ks.tanggal BETWEEN ? AND ?
+        AND DAYOFWEEK(ks.tanggal) NOT IN (1, 7)
+    ", [$idPCL, $idKegiatanDetailProses, $tanggalMulai, $endDate])->getRowArray();
 
         $jumlahLaporan = (int) ($result['jumlah_laporan'] ?? 0);
-        $persentase = $totalHari > 0 ? round(($jumlahLaporan / $totalHari) * 100, 1) : 0;
+        $persentase = $totalHariKerja > 0 ? round(($jumlahLaporan / $totalHariKerja) * 100, 1) : 0;
 
         return [
             'jumlah_laporan' => $jumlahLaporan,
-            'total_hari' => $totalHari,
+            'total_hari' => $totalHariKerja, // Ini sekarang total hari KERJA saja
             'persentase' => $persentase
         ];
     }

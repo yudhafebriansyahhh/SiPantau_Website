@@ -34,45 +34,52 @@ class MasterKegiatanDetailProsesController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         // Tentukan apakah user adalah Super Admin atau Admin Provinsi
-        $isSuperAdmin = ($role == 1); // Role 1 = Super Admin
+        $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         // Jika bukan Super Admin dan bukan Admin Provinsi, redirect
         if (!$isSuperAdmin && !$isAdminProvinsi) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
         // Ambil filter dari GET atau session
         $kegiatanDetailFilter = $this->request->getGet('kegiatan_detail') ?? session()->get('kegiatan_detail_filter');
-        
+
         // Simpan filter ke session jika ada
         if ($this->request->getGet('kegiatan_detail') !== null) {
             session()->set('kegiatan_detail_filter', $kegiatanDetailFilter);
         }
 
-        // Get data:
-        // - Super Admin: semua data (idAdminProvinsi = null)
-        // - Admin Provinsi: hanya data yang di-assign (idAdminProvinsi = ID mereka)
+        // Get data dengan pagination
         $filterAdminId = $isSuperAdmin ? null : $idAdminProvinsi;
-        $kegiatanDetails = $this->masterDetailProsesModel->getData($kegiatanDetailFilter, $filterAdminId);
+        $kegiatanDetails = $this->masterDetailProsesModel->getDataPaginated($kegiatanDetailFilter, $filterAdminId, $perPage);
 
         // Get list kegiatan detail
-        // - Super Admin: semua kegiatan
-        // - Admin Provinsi: hanya yang di-assign
-        $kegiatanDetailList = $isSuperAdmin 
-            ? $this->masterDetailModel->findAll() 
+        $kegiatanDetailList = $isSuperAdmin
+            ? $this->masterDetailModel->findAll()
             : $this->getAssignedKegiatanDetail($idAdminProvinsi);
 
         $data = [
-            'title'                   => 'Kelola Master Kegiatan Detail Proses',
-            'active_menu'             => 'master-kegiatan-detail-proses',
-            'kegiatanDetails'         => $kegiatanDetails,
-            'kegiatanDetailList'      => $kegiatanDetailList,
-            'kegiatanDetailFilter'    => $kegiatanDetailFilter,
-            'isSuperAdmin'            => $isSuperAdmin
+            'title' => 'Kelola Master Kegiatan Detail Proses',
+            'active_menu' => 'master-kegiatan-detail-proses',
+            'kegiatanDetails' => $kegiatanDetails,
+            'kegiatanDetailList' => $kegiatanDetailList,
+            'kegiatanDetailFilter' => $kegiatanDetailFilter,
+            'isSuperAdmin' => $isSuperAdmin,
+            'perPage' => $perPage,
+            'pager' => $this->masterDetailProsesModel->pager,
         ];
 
         return view('AdminSurveiProv/MasterKegiatanDetailProses/index', $data);
@@ -84,10 +91,10 @@ class MasterKegiatanDetailProsesController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if (!$isSuperAdmin && !$isAdminProvinsi) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
@@ -97,17 +104,17 @@ class MasterKegiatanDetailProsesController extends BaseController
         $kegiatanDetailFilter = session()->get('kegiatan_detail_filter');
 
         // Get list kegiatan detail
-        $kegiatanDetailList = $isSuperAdmin 
-            ? $this->masterDetailModel->findAll() 
+        $kegiatanDetailList = $isSuperAdmin
+            ? $this->masterDetailModel->findAll()
             : $this->getAssignedKegiatanDetail($idAdminProvinsi);
 
         $data = [
-            'title'                  => 'Tambah Master Kegiatan Detail Proses',
-            'active_menu'            => 'master-kegiatan-detail-proses',
-            'kegiatanDetailList'     => $kegiatanDetailList,
-            'validation'             => $this->validation,
-            'kegiatanDetailFilter'   => $kegiatanDetailFilter,
-            'isSuperAdmin'           => $isSuperAdmin
+            'title' => 'Tambah Master Kegiatan Detail Proses',
+            'active_menu' => 'master-kegiatan-detail-proses',
+            'kegiatanDetailList' => $kegiatanDetailList,
+            'validation' => $this->validation,
+            'kegiatanDetailFilter' => $kegiatanDetailFilter,
+            'isSuperAdmin' => $isSuperAdmin
         ];
 
         return view('AdminSurveiProv/MasterKegiatanDetailProses/create', $data);
@@ -118,34 +125,34 @@ class MasterKegiatanDetailProsesController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if (!$isSuperAdmin && !$isAdminProvinsi) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses.');
         }
 
         $rules = [
-            'kegiatan_detail'        => 'required|numeric',
-            'nama_proses'            => 'required|min_length[3]|max_length[255]',
-            'tanggal_mulai'          => 'required|valid_date',
-            'tanggal_selesai'        => 'required|valid_date',
-            'satuan'                 => 'required|max_length[50]',
-            'keterangan'             => 'required|max_length[255]',
-            'periode'                => 'required|max_length[50]',
-            'target'                 => 'required|numeric',
+            'kegiatan_detail' => 'required|numeric',
+            'nama_proses' => 'required|min_length[3]|max_length[255]',
+            'tanggal_mulai' => 'required|valid_date',
+            'tanggal_selesai' => 'required|valid_date',
+            'satuan' => 'required|max_length[50]',
+            'keterangan' => 'required|max_length[255]',
+            'periode' => 'required|max_length[50]',
+            'target' => 'required|numeric',
             'persentase_target_awal' => 'required|numeric',
             'tanggal_selesai_target' => 'required|valid_date',
         ];
 
-        if (! $this->validate($rules)) {
+        if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $idKegiatanDetail = $this->request->getPost('kegiatan_detail');
-        
+
         // Validasi untuk Admin Provinsi: Pastikan kegiatan detail ini di-assign ke admin ini
         // Super Admin tidak perlu validasi ini
         if ($isAdminProvinsi && !$this->isKegiatanAssignedToAdmin($idKegiatanDetail, $idAdminProvinsi)) {
@@ -153,7 +160,7 @@ class MasterKegiatanDetailProsesController extends BaseController
                 ->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
         }
 
-        $tanggalMulai   = $this->request->getPost('tanggal_mulai');
+        $tanggalMulai = $this->request->getPost('tanggal_mulai');
         $tanggalSelesai = $this->request->getPost('tanggal_selesai');
         $tanggal100Persen = $this->request->getPost('tanggal_selesai_target');
 
@@ -172,17 +179,17 @@ class MasterKegiatanDetailProsesController extends BaseController
 
         // Simpan ke tabel master_kegiatan_detail_proses
         $this->masterDetailProsesModel->insert([
-            'id_kegiatan_detail'          => $idKegiatanDetail,
+            'id_kegiatan_detail' => $idKegiatanDetail,
             'nama_kegiatan_detail_proses' => $this->request->getPost('nama_proses'),
-            'satuan'                      => $this->request->getPost('satuan'),
-            'tanggal_mulai'               => $tanggalMulai,
-            'tanggal_selesai'             => $tanggalSelesai,
-            'keterangan'                  => $this->request->getPost('keterangan'),
-            'periode'                     => $this->request->getPost('periode'),
-            'target'                      => $this->request->getPost('target'),
-            'persentase_target_awal'      => $this->request->getPost('persentase_target_awal'),
-            'tanggal_selesai_target'      => $tanggal100Persen,
-            'created_at'                  => date('Y-m-d H:i:s'),
+            'satuan' => $this->request->getPost('satuan'),
+            'tanggal_mulai' => $tanggalMulai,
+            'tanggal_selesai' => $tanggalSelesai,
+            'keterangan' => $this->request->getPost('keterangan'),
+            'periode' => $this->request->getPost('periode'),
+            'target' => $this->request->getPost('target'),
+            'persentase_target_awal' => $this->request->getPost('persentase_target_awal'),
+            'tanggal_selesai_target' => $tanggal100Persen,
+            'created_at' => date('Y-m-d H:i:s'),
         ]);
 
         $idProses = $this->masterDetailProsesModel->getInsertID();
@@ -207,10 +214,10 @@ class MasterKegiatanDetailProsesController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if (!$isSuperAdmin && !$isAdminProvinsi) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses.');
@@ -218,7 +225,7 @@ class MasterKegiatanDetailProsesController extends BaseController
 
         $detailProses = $this->masterDetailProsesModel->find($id);
 
-        if (! $detailProses) {
+        if (!$detailProses) {
             return redirect()
                 ->to(base_url('adminsurvei/master-kegiatan-detail-proses'))
                 ->with('error', 'Data tidak ditemukan.');
@@ -235,18 +242,18 @@ class MasterKegiatanDetailProsesController extends BaseController
         $kegiatanDetailFilter = session()->get('kegiatan_detail_filter');
 
         // Get list kegiatan detail
-        $kegiatanDetailList = $isSuperAdmin 
-            ? $this->masterDetailModel->findAll() 
+        $kegiatanDetailList = $isSuperAdmin
+            ? $this->masterDetailModel->findAll()
             : $this->getAssignedKegiatanDetail($idAdminProvinsi);
 
         $data = [
-            'title'                  => 'Edit Master Kegiatan Detail Proses',
-            'active_menu'            => 'master-kegiatan-detail-proses',
-            'kegiatanDetailList'     => $kegiatanDetailList,
-            'detailProses'           => $detailProses,
-            'validation'             => $this->validation,
-            'kegiatanDetailFilter'   => $kegiatanDetailFilter,
-            'isSuperAdmin'           => $isSuperAdmin
+            'title' => 'Edit Master Kegiatan Detail Proses',
+            'active_menu' => 'master-kegiatan-detail-proses',
+            'kegiatanDetailList' => $kegiatanDetailList,
+            'detailProses' => $detailProses,
+            'validation' => $this->validation,
+            'kegiatanDetailFilter' => $kegiatanDetailFilter,
+            'isSuperAdmin' => $isSuperAdmin
         ];
 
         return view('AdminSurveiProv/MasterKegiatanDetailProses/edit', $data);
@@ -257,34 +264,34 @@ class MasterKegiatanDetailProsesController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if (!$isSuperAdmin && !$isAdminProvinsi) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses.');
         }
 
         $rules = [
-            'kegiatan_detail'         => 'required|numeric',
-            'nama_proses'             => 'required|min_length[3]|max_length[255]',
-            'tanggal_mulai'           => 'required|valid_date',
-            'tanggal_selesai'         => 'required|valid_date',
-            'satuan'                  => 'required|max_length[50]',
-            'keterangan'              => 'required|max_length[255]',
-            'periode'                 => 'required|max_length[50]',
-            'target'                  => 'required|numeric',
-            'persentase_target_awal'  => 'required|numeric',
-            'tanggal_selesai_target'  => 'required|valid_date',
+            'kegiatan_detail' => 'required|numeric',
+            'nama_proses' => 'required|min_length[3]|max_length[255]',
+            'tanggal_mulai' => 'required|valid_date',
+            'tanggal_selesai' => 'required|valid_date',
+            'satuan' => 'required|max_length[50]',
+            'keterangan' => 'required|max_length[255]',
+            'periode' => 'required|max_length[50]',
+            'target' => 'required|numeric',
+            'persentase_target_awal' => 'required|numeric',
+            'tanggal_selesai_target' => 'required|valid_date',
         ];
 
-        if (! $this->validate($rules)) {
+        if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $existingData = $this->masterDetailProsesModel->find($id);
-        if (! $existingData) {
+        if (!$existingData) {
             return redirect()->back()->with('error', 'Data tidak ditemukan.');
         }
 
@@ -294,9 +301,9 @@ class MasterKegiatanDetailProsesController extends BaseController
                 ->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
         }
 
-        $tanggalMulai      = $this->request->getPost('tanggal_mulai');
-        $tanggalSelesai    = $this->request->getPost('tanggal_selesai');
-        $tanggal100Persen  = $this->request->getPost('tanggal_selesai_target');
+        $tanggalMulai = $this->request->getPost('tanggal_mulai');
+        $tanggalSelesai = $this->request->getPost('tanggal_selesai');
+        $tanggal100Persen = $this->request->getPost('tanggal_selesai_target');
 
         // Validasi hubungan antar tanggal
         if (
@@ -308,17 +315,17 @@ class MasterKegiatanDetailProsesController extends BaseController
         }
 
         $input = [
-            'id_kegiatan_detail'          => $this->request->getPost('kegiatan_detail'),
+            'id_kegiatan_detail' => $this->request->getPost('kegiatan_detail'),
             'nama_kegiatan_detail_proses' => $this->request->getPost('nama_proses'),
-            'tanggal_mulai'               => $tanggalMulai,
-            'tanggal_selesai'             => $tanggalSelesai,
-            'satuan'                      => $this->request->getPost('satuan'),
-            'keterangan'                  => $this->request->getPost('keterangan'),
-            'periode'                     => $this->request->getPost('periode'),
-            'target'                      => $this->request->getPost('target'),
-            'persentase_target_awal'      => $this->request->getPost('persentase_target_awal'),
-            'tanggal_selesai_target'      => $tanggal100Persen,
-            'updated_at'                  => date('Y-m-d H:i:s'),
+            'tanggal_mulai' => $tanggalMulai,
+            'tanggal_selesai' => $tanggalSelesai,
+            'satuan' => $this->request->getPost('satuan'),
+            'keterangan' => $this->request->getPost('keterangan'),
+            'periode' => $this->request->getPost('periode'),
+            'target' => $this->request->getPost('target'),
+            'persentase_target_awal' => $this->request->getPost('persentase_target_awal'),
+            'tanggal_selesai_target' => $tanggal100Persen,
+            'updated_at' => date('Y-m-d H:i:s'),
         ];
 
         $this->masterDetailProsesModel->update($id, $input);
@@ -356,21 +363,21 @@ class MasterKegiatanDetailProsesController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if (!$isSuperAdmin && !$isAdminProvinsi) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses.');
         }
 
         $prosesModel = new MasterKegiatanDetailProsesModel();
-        $kurvaModel  = new KurvaSProvinsiModel();
+        $kurvaModel = new KurvaSProvinsiModel();
 
         $detailProses = $prosesModel->find($id);
 
-        if (! $detailProses) {
+        if (!$detailProses) {
             return redirect()->back()->with('error', 'Data kegiatan detail proses tidak ditemukan.');
         }
 
@@ -389,7 +396,7 @@ class MasterKegiatanDetailProsesController extends BaseController
     }
 
     // Helper methods
-    
+
     /**
      * Get kegiatan detail yang di-assign ke admin provinsi
      */
@@ -423,11 +430,11 @@ class MasterKegiatanDetailProsesController extends BaseController
         $kurvaModel = new KurvaSProvinsiModel();
 
         $totalTarget = (int) $target;
-        $persenAwal  = (float) $persenAwal;
+        $persenAwal = (float) $persenAwal;
 
-        $start   = new DateTime($tanggalMulai);
-        $tgl100  = new DateTime($tanggal100);
-        $end     = new DateTime($tanggalSelesai);
+        $start = new DateTime($tanggalMulai);
+        $tgl100 = new DateTime($tanggal100);
+        $end = new DateTime($tanggalSelesai);
         $end->modify('+1 day');
 
         $interval = new DateInterval('P1D');
@@ -454,7 +461,8 @@ class MasterKegiatanDetailProsesController extends BaseController
             $normalizedSigmoid = ($sigmoid - $sigmoidMin) / ($sigmoidMax - $sigmoidMin);
 
             $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $normalizedSigmoid;
-            if ($kumulatifPersen > 100) $kumulatifPersen = 100;
+            if ($kumulatifPersen > 100)
+                $kumulatifPersen = 100;
 
             $workdayData[$date->format('Y-m-d')] = $kumulatifPersen;
         }
@@ -486,12 +494,12 @@ class MasterKegiatanDetailProsesController extends BaseController
         foreach ($insertData as $row) {
             $kurvaModel->insert([
                 'id_kegiatan_detail_proses' => $idProses,
-                'tanggal_target'            => $row['tanggal'],
-                'target_persen_kumulatif'   => $row['persen'],
-                'target_harian_absolut'     => $row['harian'],
-                'target_kumulatif_absolut'  => $row['kumulatif'],
-                'is_hari_kerja'             => 1,
-                'created_at'                => date('Y-m-d H:i:s'),
+                'tanggal_target' => $row['tanggal'],
+                'target_persen_kumulatif' => $row['persen'],
+                'target_harian_absolut' => $row['harian'],
+                'target_kumulatif_absolut' => $row['kumulatif'],
+                'is_hari_kerja' => 1,
+                'created_at' => date('Y-m-d H:i:s'),
             ]);
         }
 
@@ -502,12 +510,12 @@ class MasterKegiatanDetailProsesController extends BaseController
             $currentDate = $date->format('Y-m-d');
             $kurvaModel->insert([
                 'id_kegiatan_detail_proses' => $idProses,
-                'tanggal_target'            => $currentDate,
-                'target_persen_kumulatif'   => 100,
-                'target_harian_absolut'     => 0,
-                'target_kumulatif_absolut'  => $totalTarget,
-                'is_hari_kerja'             => 1,
-                'created_at'                => date('Y-m-d H:i:s'),
+                'tanggal_target' => $currentDate,
+                'target_persen_kumulatif' => 100,
+                'target_harian_absolut' => 0,
+                'target_kumulatif_absolut' => $totalTarget,
+                'is_hari_kerja' => 1,
+                'created_at' => date('Y-m-d H:i:s'),
             ]);
         }
     }

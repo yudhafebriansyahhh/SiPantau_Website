@@ -38,13 +38,17 @@ class KelolaPenggunaController extends BaseController
         $search = $this->request->getGet('search') ?? '';
         $roleFilter = $this->request->getGet('role') ?? '';
 
-        // Get users with details
-        $users = $this->userModel->getUsersWithDetails($search, $roleFilter);
+        // TAMBAHKAN INI - Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
 
-        // Tambahkan role tambahan untuk setiap user
-        foreach ($users as &$user) {
-            $user['role_names'] = $this->getUserRoleNames($user['sobat_id'], $user['role']);
+        // TAMBAHKAN INI - Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
         }
+
+        // UBAH INI - Get users dengan pagination
+        $users = $this->userModel->getUsersWithDetailsPaginated($search, $roleFilter, $perPage);
 
         $data = [
             'title' => 'Kelola Pengguna',
@@ -52,7 +56,9 @@ class KelolaPenggunaController extends BaseController
             'users' => $users,
             'roles' => $this->roleModel->findAll(),
             'search' => $search,
-            'roleFilter' => $roleFilter
+            'roleFilter' => $roleFilter,
+            'perPage' => $perPage,  // TAMBAHKAN INI
+            'pager' => $this->userModel->pager  // TAMBAHKAN INI
         ];
 
         return view('SuperAdmin/KelolaPengguna/index', $data);
@@ -71,7 +77,7 @@ class KelolaPenggunaController extends BaseController
                 $userRoles = array_map('intval', $decoded);
             }
         } else {
-            $userRoles = [(int)$roleJson];
+            $userRoles = [(int) $roleJson];
         }
 
         // Check admin status
@@ -218,7 +224,7 @@ class KelolaPenggunaController extends BaseController
             'email' => $this->request->getPost('email'),
             'hp' => $this->request->getPost('hp'),
             'id_kabupaten' => $this->request->getPost('id_kabupaten'),
-            'role' => json_encode($roleIds), 
+            'role' => json_encode($roleIds),
             'is_pegawai' => $this->request->getPost('is_pegawai'),
         ];
 
@@ -392,7 +398,8 @@ class KelolaPenggunaController extends BaseController
         $this->db->transStart();
 
         foreach ($data as $index => $row) {
-            if (empty(array_filter($row))) continue;
+            if (empty(array_filter($row)))
+                continue;
 
             $rowNumber = $index + 2;
 
@@ -413,8 +420,8 @@ class KelolaPenggunaController extends BaseController
             }
 
             // Ambil & validasi is_pegawai (F)
-            $isPegawai = trim((string)$row[5]);
-            if (!in_array($isPegawai, ['0','1'], true)) {
+            $isPegawai = trim((string) $row[5]);
+            if (!in_array($isPegawai, ['0', '1'], true)) {
                 $errors[] = "Baris {$rowNumber}: Nilai Pegawai/Mitra harus 1 (Pegawai) atau 0 (Mitra)";
                 $skipped++;
                 continue;
@@ -450,15 +457,15 @@ class KelolaPenggunaController extends BaseController
 
             // Insert user
             $userData = [
-                'sobat_id'      => trim($row[0]),
-                'nama_user'     => trim($row[1]),
-                'email'         => trim($row[2]),
-                'hp'            => trim($row[3]),
-                'id_kabupaten'  => $idKabupaten,
-                'role'          => json_encode($validRoleIdsForUser),
-                'password'      => trim($row[0]),
-                'is_active'     => 1,
-                'is_pegawai'    => (int)$isPegawai,
+                'sobat_id' => trim($row[0]),
+                'nama_user' => trim($row[1]),
+                'email' => trim($row[2]),
+                'hp' => trim($row[3]),
+                'id_kabupaten' => $idKabupaten,
+                'role' => json_encode($validRoleIdsForUser),
+                'password' => trim($row[0]),
+                'is_active' => 1,
+                'is_pegawai' => (int) $isPegawai,
             ];
 
             $this->userModel->insert($userData);
@@ -503,8 +510,16 @@ class KelolaPenggunaController extends BaseController
         ];
 
         $headers = [
-            'No', 'Sobat ID', 'Nama Lengkap', 'Email', 'No HP',
-            'Kabupaten/Kota', 'Roles', 'Pegawai/Mitra', 'Status', 'Tanggal Dibuat'
+            'No',
+            'Sobat ID',
+            'Nama Lengkap',
+            'Email',
+            'No HP',
+            'Kabupaten/Kota',
+            'Roles',
+            'Pegawai/Mitra',
+            'Status',
+            'Tanggal Dibuat'
         ];
         $column = 'A';
         foreach ($headers as $header) {
@@ -515,14 +530,22 @@ class KelolaPenggunaController extends BaseController
         $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
 
         foreach ([
-            'A' => 5, 'B' => 15, 'C' => 25, 'D' => 30, 'E' => 15,
-            'F' => 20, 'G' => 35, 'H' => 18, 'I' => 10, 'J' => 20
+            'A' => 5,
+            'B' => 15,
+            'C' => 25,
+            'D' => 30,
+            'E' => 15,
+            'F' => 20,
+            'G' => 35,
+            'H' => 18,
+            'I' => 10,
+            'J' => 20
         ] as $col => $width) {
             $sheet->getColumnDimension($col)->setWidth($width);
         }
 
         $row = 2;
-        $no  = 1;
+        $no = 1;
         foreach ($users as $user) {
             $sheet->setCellValue('A' . $row, $no);
             $sheet->setCellValue('B' . $row, $user['sobat_id']);
@@ -531,7 +554,7 @@ class KelolaPenggunaController extends BaseController
             $sheet->setCellValue('E' . $row, $user['hp']);
             $sheet->setCellValue('F' . $row, $user['nama_kabupaten'] ?? '-');
             $sheet->setCellValue('G' . $row, $user['roles_display'] ?? '-');
-            $sheet->setCellValue('H' . $row, ((string)$user['is_pegawai'] === '1') ? 'Pegawai' : 'Mitra');
+            $sheet->setCellValue('H' . $row, ((string) $user['is_pegawai'] === '1') ? 'Pegawai' : 'Mitra');
             $sheet->setCellValue('I' . $row, $user['is_active'] ? 'Aktif' : 'Nonaktif');
             $sheet->setCellValue('J' . $row, $user['created_at']);
 

@@ -15,25 +15,31 @@
 
 <!-- Main Card -->
 <div class="card">
-    <!-- Search, Filter and Add Button -->
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <!-- Search Box -->
-            <div class="relative w-full sm:w-80">
+    <!-- Search, Filter, PerPage and Add Button -->
+    <div style="display: grid; grid-template-columns: 1fr 300px 200px 200px; gap: 1rem; margin-bottom: 1.5rem;">
+        <!-- Search Box -->
+        <div>
+            <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">
+                Pencarian
+            </label>
+            <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="fas fa-search text-gray-400"></i>
                 </div>
-                <input type="text" id="searchInput" 
-                       class="input-field w-full pl-10" 
-                       placeholder="Cari nama kegiatan, atau periode..."
-                       onkeyup="searchTable()">
+                <input type="text" id="searchInput" class="input-field w-full pl-10"
+                    placeholder="Cari nama kegiatan, periode..." onkeyup="searchTable()">
             </div>
-            
-            <!-- Filter Master Output -->
-            <div class="relative w-full sm:w-64">
-                <select id="filterOutput" 
-                        class="input-field w-full appearance-none pr-10"
-                        onchange="filterByOutput(this.value)">
+        </div>
+
+        <!-- Filter Master Output -->
+        <div>
+            <label for="filterOutput" class="block text-sm font-medium text-gray-700 mb-1">
+                Filter Master Output
+            </label>
+            <div class="relative">
+                <select id="filterOutput"
+                    class="input-field w-full pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
+                    onchange="updateFilters()">
                     <option value="all" <?= $filterOutput == 'all' ? 'selected' : '' ?>>Semua Master Output</option>
                     <?php foreach ($masterOutputs as $output): ?>
                         <option value="<?= $output['id_output'] ?>" <?= $filterOutput == $output['id_output'] ? 'selected' : '' ?>>
@@ -42,40 +48,72 @@
                     <?php endforeach; ?>
                 </select>
                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                    <i id="filterChevron"
+                        class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
                 </div>
             </div>
         </div>
-        
+
+        <!-- Per Page Selector -->
+        <div>
+            <label for="perPageSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                Data per Halaman
+            </label>
+            <div class="relative">
+                <select name="perPage" id="perPageSelect"
+                    class="input-field w-full pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
+                    onchange="updateFilters()">
+                    <option value="5" <?= ($perPage == 5) ? 'selected' : ''; ?>>5</option>
+                    <option value="10" <?= ($perPage == 10) ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?= ($perPage == 25) ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?= ($perPage == 50) ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?= ($perPage == 100) ? 'selected' : ''; ?>>100</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <i id="perPageChevron"
+                        class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
+            </div>
+        </div>
+
         <!-- Add Button -->
-        <a href="<?= base_url('superadmin/master-kegiatan/create') ?>" 
-           class="btn-primary whitespace-nowrap w-full lg:w-auto text-center">
-            <i class="fas fa-plus mr-2"></i>
-            Tambah Kegiatan
-        </a>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
+            <a href="<?= base_url('superadmin/master-kegiatan/create') ?>"
+                class="btn-primary whitespace-nowrap w-full text-center inline-block">
+                <i class="fas fa-plus mr-2"></i>
+                Tambah Kegiatan
+            </a>
+        </div>
     </div>
-    
+
     <!-- Table -->
     <div class="overflow-x-auto">
         <table class="w-full" id="masterKegiatanTable">
             <thead>
                 <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-16">
+                    <th
+                        class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-16">
                         No
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
+                    <th
+                        class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Nama Kegiatan
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
+                    <th
+                        class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Master Output
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
+                    <th
+                        class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">
                         Fungsi
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-32">
+                    <th
+                        class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-32">
                         Periode
                     </th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-32">
+                    <th
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 w-32">
                         Aksi
                     </th>
                 </tr>
@@ -95,7 +133,9 @@
                     <?php $no = 1; ?>
                     <?php foreach ($kegiatans as $kegiatan): ?>
                         <tr class="hover:bg-gray-50 transition-colors duration-150 border-r border-gray-200">
-                            <td class="px-4 py-4 text-sm text-gray-900 border-r border-gray-200"><?= $no++ ?></td>
+                            <td class="px-4 py-4 text-sm text-gray-900 border-r border-gray-200">
+                                <?= ($pager->getCurrentPage('kegiatans') - 1) * $pager->getPerPage('kegiatans') + $no ?>
+                            </td>
                             <td class="px-4 py-4 border-r border-gray-200">
                                 <p class="text-sm font-medium text-gray-900"><?= esc($kegiatan['nama_kegiatan']) ?></p>
                                 <?php if (!empty($kegiatan['pelaksana'])): ?>
@@ -103,7 +143,8 @@
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-4 border-r border-gray-200">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                     <?= esc($kegiatan['nama_output'] ?? 'Tidak ada') ?>
                                 </span>
                             </td>
@@ -115,19 +156,20 @@
                             </td>
                             <td class="px-4 py-4 border-r border-gray-200">
                                 <div class="flex items-center justify-center space-x-2">
-                                    <a href="<?= base_url('superadmin/master-kegiatan/show/' . $kegiatan['id_kegiatan']) ?>" 
-                                       class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                                       title="Lihat Detail">
+                                    <a href="<?= base_url('superadmin/master-kegiatan/show/' . $kegiatan['id_kegiatan']) ?>"
+                                        class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                                        title="Lihat Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="<?= base_url('superadmin/master-kegiatan/edit/' . $kegiatan['id_kegiatan']) ?>" 
-                                       class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                                       title="Edit">
+                                    <a href="<?= base_url('superadmin/master-kegiatan/edit/' . $kegiatan['id_kegiatan']) ?>"
+                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                        title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button onclick="confirmDelete(<?= $kegiatan['id_kegiatan'] ?>, '<?= esc($kegiatan['nama_kegiatan'], 'js') ?>')"
-                                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                            title="Hapus">
+                                    <button
+                                        onclick="confirmDelete(<?= $kegiatan['id_kegiatan'] ?>, '<?= esc($kegiatan['nama_kegiatan'], 'js') ?>')"
+                                        class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                        title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -138,171 +180,207 @@
             </tbody>
         </table>
     </div>
-    
-    <!-- Info -->
-    <?php if (!empty($kegiatans)): ?>
-        <div class="mt-6">
-            <p class="text-sm text-gray-600">
-                Menampilkan <span class="font-medium"><?= count($kegiatans) ?></span> data
-            </p>
-        </div>
-    <?php endif; ?>
+
+    <!-- Footer dengan Pagination -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-gray-600">
+            Menampilkan data
+            <span
+                class="font-medium"><?= (($pager->getCurrentPage('kegiatans') - 1) * $pager->getPerPage('kegiatans')) + 1 ?></span>-<span
+                class="font-medium"><?= min($pager->getCurrentPage('kegiatans') * $pager->getPerPage('kegiatans'), $pager->getTotal('kegiatans')) ?></span>
+            dari <span class="font-medium"><?= $pager->getTotal('kegiatans') ?></span> data
+        </p>
+
+        <!-- Custom Pagination -->
+        <?php if ($pager->getPageCount('kegiatans') > 1): ?>
+            <?= $pager->links('kegiatans', 'tailwind_pager') ?>
+        <?php endif; ?>
+    </div>
 </div>
 
 <!-- SweetAlert2 Script -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Search functionality
-function searchTable() {
-    const input = document.getElementById('searchInput');
-    const filter = input.value.toLowerCase();
-    const table = document.getElementById('masterKegiatanTable');
-    const rows = table.getElementsByTagName('tr');
-    
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        const cells = row.getElementsByTagName('td');
-        let found = false;
-        
-        if (cells.length > 1) {
-            for (let j = 1; j < cells.length - 1; j++) {
-                const cell = cells[j];
-                if (cell) {
-                    const textValue = cell.textContent || cell.innerText;
-                    if (textValue.toLowerCase().indexOf(filter) > -1) {
-                        found = true;
-                        break;
+    // Search functionality
+    function searchTable() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('masterKegiatanTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const cells = row.getElementsByTagName('td');
+            let found = false;
+
+            if (cells.length > 1) {
+                for (let j = 1; j < cells.length - 1; j++) {
+                    const cell = cells[j];
+                    if (cell) {
+                        const textValue = cell.textContent || cell.innerText;
+                        if (textValue.toLowerCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
                     }
                 }
             }
+
+            row.style.display = found ? '' : 'none';
         }
-        
-        row.style.display = found ? '' : 'none';
     }
-}
 
-// Filter by master output
-function filterByOutput(outputId) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('output', outputId);
-    window.location.href = url.toString();
-}
+    // Handle animasi chevron untuk filter output
+    const filterOutput = document.getElementById('filterOutput');
+    const filterChevron = document.getElementById('filterChevron');
 
-// Delete confirmation dengan SweetAlert2
-function confirmDelete(id, name) {
-    Swal.fire({
-        title: 'Hapus Data Kegiatan?',
-        html: `Apakah Anda yakin ingin menghapus kegiatan <strong>"${name}"</strong>?<br><span class="text-sm text-gray-600">Tindakan ini tidak dapat dibatalkan.</span>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '<i class="fas fa-trash mr-2"></i>Hapus',
-        cancelButtonText: 'Batal',
-        reverseButtons: true,
-        customClass: {
-            popup: 'rounded-xl',
-            confirmButton: 'px-6 py-2.5 rounded-lg font-medium',
-            cancelButton: 'px-6 py-2.5 rounded-lg font-medium'
-        },
-        buttonsStyling: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            deleteData(id, name);
-        }
-    });
-}
-
-// Fungsi untuk proses delete
-function deleteData(id, name) {
-    Swal.fire({
-        title: 'Menghapus...',
-        html: 'Mohon tunggu sebentar',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        willOpen: () => {
-            Swal.showLoading();
-        }
+    filterOutput.addEventListener('focus', function () {
+        filterChevron.classList.add('rotate-180');
     });
 
-    // Kirim request delete ke server
-    fetch(`<?= base_url('superadmin/master-kegiatan/') ?>${id}`, {
-        method: 'DELETE',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil Dihapus!',
-                text: data.message,
-                confirmButtonColor: '#3b82f6',
-                customClass: {
-                    popup: 'rounded-xl',
-                    confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+    filterOutput.addEventListener('blur', function () {
+        filterChevron.classList.remove('rotate-180');
+    });
+
+    // Handle animasi chevron untuk perPage selector
+    const perPageSelect = document.getElementById('perPageSelect');
+    const perPageChevron = document.getElementById('perPageChevron');
+
+    perPageSelect.addEventListener('focus', function () {
+        perPageChevron.classList.add('rotate-180');
+    });
+
+    perPageSelect.addEventListener('blur', function () {
+        perPageChevron.classList.remove('rotate-180');
+    });
+
+    // Function untuk update filters dengan mempertahankan parameter yang ada
+    function updateFilters() {
+        const output = document.getElementById('filterOutput').value;
+        const perPage = document.getElementById('perPageSelect').value;
+
+        const params = new URLSearchParams();
+        if (output && output !== 'all') params.append('output', output);
+        if (perPage) params.append('perPage', perPage);
+
+        window.location.href = '<?= base_url('superadmin/master-kegiatan') ?>?' + params.toString();
+    }
+
+    // Delete confirmation dengan SweetAlert2
+    function confirmDelete(id, name) {
+        Swal.fire({
+            title: 'Hapus Data Kegiatan?',
+            html: `Apakah Anda yakin ingin menghapus kegiatan <strong>"${name}"</strong>?<br><span class="text-sm text-gray-600">Tindakan ini tidak dapat dibatalkan.</span>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-trash mr-2"></i>Hapus',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-xl',
+                confirmButton: 'px-6 py-2.5 rounded-lg font-medium',
+                cancelButton: 'px-6 py-2.5 rounded-lg font-medium'
+            },
+            buttonsStyling: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteData(id, name);
+            }
+        });
+    }
+
+    // Fungsi untuk proses delete
+    function deleteData(id, name) {
+        Swal.fire({
+            title: 'Menghapus...',
+            html: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Kirim request delete ke server
+        fetch(`<?= base_url('superadmin/master-kegiatan/') ?>${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Dihapus!',
+                        text: data.message,
+                        confirmButtonColor: '#3b82f6',
+                        customClass: {
+                            popup: 'rounded-xl',
+                            confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+                        }
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menghapus',
+                        text: data.message,
+                        confirmButtonColor: '#3b82f6',
+                        customClass: {
+                            popup: 'rounded-xl',
+                            confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+                        }
+                    });
                 }
-            }).then(() => {
-                window.location.reload();
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    text: 'Gagal menghapus data. Silakan coba lagi.',
+                    confirmButtonColor: '#3b82f6',
+                    customClass: {
+                        popup: 'rounded-xl',
+                        confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
+                    }
+                });
             });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal Menghapus',
-                text: data.message,
-                confirmButtonColor: '#3b82f6',
-                customClass: {
-                    popup: 'rounded-xl',
-                    confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-                }
-            });
-        }
-    })
-    .catch(error => {
+    }
+
+    // Show success/error message from session
+    <?php if (session()->getFlashdata('success')): ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '<?= session()->getFlashdata('success') ?>',
+            timer: 3000,
+            showConfirmButton: false,
+            customClass: {
+                popup: 'rounded-xl'
+            }
+        });
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('error')): ?>
         Swal.fire({
             icon: 'error',
-            title: 'Terjadi Kesalahan',
-            text: 'Gagal menghapus data. Silakan coba lagi.',
+            title: 'Gagal!',
+            text: '<?= session()->getFlashdata('error') ?>',
             confirmButtonColor: '#3b82f6',
             customClass: {
                 popup: 'rounded-xl',
                 confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
             }
         });
-    });
-}
-
-// Show success/error message from session
-<?php if (session()->getFlashdata('success')): ?>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: '<?= session()->getFlashdata('success') ?>',
-        timer: 3000,
-        showConfirmButton: false,
-        customClass: {
-            popup: 'rounded-xl'
-        }
-    });
-<?php endif; ?>
-
-<?php if (session()->getFlashdata('error')): ?>
-    Swal.fire({
-        icon: 'error',
-        title: 'Gagal!',
-        text: '<?= session()->getFlashdata('error') ?>',
-        confirmButtonColor: '#3b82f6',
-        customClass: {
-            popup: 'rounded-xl',
-            confirmButton: 'px-6 py-2.5 rounded-lg font-medium'
-        }
-    });
-<?php endif; ?>
+    <?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

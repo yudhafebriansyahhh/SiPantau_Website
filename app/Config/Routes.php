@@ -130,6 +130,7 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
     $routes->get('kegiatan-wilayah', 'AdminProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'AdminProv\DashboardController::getPetugas');
     $routes->get('get-kurva-s-with-realisasi', 'AdminProv\DashboardController::getKurvaSWithRealisasi');
+    $routes->get('get-kepatuhan-data', 'AdminProv\DashboardController::getKepatuhanData');
 
 
     // ===== Master Kegiatan Detail Proses =====
@@ -183,6 +184,7 @@ $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($rout
     $routes->get('/', 'AdminKab\DashboardController::index');
     $routes->get('get-kurva-s', 'AdminKab\DashboardController::getKurvaS');
     $routes->get('get-petugas', 'AdminKab\DashboardController::getPetugas');
+    $routes->get('get-kepatuhan-data', 'AdminKab\DashboardController::getKepatuhanData');
 
     // ===== Assign Petugas =====
     $routes->group('assign-petugas', static function ($routes) {
@@ -232,6 +234,8 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
     $routes->get('kegiatan-wilayah', 'PemantauProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'PemantauProv\DashboardController::getPetugas');
     $routes->get('get-kurva-s-with-realisasi', 'PemantauProv\DashboardController::getKurvaSWithRealisasi');
+    $routes->get('get-kepatuhan-data', 'PemantauProv\DashboardController::getKepatuhanData');
+
 
     // ===== Menu Lainnya (yang sudah ada sebelumnya) =====
     $routes->get('detail-proses', 'PemantauProv\MasterKegiatanDetailProsesController::index');
@@ -257,6 +261,8 @@ $routes->group('pemantau-kabupaten', ['filter' => 'role:3'], static function ($r
     $routes->get('kurva-kabupaten', 'PemantauKab\DashboardController::getKurvaKabupaten');
     $routes->get('get-petugas', 'PemantauKab\DashboardController::getPetugas');
     $routes->get('get-kurva-s-with-realisasi', 'PemantauKab\DashboardController::getKurvaSWithRealisasi');
+    $routes->get('get-kepatuhan-data', 'PemantauKab\DashboardController::getKepatuhanData');
+
 
     // ===== Kegiatan Wilayah =====
     $routes->get('kegiatan-wilayah', 'PemantauKab\MasterKegiatanWilayahController::index');
@@ -283,7 +289,7 @@ $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static f
 //=================== Api Fitur Aplikasi Mobile ===============================
 $routes->group('api', [
     'namespace' => 'App\Controllers\Api',
-    'filter'    => 'jwt'
+    'filter' => 'jwt'
 ], static function ($routes) {
     $routes->get('pelaporan', 'PelaporanController::index');
     $routes->post('pelaporan', 'PelaporanController::create');

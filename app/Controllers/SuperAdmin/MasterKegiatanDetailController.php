@@ -41,22 +41,40 @@ class MasterKegiatanDetailController extends BaseController
     {
         $filterKegiatan = $this->request->getGet('kegiatan');
 
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
         // Get all master kegiatan untuk filter
         $masterKegiatans = $this->masterKegiatanModel->getWithOutput();
 
-        // Get kegiatan detail dengan filter
+        // Get kegiatan detail dengan filter dan pagination
         if ($filterKegiatan && $filterKegiatan != 'all') {
-            $details = $this->masterKegiatanDetailModel->getByKegiatan($filterKegiatan);
-            // Add master kegiatan info manually for filtered data
-            foreach ($details as &$detail) {
-                $kegiatan = $this->masterKegiatanModel->getWithOutputById($detail['id_kegiatan']);
-                if ($kegiatan) {
-                    $detail['nama_kegiatan'] = $kegiatan['nama_kegiatan'];
-                    $detail['nama_output'] = $kegiatan['nama_output'];
-                }
-            }
+            $details = $this->masterKegiatanDetailModel
+                ->select('
+                master_kegiatan_detail.*,
+                master_kegiatan.nama_kegiatan,
+                master_kegiatan.periode as periode_kegiatan
+            ')
+                ->join('master_kegiatan', 'master_kegiatan.id_kegiatan = master_kegiatan_detail.id_kegiatan', 'left')
+                ->where('master_kegiatan_detail.id_kegiatan', $filterKegiatan)
+                ->orderBy('master_kegiatan_detail.id_kegiatan_detail', 'DESC')
+                ->paginate($perPage, 'details');
         } else {
-            $details = $this->masterKegiatanDetailModel->getWithKegiatan();
+            $details = $this->masterKegiatanDetailModel
+                ->select('
+                master_kegiatan_detail.*,
+                master_kegiatan.nama_kegiatan,
+                master_kegiatan.periode as periode_kegiatan
+            ')
+                ->join('master_kegiatan', 'master_kegiatan.id_kegiatan = master_kegiatan_detail.id_kegiatan', 'left')
+                ->orderBy('master_kegiatan_detail.id_kegiatan_detail', 'DESC')
+                ->paginate($perPage, 'details');
         }
 
         // Get admin untuk setiap kegiatan detail
@@ -69,7 +87,9 @@ class MasterKegiatanDetailController extends BaseController
             'active_menu' => 'master-kegiatan-detail',
             'details' => $details,
             'masterKegiatans' => $masterKegiatans,
-            'filterKegiatan' => $filterKegiatan ?? 'all'
+            'filterKegiatan' => $filterKegiatan ?? 'all',
+            'perPage' => $perPage,
+            'pager' => $this->masterKegiatanDetailModel->pager
         ];
 
         return view('SuperAdmin/MasterKegiatanDetail/index', $data);
@@ -197,17 +217,28 @@ class MasterKegiatanDetailController extends BaseController
                 ->with('error', 'Data master kegiatan detail tidak ditemukan');
         }
 
-        // Get detail proses yang terkait dengan kegiatan detail ini
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // Get detail proses yang terkait dengan kegiatan detail ini dengan pagination
         $detailProses = $this->masterKegiatanDetailProsesModel
             ->where('id_kegiatan_detail', $id)
             ->orderBy('created_at', 'DESC')
-            ->findAll();
+            ->paginate($perPage, 'detailProses');
 
         $data = [
             'title' => 'Detail Kegiatan Detail',
             'active_menu' => 'master-kegiatan-detail',
             'detail' => $detail,
-            'detailProses' => $detailProses
+            'detailProses' => $detailProses,
+            'perPage' => $perPage,
+            'pager' => $this->masterKegiatanDetailProsesModel->pager
         ];
 
         return view('SuperAdmin/MasterKegiatanDetail/show', $data);
@@ -402,10 +433,22 @@ class MasterKegiatanDetailController extends BaseController
     // ====================================================================
     public function showKegiatanWilayah($idKegiatanDetailProses)
     {
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // Get current page
+        $page = $this->request->getGet('page_kegiatanWilayah') ?? 1;
+
         // Get detail proses dengan informasi lengkap
         $detailProses = $this->db->table('master_kegiatan_detail_proses mkdp')
             ->select('mkdp.*, mkd.nama_kegiatan_detail, mkd.satuan as satuan_detail, 
-                      mkg.nama_kegiatan, mkd.periode as periode_detail, mkd.id_kegiatan_detail')
+                  mkg.nama_kegiatan, mkd.periode as periode_detail, mkd.id_kegiatan_detail')
             ->join('master_kegiatan_detail mkd', 'mkd.id_kegiatan_detail = mkdp.id_kegiatan_detail')
             ->join('master_kegiatan mkg', 'mkg.id_kegiatan = mkd.id_kegiatan')
             ->where('mkdp.id_kegiatan_detail_proses', $idKegiatanDetailProses)
@@ -418,12 +461,21 @@ class MasterKegiatanDetailController extends BaseController
                 ->with('error', 'Data kegiatan detail proses tidak ditemukan');
         }
 
-        // Get kegiatan wilayah yang terkait
+        // Count total records
+        $totalRecords = $this->db->table('kegiatan_wilayah kw')
+            ->where('kw.id_kegiatan_detail_proses', $idKegiatanDetailProses)
+            ->countAllResults();
+
+        // Calculate offset
+        $offset = ($page - 1) * $perPage;
+
+        // Get kegiatan wilayah yang terkait dengan pagination manual
         $kegiatanWilayahRaw = $this->db->table('kegiatan_wilayah kw')
             ->select('kw.*, mk.nama_kabupaten, mk.id_kabupaten')
             ->join('master_kabupaten mk', 'mk.id_kabupaten = kw.id_kabupaten')
             ->where('kw.id_kegiatan_detail_proses', $idKegiatanDetailProses)
             ->orderBy('mk.nama_kabupaten', 'ASC')
+            ->limit($perPage, $offset)
             ->get()
             ->getResultArray();
 
@@ -433,7 +485,7 @@ class MasterKegiatanDetailController extends BaseController
         $totalRealisasi = 0;
 
         foreach ($kegiatanWilayahRaw as $kg) {
-            $target = (int)$kg['target_wilayah'];
+            $target = (int) $kg['target_wilayah'];
 
             // Hitung realisasi dari pantau_progress
             $realisasiData = $this->db->table('pantau_progress pp')
@@ -447,7 +499,7 @@ class MasterKegiatanDetailController extends BaseController
 
             $realisasi = 0;
             foreach ($realisasiData as $item) {
-                $realisasi += (int)$item['total_realisasi'];
+                $realisasi += (int) $item['total_realisasi'];
             }
 
             // Hitung progress
@@ -477,6 +529,10 @@ class MasterKegiatanDetailController extends BaseController
         // Hitung progress rata-rata
         $avgProgress = $totalTarget > 0 ? ($totalRealisasi / $totalTarget) * 100 : 0;
 
+        // Create manual pager
+        $pager = \Config\Services::pager();
+        $pager->store('kegiatanWilayah', $page, $perPage, $totalRecords);
+
         $data = [
             'title' => 'Daftar Kegiatan Wilayah',
             'active_menu' => 'master-kegiatan-detail',
@@ -484,7 +540,9 @@ class MasterKegiatanDetailController extends BaseController
             'kegiatanWilayah' => $kegiatanWilayah,
             'totalTarget' => $totalTarget,
             'totalRealisasi' => $totalRealisasi,
-            'avgProgress' => round($avgProgress, 1)
+            'avgProgress' => round($avgProgress, 1),
+            'perPage' => $perPage,
+            'pager' => $pager
         ];
 
         return view('SuperAdmin/MasterKegiatanDetail/kegiatan_wilayah', $data);
@@ -496,7 +554,7 @@ class MasterKegiatanDetailController extends BaseController
     public function getKurvaProvinsi()
     {
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
-        
+
         if (!$idProses) {
             return $this->response->setJSON([
                 'labels' => [],
@@ -519,7 +577,7 @@ class MasterKegiatanDetailController extends BaseController
 
         // Get total target dari detail proses
         $detailProses = $this->masterKegiatanDetailProsesModel->find($idProses);
-        $totalTarget = $detailProses ? (int)$detailProses['target'] : 0;
+        $totalTarget = $detailProses ? (int) $detailProses['target'] : 0;
 
         // Get data realisasi kumulatif per tanggal
         $realisasiData = $this->db->query("
@@ -569,7 +627,7 @@ class MasterKegiatanDetailController extends BaseController
         // Proses data realisasi menjadi array dengan key tanggal
         $realisasiByDate = [];
         foreach ($realisasiData as $real) {
-            $realisasiByDate[$real['tanggal_realisasi']] = (int)$real['total_realisasi_harian'];
+            $realisasiByDate[$real['tanggal_realisasi']] = (int) $real['total_realisasi_harian'];
         }
 
         $labels = [];
@@ -594,7 +652,7 @@ class MasterKegiatanDetailController extends BaseController
             }
 
             $realisasiAbsolut[] = $realisasiKumulatif;
-            
+
             // Hitung persen realisasi
             $realisasiPersenValue = $totalTarget > 0 ? ($realisasiKumulatif / $totalTarget) * 100 : 0;
             $realisasiPersen[] = round($realisasiPersenValue, 2);

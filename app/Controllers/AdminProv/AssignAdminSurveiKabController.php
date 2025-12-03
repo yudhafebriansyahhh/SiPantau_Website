@@ -36,27 +36,38 @@ class AssignAdminSurveiKabController extends BaseController
         $search = $this->request->getGet('search') ?? '';
         $filterKabupaten = $this->request->getGet('kabupaten') ?? '';
 
-        // Get all admin survei kabupaten dengan informasi user dan kegiatan
-        $builder = $this->db->table('admin_survei_kabupaten ask')
-            ->select('ask.id_admin_kabupaten, ask.sobat_id, u.nama_user, u.email, u.hp, u.is_active, k.nama_kabupaten, k.id_kabupaten')
-            ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
-            ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
-            ->orderBy('k.nama_kabupaten', 'ASC')
-            ->orderBy('u.nama_user', 'ASC');
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // Use AdminSurveiKabupatenModel untuk pagination
+        $builder = $this->adminKabupatenModel
+            ->select('admin_survei_kabupaten.id_admin_kabupaten, admin_survei_kabupaten.sobat_id, 
+              sipantau_user.nama_user, sipantau_user.email, sipantau_user.hp, sipantau_user.is_active, 
+              master_kabupaten.nama_kabupaten, master_kabupaten.id_kabupaten')
+            ->join('sipantau_user', 'admin_survei_kabupaten.sobat_id = sipantau_user.sobat_id')
+            ->join('master_kabupaten', 'sipantau_user.id_kabupaten = master_kabupaten.id_kabupaten', 'left')
+            ->orderBy('master_kabupaten.nama_kabupaten', 'ASC')
+            ->orderBy('sipantau_user.nama_user', 'ASC');
 
         if (!empty($search)) {
             $builder->groupStart()
-                ->like('u.nama_user', $search)
-                ->orLike('u.email', $search)
-                ->orLike('k.nama_kabupaten', $search)
+                ->like('sipantau_user.nama_user', $search)
+                ->orLike('sipantau_user.email', $search)
+                ->orLike('master_kabupaten.nama_kabupaten', $search)
                 ->groupEnd();
         }
 
         if (!empty($filterKabupaten)) {
-            $builder->where('k.id_kabupaten', $filterKabupaten);
+            $builder->where('master_kabupaten.id_kabupaten', $filterKabupaten);
         }
 
-        $adminList = $builder->get()->getResultArray();
+        $adminList = $builder->paginate($perPage, 'admin_survei');
 
         // Get kegiatan wilayah untuk setiap admin dengan progress
         foreach ($adminList as &$admin) {
@@ -111,11 +122,13 @@ class AssignAdminSurveiKabController extends BaseController
 
         $data = [
             'title' => 'Kelola Admin Survei Kabupaten',
-            'active_menu' => 'admin-survei-kab',
+            'active_menu' => 'assign-admin-kab',
             'admin_list' => $adminList,
             'allKabupaten' => $allKabupaten,
             'search' => $search,
-            'filterKabupaten' => $filterKabupaten
+            'filterKabupaten' => $filterKabupaten,
+            'perPage' => $perPage,
+            'pager' => $this->adminKabupatenModel->pager,
         ];
 
         return view('AdminSurveiProv/AssignAdminSurveiKab/index', $data);

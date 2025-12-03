@@ -30,10 +30,21 @@ class RatingAplikasiController extends BaseController
             'search' => $this->request->getGet('search'),
         ];
 
-        $feedbacks = $this->feedbackUserModel->getFeedbackWithDetails($filters);
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // UBAH INI - Tambahkan parameter perPage
+        $feedbackData = $this->feedbackUserModel->getFeedbackWithDetailsPaginated($filters, $perPage);
+
         $stats = $this->feedbackUserModel->getFeedbackStats($filters);
         $kabupatens = $this->kabupatenModel->findAll();
-        
+
         // Get latest feedbacks untuk sidebar
         $latestFeedbacks = $this->feedbackUserModel->getLatestFeedbacks(5, [
             'id_kabupaten' => $filters['id_kabupaten'] ?? null
@@ -42,16 +53,17 @@ class RatingAplikasiController extends BaseController
         $data = [
             'title' => 'Rating Aplikasi',
             'active_menu' => 'rating-aplikasi',
-            'feedbacks' => $feedbacks,
+            'feedbacks' => $feedbackData['data'],           
+            'pager' => $feedbackData['pager'],              
             'stats' => $stats,
             'kabupatens' => $kabupatens,
             'filters' => $filters,
-            'latestFeedbacks' => $latestFeedbacks
+            'latestFeedbacks' => $latestFeedbacks,
+            'perPage' => $perPage                           
         ];
 
         return view('SuperAdmin/RatingAplikasi/index', $data);
     }
-
     /**
      * Detail feedback user
      */
@@ -123,7 +135,7 @@ class RatingAplikasiController extends BaseController
         $output = fopen('php://output', 'w');
 
         // Add BOM for UTF-8
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
         // Add headers
         fputcsv($output, [

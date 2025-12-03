@@ -354,6 +354,9 @@ class DashboardController extends BaseController
     public function getPetugas()
     {
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
+        $page = $this->request->getGet('page') ?? 1;
+        $perPage = $this->request->getGet('perPage') ?? 10;
+        $search = $this->request->getGet('search') ?? '';
         $sobatId = session()->get('sobat_id');
 
         if (!$sobatId) {
@@ -385,7 +388,12 @@ class DashboardController extends BaseController
             return $this->response->setJSON([
                 'success' => true,
                 'data' => [],
-                'status_kegiatan_global' => 'unknown'
+                'pagination' => [
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => 1,
+                    'total_pages' => 0
+                ]
             ]);
         }
 
@@ -415,12 +423,17 @@ class DashboardController extends BaseController
             return $this->response->setJSON([
                 'success' => true,
                 'data' => [],
-                'status_kegiatan_global' => $statusKegiatanGlobal
+                'pagination' => [
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => 1,
+                    'total_pages' => 0
+                ]
             ]);
         }
 
-        // Get petugas (PCL) dengan informasi lengkap
-        $petugas = $this->db->query("
+        // Build query dasar dengan PAGINATION dan SEARCH
+        $baseQuery = "
         SELECT 
             u.nama_user,
             u.sobat_id,
@@ -436,24 +449,59 @@ class DashboardController extends BaseController
         JOIN master_kabupaten mk ON kw.id_kabupaten = mk.id_kabupaten
         LEFT JOIN pantau_progress pp ON pp.id_pcl = pcl.id_pcl
         WHERE kw.id_kegiatan_wilayah = ?
+    ";
+
+        $params = [$kegiatanWilayah['id_kegiatan_wilayah']];
+
+        // Search filter
+        if (!empty($search)) {
+            $baseQuery .= " AND (u.nama_user LIKE ? OR u.sobat_id LIKE ?)";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+        }
+
+        // Count total records
+        $countQuery = "
+        SELECT COUNT(DISTINCT pcl.id_pcl) as total
+        FROM pcl
+        JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
+        JOIN pml ON pcl.id_pml = pml.id_pml
+        JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+        WHERE kw.id_kegiatan_wilayah = ?
+    ";
+
+        $countParams = [$kegiatanWilayah['id_kegiatan_wilayah']];
+
+        if (!empty($search)) {
+            $countQuery .= " AND (u.nama_user LIKE ? OR u.sobat_id LIKE ?)";
+            $countParams[] = "%{$search}%";
+            $countParams[] = "%{$search}%";
+        }
+
+        $totalRecords = $this->db->query($countQuery, $countParams)->getRowArray()['total'] ?? 0;
+        $totalPages = ceil($totalRecords / $perPage);
+        $offset = ($page - 1) * $perPage;
+
+        // Get paginated data
+        $query = $baseQuery . "
         GROUP BY pcl.id_pcl, u.nama_user, u.sobat_id, mk.nama_kabupaten, pcl.target
         ORDER BY u.nama_user
-    ", [$kegiatanWilayah['id_kegiatan_wilayah']])->getResultArray();
+        LIMIT {$perPage} OFFSET {$offset}
+    ";
+
+        $petugas = $this->db->query($query, $params)->getResultArray();
 
         // Process setiap petugas
         foreach ($petugas as &$p) {
             $target = (int) $p['target'];
             $realisasiTotal = (int) $p['realisasi_total'];
 
-            // Hitung progress keseluruhan
             $progress = $target > 0 ? round(($realisasiTotal / $target) * 100, 0) : 0;
             $p['progress'] = min(100, $progress);
 
-            // Set status kegiatan (sama dengan global)
             $p['status_kegiatan'] = $statusKegiatanGlobal;
             $p['status_kegiatan_class'] = $this->getStatusKegiatanClass($statusKegiatanGlobal);
 
-            // Cek status harian
             $statusHarian = $this->getStatusHarian(
                 $p['id_pcl'],
                 $statusKegiatanGlobal,
@@ -470,9 +518,12 @@ class DashboardController extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'data' => $petugas,
-            'status_kegiatan_global' => $statusKegiatanGlobal,
-            'tanggal_mulai' => $tanggalMulai,
-            'tanggal_selesai' => $tanggalSelesai
+            'pagination' => [
+                'total' => $totalRecords,
+                'per_page' => (int) $perPage,
+                'current_page' => (int) $page,
+                'total_pages' => $totalPages
+            ]
         ]);
     }
 
@@ -569,6 +620,106 @@ class DashboardController extends BaseController
                 'realisasi_hari_ini' => $realisasiHariIni,
                 'target_harian' => $targetHarianValue
             ];
+        }
+    }
+
+    public function getKepatuhanData()
+    {
+        try {
+            // Get parameters
+            $idKegiatanDetailProses = $this->request->getGet('id_kegiatan_detail_proses');
+            $sobatId = session()->get('sobat_id');
+
+            // Validation
+            if (!$idKegiatanDetailProses || !$sobatId) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Parameter tidak lengkap'
+                ]);
+            }
+
+            // Get admin data
+            $admin = $this->adminKabModel->db->table('admin_survei_kabupaten ask')
+                ->select('ask.*, u.id_kabupaten')
+                ->join('sipantau_user u', 'ask.sobat_id = u.sobat_id')
+                ->where('ask.sobat_id', $sobatId)
+                ->get()
+                ->getRowArray();
+
+            if (!$admin) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Admin tidak ditemukan'
+                ]);
+            }
+
+            // Validasi akses admin kabupaten ke kegiatan ini
+            $kegiatanWilayah = $this->db->query("
+            SELECT kw.*
+            FROM kegiatan_wilayah kw
+            JOIN kegiatan_wilayah_admin kwa ON kwa.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+            WHERE kw.id_kegiatan_detail_proses = ?
+            AND kw.id_kabupaten = ?
+            AND kwa.id_admin_kabupaten = ?
+        ", [$idKegiatanDetailProses, $admin['id_kabupaten'], $admin['id_admin_kabupaten']])->getRowArray();
+
+            if (!$kegiatanWilayah) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke kegiatan ini'
+                ]);
+            }
+
+            $kepatuhanModel = new \App\Models\KepatuhanModel();
+
+            // 1. Get Statistik - gunakan id_kabupaten
+            $stats = $kepatuhanModel->getStatistikKepatuhan(
+                $idKegiatanDetailProses,
+                null,
+                $admin['id_kabupaten']
+            );
+
+            // 2. Get Chart Data - Line chart untuk trend harian satu wilayah
+            $chartData = $kepatuhanModel->getTrendKepatuhanHarian(
+                $idKegiatanDetailProses,
+                $admin['id_kabupaten']
+            );
+
+            // 3. Get Leaderboard - filter by kabupaten
+            $leaderboard = $kepatuhanModel->getLeaderboardKepatuhan(
+                $idKegiatanDetailProses,
+                null,
+                10,
+                $admin['id_kabupaten']
+            );
+
+            // 4. Get Petugas Tidak Patuh - filter by kabupaten
+            $tidakPatuh = $kepatuhanModel->getPetugasTidakPatuh(
+                $idKegiatanDetailProses,
+                null,
+                $admin['id_kabupaten']
+            );
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [
+                    'stats' => $stats,
+                    'chart' => [
+                        'type' => 'line',
+                        'data' => $chartData
+                    ],
+                    'leaderboard' => $leaderboard,
+                    'tidak_patuh' => $tidakPatuh
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error in getKepatuhanData: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
         }
     }
 

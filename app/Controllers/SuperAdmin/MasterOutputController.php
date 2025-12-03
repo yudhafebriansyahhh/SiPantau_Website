@@ -21,10 +21,26 @@ class MasterOutputController extends BaseController
     // ====================================================================
     public function index()
     {
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // Query dengan pagination
+        $outputs = $this->masterOutputModel
+            ->orderBy('id_output', 'DESC')
+            ->paginate($perPage, 'outputs');
+
         $data = [
-            'title'       => 'Kelola Master Output',
+            'title' => 'Kelola Master Output',
             'active_menu' => 'master-output',
-            'outputs'     => $this->masterOutputModel->orderBy('id_output', 'DESC')->findAll()
+            'outputs' => $outputs,
+            'perPage' => $perPage,
+            'pager' => $this->masterOutputModel->pager,
         ];
 
         return view('SuperAdmin/MasterOutput/index', $data);
@@ -36,9 +52,9 @@ class MasterOutputController extends BaseController
     public function create()
     {
         $data = [
-            'title'       => 'Tambah Master Output',
+            'title' => 'Tambah Master Output',
             'active_menu' => 'master-output',
-            'validation'  => $this->validation
+            'validation' => $this->validation
         ];
 
         return view('SuperAdmin/MasterOutput/create', $data);
@@ -51,15 +67,15 @@ class MasterOutputController extends BaseController
     {
         $rules = [
             'nama_output' => [
-                'rules'  => 'required|max_length[255]|is_unique[master_output.nama_output]',
+                'rules' => 'required|max_length[255]|is_unique[master_output.nama_output]',
                 'errors' => [
-                    'required'   => 'Nama output harus diisi',
+                    'required' => 'Nama output harus diisi',
                     'max_length' => 'Nama output maksimal 255 karakter',
-                    'is_unique'  => 'Nama output sudah terdaftar'
+                    'is_unique' => 'Nama output sudah terdaftar'
                 ]
             ],
             'fungsi' => [
-                'rules'  => 'required',
+                'rules' => 'required',
                 'errors' => [
                     'required' => 'Fungsi harus diisi'
                 ]
@@ -75,7 +91,7 @@ class MasterOutputController extends BaseController
 
         $data = [
             'nama_output' => $this->request->getPost('nama_output'),
-            'fungsi'      => $this->request->getPost('fungsi'),
+            'fungsi' => $this->request->getPost('fungsi'),
         ];
 
         $this->masterOutputModel->insert($data);
@@ -99,10 +115,10 @@ class MasterOutputController extends BaseController
         }
 
         $data = [
-            'title'       => 'Edit Master Output',
+            'title' => 'Edit Master Output',
             'active_menu' => 'master-output',
-            'output'      => $output,
-            'validation'  => $this->validation
+            'output' => $output,
+            'validation' => $this->validation
         ];
 
         return view('SuperAdmin/MasterOutput/edit', $data);
@@ -123,15 +139,15 @@ class MasterOutputController extends BaseController
 
         $rules = [
             'nama_output' => [
-                'rules'  => "required|max_length[255]|is_unique[master_output.nama_output,id_output,{$id}]",
+                'rules' => "required|max_length[255]|is_unique[master_output.nama_output,id_output,{$id}]",
                 'errors' => [
-                    'required'   => 'Nama output harus diisi',
+                    'required' => 'Nama output harus diisi',
                     'max_length' => 'Nama output maksimal 255 karakter',
-                    'is_unique'  => 'Nama output sudah terdaftar'
+                    'is_unique' => 'Nama output sudah terdaftar'
                 ]
             ],
             'fungsi' => [
-                'rules'  => 'required',
+                'rules' => 'required',
                 'errors' => [
                     'required' => 'Fungsi harus diisi'
                 ]
@@ -147,7 +163,7 @@ class MasterOutputController extends BaseController
 
         $data = [
             'nama_output' => $this->request->getPost('nama_output'),
-            'fungsi'      => $this->request->getPost('fungsi'),
+            'fungsi' => $this->request->getPost('fungsi'),
         ];
 
         $this->masterOutputModel->update($id, $data);
