@@ -50,56 +50,56 @@
     </div>
 </div>
 
-<!-- Summary Cards dengan warna sesuai contoh -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <!-- Total Wilayah - Biru -->
-    <div class="card bg-white border-l-4 border-blue-500">
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Wilayah -->
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 mb-1">Total Wilayah</p>
                 <h3 class="text-3xl font-bold text-gray-900"><?= count($kegiatanWilayah) ?></h3>
             </div>
-            <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-map-marked-alt text-2xl text-blue-600"></i>
+            <div class="w-14 h-14 bg-blue-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-map-marked-alt text-2xl text-[#1e88e5]"></i>
             </div>
         </div>
     </div>
 
-    <!-- Total Target - Hijau -->
-    <div class="card bg-white border-l-4 border-green-500">
+    <!-- Total Target -->
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 mb-1">Total Target</p>
                 <h3 class="text-3xl font-bold text-gray-900"><?= number_format($totalTarget) ?></h3>
             </div>
-            <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-clipboard-list text-2xl text-green-600"></i>
+            <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-clipboard-list text-2xl text-[#43a047]"></i>
             </div>
         </div>
     </div>
 
-    <!-- Total Realisasi - Orange -->
-    <div class="card bg-white border-l-4 border-orange-500">
+    <!-- Total Realisasi -->
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 mb-1">Total Realisasi</p>
                 <h3 class="text-3xl font-bold text-gray-900"><?= number_format($totalRealisasi) ?></h3>
             </div>
-            <div class="w-14 h-14 bg-orange-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-chart-line text-2xl text-orange-600"></i>
+            <div class="w-14 h-14 bg-orange-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-chart-line text-2xl text-[#fb8c00]"></i>
             </div>
         </div>
     </div>
 
-    <!-- Target Tercapai - Ungu -->
-    <div class="card bg-white border-l-4 border-purple-500">
+    <!-- Target Tercapai -->
+    <div class="card hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 mb-1">Target Tercapai</p>
                 <h3 class="text-3xl font-bold text-gray-900"><?= number_format($avgProgress, 0) ?>%</h3>
             </div>
-            <div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-bullseye text-2xl text-purple-600"></i>
+            <div class="w-14 h-14 bg-purple-50 rounded-lg flex items-center justify-center">
+                <i class="fas fa-bullseye text-2xl text-[#8e24aa]"></i>
             </div>
         </div>
     </div>
@@ -107,23 +107,20 @@
 
 <!-- Kurva S Chart -->
 <div class="card mb-6">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
         <div>
-            <h3 class="text-lg font-semibold text-gray-900">Kurva S – Target vs Realisasi</h3>
-            <p class="text-sm text-gray-600 mt-1">Perbandingan pencapaian target kumulatif dengan realisasi aktual</p>
-        </div>
-        <div class="flex gap-3 text-sm">
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                <span class="text-gray-600">Target</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span class="text-gray-600">Realisasi</span>
-            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Kurva S - Target vs Realisasi</h3>
+            <p class="text-sm text-gray-600">Progres Kumulatif Kegiatan</p>
         </div>
     </div>
-    <div id="kurvaProvinsiChart"></div>
+
+    <!-- Chart Container -->
+    <div class="relative -mx-2 sm:mx-0">
+        <div id="kurvaProvinsiChart" class="w-full"></div>
+        <div id="chartPlaceholder" class="flex justify-center items-center py-16" style="display: none;">
+            <p class="text-gray-400">Memuat data kurva S...</p>
+        </div>
+    </div>
 </div>
 
 <!-- Main Card -->
@@ -334,10 +331,10 @@
     // Function untuk update perPage dengan save scroll position
     function updatePerPage() {
         const perPage = document.getElementById('perPageSelect').value;
-        
+
         // Simpan posisi scroll
         sessionStorage.setItem('scrollPosition', window.scrollY);
-        
+
         const params = new URLSearchParams();
         if (perPage) params.append('perPage', perPage);
         window.location.href = '<?= base_url('superadmin/master-kegiatan-detail/kegiatan-wilayah/' . $detailProses['id_kegiatan_detail_proses']) ?>?' + params.toString();
@@ -359,14 +356,14 @@
     });
 
     // TAMBAHAN: Handle klik pada pagination links
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Load kurva chart terlebih dahulu
         loadKurvaProvinsi();
-        
+
         // Tambahkan event listener untuk semua pagination links
         const paginationLinks = document.querySelectorAll('.pagination a');
         paginationLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
+            link.addEventListener('click', function (e) {
                 // Simpan posisi scroll saat ini sebelum navigasi
                 sessionStorage.setItem('scrollPosition', window.scrollY);
             });
@@ -426,159 +423,115 @@
             chartInstance = null;
         }
 
+        const isMobile = window.innerWidth < 640;
+
         const options = {
             series: [
                 {
-                    name: 'Target Kumulatif',
-                    data: data.targetAbsolut
+                    name: 'Target (Kurva S)',
+                    data: data.targetAbsolut,
+                    type: 'area'
                 },
                 {
-                    name: 'Realisasi Kumulatif',
-                    data: data.realisasiAbsolut
+                    name: 'Realisasi (Kumulatif)',
+                    data: data.realisasiAbsolut,
+                    type: 'area'
                 }
             ],
             chart: {
-                height: 420,
+                height: isMobile ? 300 : 380,
                 type: 'area',
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Poppins, sans-serif',
+                toolbar: {
+                    show: true
+                },
+                zoom: {
+                    enabled: true,
+                    type: 'x',
+                    autoScaleYaxis: true
+                },
                 animations: {
                     enabled: true,
-                    speed: 600,
-                    animateGradually: {
-                        enabled: true,
-                        delay: 150
-                    }
-                },
-                toolbar: {
-                    show: true,
-                    tools: {
-                        download: true,
-                        selection: false,
-                        zoom: false,
-                        zoomin: false,
-                        zoomout: false,
-                        pan: false,
-                        reset: false
-                    }
+                    speed: 800
                 }
             },
-            colors: ['#1e88e5', '#43a047'],
+            colors: ['#1e88e5', '#e53935'],
             dataLabels: {
                 enabled: false
             },
             stroke: {
+                width: isMobile ? [2, 2] : [3, 3],
                 curve: 'smooth',
-                width: 3
+                dashArray: [0, 5]
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shade: 'light',
+                    type: 'vertical',
+                    shadeIntensity: 0.3,
+                    gradientToColors: ['#bbdefb', '#ffcdd2'],
+                    inverseColors: false,
+                    opacityFrom: 0.5,
+                    opacityTo: 0.1,
+                    stops: [0, 100]
+                }
+            },
+            markers: {
+                size: 0,
+                hover: {
+                    size: isMobile ? 5 : 7
+                }
             },
             xaxis: {
                 categories: data.labels,
                 title: {
-                    text: 'Tanggal',
+                    text: 'Periode',
                     style: {
-                        fontSize: '12px',
+                        fontSize: isMobile ? '11px' : '12px',
                         fontWeight: 600
                     }
                 },
                 labels: {
-                    rotate: -45,
+                    rotate: 0,
                     style: {
-                        fontSize: '11px'
+                        fontSize: isMobile ? '10px' : '11px'
                     }
                 }
             },
             yaxis: {
                 title: {
-                    text: 'Jumlah Kumulatif',
+                    text: isMobile ? '' : 'Jumlah',
                     style: {
                         fontSize: '12px',
                         fontWeight: 600
                     }
                 },
                 labels: {
-                    formatter: function (val) {
-                        return Math.floor(val).toLocaleString('id-ID');
+                    style: {
+                        fontSize: isMobile ? '9px' : '11px'
+                    },
+                    formatter: function (value) {
+                        return Math.round(value).toLocaleString('id-ID');
                     }
-                }
-            },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.5,
-                    opacityTo: 0.05,
-                    stops: [0, 90, 100]
-                }
-            },
-            legend: {
-                show: true,
-                position: 'top',
-                horizontalAlign: 'left',
-                fontSize: '13px',
-                markers: {
-                    width: 12,
-                    height: 12,
-                    radius: 2
                 }
             },
             tooltip: {
                 shared: true,
                 intersect: false,
-                custom: function ({ seriesIndex, dataPointIndex, w }) {
-                    const targetKum = data.targetAbsolut[dataPointIndex];
-                    const targetHarian = data.targetHarian ? data.targetHarian[dataPointIndex] : 0;
-                    const targetPersen = data.targetPersen ? data.targetPersen[dataPointIndex] : 0;
-                    const realisasiKum = data.realisasiAbsolut[dataPointIndex];
-                    const realisasiPersen = data.realisasiPersen ? data.realisasiPersen[dataPointIndex] : 0;
-                    const selisih = realisasiKum - targetKum;
-                    const selisihClass = selisih >= 0 ? 'color: #43a047;' : 'color: #ef4444;';
-                    const selisihIcon = selisih >= 0 ? '📈' : '📉';
-
-                    return `
-                    <div style="padding: 14px; min-width: 240px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        <div style="font-weight: 600; margin-bottom: 10px; color: #1e293b; font-size: 13px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">
-                            📅 ${data.labels[dataPointIndex]}
-                        </div>
-                        
-                        <div style="margin-bottom: 10px;">
-                            <div style="font-weight: 600; color: #64748b; font-size: 11px; margin-bottom: 6px;">TARGET</div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                                <span style="color: #64748b; font-size: 12px;">Kumulatif:</span>
-                                <span style="font-weight: 600; color: #1e88e5; font-size: 12px;">${targetKum.toLocaleString('id-ID')}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                                <span style="color: #64748b; font-size: 12px;">Harian:</span>
-                                <span style="font-weight: 600; font-size: 12px;">${targetHarian.toLocaleString('id-ID')}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #64748b; font-size: 12px;">Persen:</span>
-                                <span style="font-weight: 600; font-size: 12px;">${targetPersen.toFixed(2)}%</span>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 10px; padding-top: 6px; border-top: 1px dashed #e5e7eb;">
-                            <div style="font-weight: 600; color: #64748b; font-size: 11px; margin-bottom: 6px;">REALISASI</div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                                <span style="color: #64748b; font-size: 12px;">Kumulatif:</span>
-                                <span style="font-weight: 600; color: #43a047; font-size: 12px;">${realisasiKum.toLocaleString('id-ID')}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #64748b; font-size: 12px;">Persen:</span>
-                                <span style="font-weight: 600; font-size: 12px;">${realisasiPersen.toFixed(2)}%</span>
-                            </div>
-                        </div>
-                        
-                        <div style="padding-top: 8px; border-top: 2px solid #e5e7eb;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: #64748b; font-size: 12px; font-weight: 600;">${selisihIcon} Selisih:</span>
-                                <span style="font-weight: 700; font-size: 13px; ${selisihClass}">${selisih >= 0 ? '+' : ''}${selisih.toLocaleString('id-ID')}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                y: {
+                    formatter: function (value) {
+                        return value.toLocaleString('id-ID');
+                    }
                 }
             },
+            legend: {
+                position: isMobile ? 'bottom' : 'top',
+                horizontalAlign: isMobile ? 'center' : 'left',
+                fontSize: isMobile ? '11px' : '13px'
+            },
             grid: {
-                borderColor: '#e5e7eb',
+                borderColor: '#f3f4f6',
                 strokeDashArray: 3
             }
         };
@@ -586,6 +539,16 @@
         chartInstance = new ApexCharts(document.querySelector("#kurvaProvinsiChart"), options);
         chartInstance.render();
     }
+
+    let resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            if (chartInstance) {
+                loadKurvaProvinsi();
+            }
+        }, 250);
+    });
 </script>
 
 <?= $this->endSection() ?>

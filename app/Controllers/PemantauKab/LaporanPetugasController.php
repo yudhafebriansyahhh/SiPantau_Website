@@ -29,9 +29,9 @@ class LaporanPetugasController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $sobatId = session()->get('sobat_id');
-        
+
         $isPemantauKabupaten = ($role == 3 && $roleType == 'pemantau_kabupaten');
-        
+
         if (!$isPemantauKabupaten) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
@@ -39,7 +39,7 @@ class LaporanPetugasController extends BaseController
 
         // Get kabupaten user
         $user = $this->userModel->find($sobatId);
-        
+
         if (!$user || !$user['id_kabupaten']) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Data kabupaten tidak ditemukan.');
@@ -51,10 +51,10 @@ class LaporanPetugasController extends BaseController
         $idKegiatanProses = $this->request->getGet('kegiatan_proses');
         $search = $this->request->getGet('search');
         $perPage = $this->request->getGet('perPage') ?? 10;
-        
+
         // Validasi perPage
         $allowedPerPage = [5, 10, 25, 50, 100];
-        if (!in_array((int)$perPage, $allowedPerPage)) {
+        if (!in_array((int) $perPage, $allowedPerPage)) {
             $perPage = 10;
         }
 
@@ -78,23 +78,23 @@ class LaporanPetugasController extends BaseController
         if ($idKegiatanProses) {
             // Ambil detail kegiatan untuk tanggal
             $kegiatanDetail = $this->kegiatanProsesModel->find($idKegiatanProses);
-            
+
             if ($kegiatanDetail) {
                 // Generate tanggal (exclude Sabtu & Minggu)
                 $dateHeaders = $this->generateWorkingDates(
-                    $kegiatanDetail['tanggal_mulai'], 
+                    $kegiatanDetail['tanggal_mulai'],
                     $kegiatanDetail['tanggal_selesai']
                 );
 
                 // Ambil data petugas dan progress untuk kabupaten ini
                 $dataPetugas = $this->getLaporanPetugas(
-                    $idKegiatanProses, 
+                    $idKegiatanProses,
                     $idKabupaten,
-                    $search, 
+                    $search,
                     $dateHeaders,
                     $perPage
                 );
-                
+
                 $totalData = $dataPetugas['total'];
                 $dataPetugas = $dataPetugas['data'];
             }
@@ -134,7 +134,7 @@ class LaporanPetugasController extends BaseController
 
         while ($current <= $end) {
             $dayOfWeek = date('N', $current); // 1=Senin, 7=Minggu
-            
+
             // Skip Sabtu (6) dan Minggu (7)
             if ($dayOfWeek != 6 && $dayOfWeek != 7) {
                 $dates[] = [
@@ -142,7 +142,7 @@ class LaporanPetugasController extends BaseController
                     'display' => date('d/m', $current)
                 ];
             }
-            
+
             $current = strtotime('+1 day', $current);
         }
 
@@ -179,7 +179,7 @@ class LaporanPetugasController extends BaseController
         // Pagination
         $page = $this->request->getGet('page') ?? 1;
         $offset = ($page - 1) * $perPage;
-        
+
         $petugas = $builder
             ->orderBy('sipantau_user.nama_user', 'ASC')
             ->limit($perPage, $offset)
@@ -196,7 +196,7 @@ class LaporanPetugasController extends BaseController
                     ->where('id_pcl', $p['id_pcl'])
                     ->where('DATE(created_at)', $dateInfo['date'])
                     ->countAllResults();
-                
+
                 $progressData[] = $count;
                 $totalRealisasi += $count;
             }
@@ -221,9 +221,9 @@ class LaporanPetugasController extends BaseController
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $sobatId = session()->get('sobat_id');
-        
+
         $isPemantauKabupaten = ($role == 3 && $roleType == 'pemantau_kabupaten');
-        
+
         if (!$isPemantauKabupaten) {
             return redirect()->to(base_url('unauthorized'));
         }
@@ -247,7 +247,7 @@ class LaporanPetugasController extends BaseController
 
         // Generate tanggal
         $dateHeaders = $this->generateWorkingDates(
-            $kegiatanDetail['tanggal_mulai'], 
+            $kegiatanDetail['tanggal_mulai'],
             $kegiatanDetail['tanggal_selesai']
         );
 
@@ -261,9 +261,9 @@ class LaporanPetugasController extends BaseController
 
         // Output CSV
         $output = fopen('php://output', 'w');
-        
+
         // UTF-8 BOM untuk Excel
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
         // Header CSV
         $headers = array_merge(['No', 'Nama Petugas', 'Kabupaten'], array_column($dateHeaders, 'display'), ['TOTAL', 'Target', 'Status']);
@@ -284,6 +284,8 @@ class LaporanPetugasController extends BaseController
         fclose($output);
         exit;
     }
+
+
 
     /**
      * Get all laporan petugas (untuk export)
@@ -321,7 +323,7 @@ class LaporanPetugasController extends BaseController
                     ->where('id_pcl', $p['id_pcl'])
                     ->where('DATE(created_at)', $dateInfo['date'])
                     ->countAllResults();
-                
+
                 $progressData[] = $count;
                 $totalRealisasi += $count;
             }
@@ -331,5 +333,233 @@ class LaporanPetugasController extends BaseController
         }
 
         return $petugas;
+    }
+
+    /**
+     * Detail Laporan Petugas (PCL) - sama seperti detail PCL
+     */
+    public function detailLaporanPetugas($idPCL)
+    {
+        // Get role dan user info dari session
+        $role = session()->get('role');
+        $roleType = session()->get('role_type');
+        $sobatId = session()->get('sobat_id');
+
+        $isPemantauKabupaten = ($role == 3 && $roleType == 'pemantau_kabupaten');
+
+        if (!$isPemantauKabupaten) {
+            return redirect()->to(base_url('unauthorized'))
+                ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        // Get kabupaten user
+        $user = $this->userModel->find($sobatId);
+        $idKabupaten = $user['id_kabupaten'];
+
+        $db = \Config\Database::connect();
+
+        // Get PCL detail with kabupaten filter
+        $pclDetail = $db->table('pcl')
+            ->select('pcl.*, 
+         u.nama_user as nama_pcl, 
+         u.email, 
+         u.hp,
+         u.id_kabupaten,
+         u_pml.nama_user as nama_pml,
+         mk.nama_kabupaten,
+         mkdp.nama_kegiatan_detail_proses,
+         mkdp.tanggal_mulai,
+         mkdp.tanggal_selesai,
+         mkd.nama_kegiatan_detail')
+            ->join('sipantau_user u', 'pcl.sobat_id = u.sobat_id')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kabupaten mk', 'kw.id_kabupaten = mk.id_kabupaten')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('pcl.id_pcl', $idPCL)
+            ->where('u.id_kabupaten', $idKabupaten) // Filter by kabupaten
+            ->get()
+            ->getRowArray();
+
+        if (!$pclDetail) {
+            return redirect()->to('pemantau-kabupaten/laporan-petugas')->with('error', 'Data PCL tidak ditemukan atau bukan dari kabupaten Anda');
+        }
+
+        $kurvaPetugasModel = new \App\Models\KurvaPetugasModel();
+
+        // Get realisasi data
+        $realisasi = $this->pantauProgressModel
+            ->select('COALESCE(MAX(jumlah_realisasi_kumulatif), 0) as total_realisasi')
+            ->where('id_pcl', $idPCL)
+            ->first();
+
+        $realisasiKumulatif = (int) ($realisasi['total_realisasi'] ?? 0);
+        $target = (int) $pclDetail['target'];
+        $persentase = $target > 0 ? round(($realisasiKumulatif / $target) * 100, 2) : 0;
+        $selisih = $target - $realisasiKumulatif;
+
+        // Get Kurva S data
+        $kurvaData = $this->getKurvaDataPCL($idPCL, $pclDetail, $kurvaPetugasModel);
+
+        $data = [
+            'title' => 'Detail Laporan PCL',
+            'active_menu' => 'laporan-petugas',
+            'pcl' => $pclDetail,
+            'target' => $target,
+            'realisasi' => $realisasiKumulatif,
+            'persentase' => $persentase,
+            'selisih' => $selisih,
+            'kurvaData' => $kurvaData,
+            'idPCL' => $idPCL
+        ];
+
+        return view('PemantauKabupaten/LaporanPetugas/detail', $data);
+    }
+
+    /**
+     * Get Kurva S data untuk chart
+     */
+    private function getKurvaDataPCL($idPCL, $pclDetail, $kurvaPetugasModel)
+    {
+        $db = \Config\Database::connect();
+
+        // Get kurva target
+        $kurvaTarget = $kurvaPetugasModel
+            ->where('id_pcl', $idPCL)
+            ->orderBy('tanggal_target', 'ASC')
+            ->findAll();
+
+        // Get realisasi harian
+        $realisasiHarian = $db->query("
+        SELECT 
+            DATE(created_at) as tanggal,
+            SUM(jumlah_realisasi_absolut) as realisasi_harian
+        FROM pantau_progress
+        WHERE id_pcl = ?
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+    ", [$idPCL])->getResultArray();
+
+        // Build realisasi lookup
+        $realisasiLookup = [];
+        foreach ($realisasiHarian as $item) {
+            $realisasiLookup[$item['tanggal']] = (int) $item['realisasi_harian'];
+        }
+
+        // Format data untuk chart
+        $labels = [];
+        $targetData = [];
+        $realisasiData = [];
+        $realisasiKumulatif = 0;
+
+        foreach ($kurvaTarget as $item) {
+            $tanggal = $item['tanggal_target'];
+            $labels[] = date('d M', strtotime($tanggal));
+            $targetData[] = (int) $item['target_kumulatif_absolut'];
+
+            if (isset($realisasiLookup[$tanggal])) {
+                $realisasiKumulatif += $realisasiLookup[$tanggal];
+            }
+            $realisasiData[] = $realisasiKumulatif;
+        }
+
+        return [
+            'labels' => $labels,
+            'target' => $targetData,
+            'realisasi' => $realisasiData,
+            'config' => [
+                'tanggal_mulai' => date('d M', strtotime($pclDetail['tanggal_mulai'])),
+                'tanggal_selesai' => date('d M', strtotime($pclDetail['tanggal_selesai']))
+            ]
+        ];
+    }
+
+    /**
+     * Get Pantau Progress via AJAX (untuk detail laporan)
+     */
+    public function getPantauProgressLaporan()
+    {
+        $idPCL = $this->request->getGet('id_pcl');
+        $page = $this->request->getGet('page') ?? 1;
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $total = $this->pantauProgressModel->where('id_pcl', $idPCL)->countAllResults(false);
+        $data = $this->pantauProgressModel
+            ->where('id_pcl', $idPCL)
+            ->orderBy('created_at', 'DESC')
+            ->limit($perPage, $offset)
+            ->findAll();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'pagination' => [
+                'total' => $total,
+                'perPage' => $perPage,
+                'currentPage' => $page,
+                'totalPages' => ceil($total / $perPage)
+            ]
+        ]);
+    }
+
+    /**
+     * Get Laporan Transaksi via AJAX (untuk detail laporan)
+     */
+    public function getLaporanTransaksiLaporan()
+    {
+        $db = \Config\Database::connect();
+        $idPCL = $this->request->getGet('id_pcl');
+        $page = (int) ($this->request->getGet('page') ?? 1);
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $builder = $db->table('sipantau_transaksi st');
+
+        $totalBuilder = clone $builder;
+        $total = $totalBuilder->where('st.id_pcl', $idPCL)->countAllResults();
+
+        if ($total == 0) {
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [],
+                'pagination' => [
+                    'total' => 0,
+                    'perPage' => $perPage,
+                    'currentPage' => $page,
+                    'totalPages' => 0
+                ]
+            ]);
+        }
+
+        $data = $builder
+            ->select('st.id_sipantau_transaksi,
+         st.resume,
+         st.latitude,
+         st.longitude,
+         st.imagepath,
+         st.created_at,
+         COALESCE(mk.nama_kecamatan, "-") as nama_kecamatan,
+         COALESCE(md.nama_desa, "-") as nama_desa')
+            ->join('master_kecamatan mk', 'st.id_kecamatan = mk.id_kecamatan', 'left')
+            ->join('master_desa md', 'st.id_desa = md.id_desa', 'left')
+            ->where('st.id_pcl', $idPCL)
+            ->orderBy('st.created_at', 'DESC')
+            ->limit($perPage, $offset)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'pagination' => [
+                'total' => $total,
+                'perPage' => $perPage,
+                'currentPage' => $page,
+                'totalPages' => ceil($total / $perPage)
+            ]
+        ]);
     }
 }

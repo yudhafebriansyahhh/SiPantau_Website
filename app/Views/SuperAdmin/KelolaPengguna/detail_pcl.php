@@ -1,10 +1,10 @@
-<?= $this->extend('layouts/pemantau_kabupaten_layout') ?>
+<?= $this->extend('layouts/sadmin_layout') ?>
 
 <?= $this->section('content') ?>
 
 <!-- Back Button & Title -->
 <div class="mb-6">
-    <a href="<?= base_url('pemantau-kabupaten/laporan-petugas') ?>"
+    <a href="<?= base_url('superadmin/kelola-pengguna/detail/' . $pcl['sobat_id']) ?>"
         class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
         <i class="fas fa-arrow-left mr-2"></i>
         <span>Kembali</span>
@@ -239,8 +239,7 @@
 
 <script>
     const idPCL = <?= $idPCL ?>;
-    // PERBAIKAN: Gunakan route yang benar sesuai dengan Routes.php
-    const baseUrl = '<?= base_url('pemantau-kabupaten/laporan-petugas') ?>';
+    const baseUrl = '<?= base_url('superadmin/kelola-pengguna') ?>';
     const kurvaData = <?= json_encode($kurvaData) ?>;
 
     let chartInstance = null;
@@ -326,35 +325,22 @@
         else if (tab === 'transaksi' && !tabDataCache.transaksi) loadLaporanTransaksi(1);
     }
 
-    // PERBAIKAN: Load Pantau Progress dengan route yang benar
+    // Load Pantau Progress
     async function loadPantauProgress(page = 1) {
         const tbody = document.getElementById('pantauTableBody');
         tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div><p class="text-gray-600">Memuat data...</p></td></tr>';
 
         try {
-            // PERBAIKAN: Gunakan route yang sesuai dengan Routes.php
-            const response = await fetch(`${baseUrl}/pantau-progress?id_pcl=${idPCL}&page=${page}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            const response = await fetch(`${baseUrl}/get-pantau-progress?id_pcl=${idPCL}&page=${page}`);
             const result = await response.json();
 
             if (result.success) {
                 renderPantauTable(result.data, result.pagination);
                 if (page === 1) tabDataCache.pantau = true;
-            } else {
-                throw new Error(result.message || 'Gagal memuat data');
             }
         } catch (e) {
             console.error('Error:', e);
-            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-12 text-center text-red-500">Gagal memuat data: ' + e.message + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-12 text-center text-red-500">Gagal memuat data</td></tr>';
         }
     }
 
@@ -374,42 +360,29 @@
             <td class="px-4 py-3 border border-gray-200 text-sm">${formatTime(item.created_at)}</td>
             <td class="px-4 py-3 border border-gray-200 text-sm text-center font-semibold">${item.jumlah_realisasi_absolut || 0}</td>
             <td class="px-4 py-3 border border-gray-200 text-sm text-center font-semibold text-blue-600">${item.jumlah_realisasi_kumulatif || 0}</td>
-            <td class="px-4 py-3 border border-gray-200 text-sm">${escapeHtml(item.catatan_aktivitas || '-')}</td>
+            <td class="px-4 py-3 border border-gray-200 text-sm">${item.catatan_aktivitas || '-'}</td>
         </tr>
     `).join('');
 
         renderPagination('pantau', pagination);
     }
 
-    // PERBAIKAN: Load Laporan Transaksi dengan route yang benar
+    // Load Laporan Transaksi
     async function loadLaporanTransaksi(page = 1) {
         const tbody = document.getElementById('transaksiTableBody');
         tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-12 text-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div><p class="text-gray-600">Memuat data...</p></td></tr>';
 
         try {
-            // PERBAIKAN: Gunakan route yang sesuai dengan Routes.php
-            const response = await fetch(`${baseUrl}/laporan-transaksi?id_pcl=${idPCL}&page=${page}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            const response = await fetch(`${baseUrl}/get-laporan-transaksi?id_pcl=${idPCL}&page=${page}`);
             const result = await response.json();
 
             if (result.success) {
                 renderTransaksiTable(result.data, result.pagination);
                 if (page === 1) tabDataCache.transaksi = true;
-            } else {
-                throw new Error(result.message || 'Gagal memuat data');
             }
         } catch (e) {
             console.error('Error:', e);
-            tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-12 text-center text-red-500">Gagal memuat data: ' + e.message + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-12 text-center text-red-500">Gagal memuat data</td></tr>';
         }
     }
 
@@ -427,15 +400,15 @@
             <td class="px-4 py-3 border text-sm">${startNo + index}</td>
             <td class="px-4 py-3 border text-sm">${formatDate(item.created_at)}</td>
             <td class="px-4 py-3 border text-sm">${formatTime(item.created_at)}</td>
-            <td class="px-4 py-3 border text-sm">${escapeHtml(item.nama_kecamatan || '-')}</td>
-            <td class="px-4 py-3 border text-sm">${escapeHtml(item.nama_desa || '-')}</td>
+            <td class="px-4 py-3 border text-sm">${item.nama_kecamatan || '-'}</td>
+            <td class="px-4 py-3 border text-sm">${item.nama_desa || '-'}</td>
             <td class="px-4 py-3 border text-sm">
                 ${item.latitude && item.longitude ? `<a href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-map-marker-alt mr-1"></i>Lihat</a>` : '-'}
             </td>
             <td class="px-4 py-3 border">
                 ${item.imagepath ? `<img src="<?= base_url() ?>${item.imagepath}" alt="Foto" loading="lazy" class="w-16 h-16 object-cover rounded border cursor-pointer" onclick="showImage('<?= base_url() ?>${item.imagepath}')">` : '<span class="text-gray-400 text-xs">Tidak ada foto</span>'}
             </td>
-            <td class="px-4 py-3 border text-sm"><div class="max-w-xs truncate" title="${escapeHtml(item.resume || '-')}">${escapeHtml(item.resume || '-')}</div></td>
+            <td class="px-4 py-3 border text-sm"><div class="max-w-xs truncate" title="${item.resume || '-'}">${item.resume || '-'}</div></td>
         </tr>
     `).join('');
 
@@ -462,7 +435,6 @@
     }
 
     function escapeHtml(text) {
-        if (!text) return '-';
         const map = {
             '&': '&amp;',
             '<': '&lt;',
@@ -470,7 +442,7 @@
             '"': '&quot;',
             "'": '&#039;'
         };
-        return String(text).replace(/[&<>"']/g, m => map[m]);
+        return text.replace(/[&<>"']/g, m => map[m]);
     }
 
     // Utility Functions
@@ -502,10 +474,10 @@
 </script>
 
 <style>
-.tab-button.active {
-    border-bottom: 2px solid #2563eb;
-    color: #2563eb;
-}
+    .tab-button.active {
+        border-bottom: 2px solid #2563eb;
+        color: #2563eb;
+    }
 </style>
 
 <?= $this->endSection() ?>

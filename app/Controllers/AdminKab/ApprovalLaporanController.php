@@ -56,18 +56,28 @@ class ApprovalLaporanController extends BaseController
         $filterKegiatan = $this->request->getGet('kegiatan_wilayah');
         $filterStatus = $this->request->getGet('status');
 
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
         // Get kegiatan wilayah yang di-assign ke admin ini
         $kegiatanWilayahList = $this->kegiatanWilayahModel->getByKabupatenAndAdmin(
             $idKabupaten,
             $idAdminKabupaten
         );
 
-        // Get PML data dengan status approval
-        $pmlData = $this->getPMLForApproval(
+        // Get PML data dengan status approval dan pagination
+        $pmlData = $this->getPMLForApprovalPaginated(
             $idKabupaten,
             $idAdminKabupaten,
             $filterKegiatan,
-            $filterStatus
+            $filterStatus,
+            $perPage
         );
 
         $data = [
@@ -75,9 +85,11 @@ class ApprovalLaporanController extends BaseController
             'active_menu' => 'approval-laporan',
             'admin' => $admin,
             'kegiatanWilayahList' => $kegiatanWilayahList,
-            'pmlData' => $pmlData,
+            'pmlData' => $pmlData['data'],
             'filterKegiatan' => $filterKegiatan,
-            'filterStatus' => $filterStatus
+            'filterStatus' => $filterStatus,
+            'perPage' => $perPage,
+            'pager' => $pmlData['pager'],
         ];
 
         return view('AdminSurveiKab/ApprovalLaporan/index', $data);
@@ -135,8 +147,8 @@ class ApprovalLaporanController extends BaseController
                     ->get()
                     ->getRowArray();
 
-                $totalRealisasi = (int)($realisasi['total_realisasi'] ?? 0);
-                $targetPCL = (int)$pcl['target'];
+                $totalRealisasi = (int) ($realisasi['total_realisasi'] ?? 0);
+                $targetPCL = (int) $pcl['target'];
                 $progressPCL = $targetPCL > 0 ? round(($totalRealisasi / $targetPCL) * 100, 2) : 0;
 
                 $totalProgress += $progressPCL;
@@ -175,7 +187,7 @@ class ApprovalLaporanController extends BaseController
 
         // Apply status filter
         if ($filterStatus) {
-            $pmlList = array_filter($pmlList, function($pml) use ($filterStatus) {
+            $pmlList = array_filter($pmlList, function ($pml) use ($filterStatus) {
                 if ($filterStatus == 'approved') {
                     return $pml['pml_status_approval'] == 1;
                 } elseif ($filterStatus == 'eligible') {
@@ -197,7 +209,7 @@ class ApprovalLaporanController extends BaseController
     {
         // Set JSON response header
         $this->response->setContentType('application/json');
-        
+
         try {
             if (!$this->request->isAJAX()) {
                 return $this->response->setJSON([
@@ -207,7 +219,7 @@ class ApprovalLaporanController extends BaseController
             }
 
             $sobatId = session()->get('sobat_id');
-            
+
             if (!$sobatId) {
                 return $this->response->setJSON([
                     'success' => false,
@@ -281,8 +293,8 @@ class ApprovalLaporanController extends BaseController
                     ->get()
                     ->getRowArray();
 
-                $totalRealisasi = (int)($realisasi['total_realisasi'] ?? 0);
-                $targetPCL = (int)$pcl['target'];
+                $totalRealisasi = (int) ($realisasi['total_realisasi'] ?? 0);
+                $targetPCL = (int) $pcl['target'];
                 $progressPCL = $targetPCL > 0 ? round(($totalRealisasi / $targetPCL) * 100, 2) : 0;
 
                 $pcl['realisasi'] = $totalRealisasi;
@@ -365,7 +377,7 @@ class ApprovalLaporanController extends BaseController
             ->where('p.id_pml', $idPML)
             ->get()
             ->getRowArray();
-            
+
         if (!$pml) {
             return $this->response->setJSON([
                 'success' => false,
@@ -387,7 +399,7 @@ class ApprovalLaporanController extends BaseController
 
         // Check all PCL are completed and approved
         $pclList = $this->pclModel->where('id_pml', $idPML)->findAll();
-        
+
         if (empty($pclList)) {
             return $this->response->setJSON([
                 'success' => false,
@@ -411,8 +423,8 @@ class ApprovalLaporanController extends BaseController
                 ->get()
                 ->getRowArray();
 
-            $totalRealisasi = (int)($realisasi['total_realisasi'] ?? 0);
-            $targetPCL = (int)$pcl['target'];
+            $totalRealisasi = (int) ($realisasi['total_realisasi'] ?? 0);
+            $targetPCL = (int) $pcl['target'];
             $progressPCL = $targetPCL > 0 ? ($totalRealisasi / $targetPCL) * 100 : 0;
 
             if ($progressPCL < 100) {
@@ -504,5 +516,35 @@ class ApprovalLaporanController extends BaseController
             'success' => true,
             'message' => 'Laporan PML ditolak'
         ]);
+    }
+
+    /**
+     * Get PML yang bisa diapprove beserta statusnya dengan pagination
+     */
+    private function getPMLForApprovalPaginated($idKabupaten, $idAdminKabupaten, $filterKegiatan = null, $filterStatus = null, $perPage = 10)
+    {
+        // Get all PML data first (without pagination) untuk filtering
+        $allPMLData = $this->getPMLForApproval($idKabupaten, $idAdminKabupaten, $filterKegiatan, $filterStatus);
+
+        // Manual pagination
+        $page = $this->request->getGet('page_pml') ?? 1;
+        $offset = ($page - 1) * $perPage;
+        $total = count($allPMLData);
+        $totalPages = ceil($total / $perPage);
+
+        // Slice data untuk pagination
+        $paginatedData = array_slice($allPMLData, $offset, $perPage);
+
+        // Create pager manually
+        $pager = new \stdClass();
+        $pager->currentPage = (int) $page;
+        $pager->perPage = (int) $perPage;
+        $pager->total = $total;
+        $pager->totalPages = $totalPages;
+
+        return [
+            'data' => $paginatedData,
+            'pager' => $pager
+        ];
     }
 }

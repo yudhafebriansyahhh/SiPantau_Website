@@ -913,43 +913,132 @@ class AssignPetugasController extends BaseController
             return redirect()->to('/')->with('error', 'Anda tidak memiliki akses');
         }
 
-        // Gunakan fungsi bawaan model → lebih konsisten
-        $pcl = $this->pclModel->getPCLWithDetails($id_pcl);
-        if (!$pcl) {
+        // Get PCL detail
+        $pclDetail = $this->pclModel->db->table('pcl')
+            ->select('pcl.*, 
+                 u.nama_user as nama_pcl, 
+                 u.email, 
+                 u.hp,
+                 u.id_kabupaten,
+                 u_pml.nama_user as nama_pml,
+                 pml.id_pml,
+                 kw.id_kegiatan_wilayah,
+                 mk.nama_kabupaten,
+                 mkdp.nama_kegiatan_detail_proses,
+                 mkdp.tanggal_mulai,
+                 mkdp.tanggal_selesai,
+                 mkd.nama_kegiatan_detail')
+            ->join('sipantau_user u', 'pcl.sobat_id = u.sobat_id')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kabupaten mk', 'kw.id_kabupaten = mk.id_kabupaten')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('pcl.id_pcl', $id_pcl)
+            ->get()
+            ->getRowArray();
+
+        if (!$pclDetail) {
             return redirect()->back()->with('error', 'Data PCL tidak ditemukan.');
         }
 
+        // Validasi kabupaten
+        if ($pclDetail['id_kabupaten'] != $admin['id_kabupaten']) {
+            return redirect()->to('unauthorized')->with('error', 'Anda tidak memiliki akses ke data ini');
+        }
+
         // Cek apakah kegiatan ini di-assign ke admin yang login
-        $isAssigned = $this->kegiatanWilayahAdminModel->isAssigned($admin['id_admin_kabupaten'], $pcl['id_kegiatan_wilayah']);
+        $isAssigned = $this->kegiatanWilayahAdminModel->isAssigned($admin['id_admin_kabupaten'], $pclDetail['id_kegiatan_wilayah']);
         if (!$isAssigned) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini');
         }
 
-        // Ambil data Kurva S dari model
-        $kurvaData = $this->kurvaModel->getByPCL($id_pcl);
+        // Load additional models
+        $pantauProgressModel = new \App\Models\PantauProgressModel();
+        $kurvaPetugasModel = new \App\Models\KurvaPetugasModel();
 
-        // Siapkan data kumulatif untuk chart
-        $labels = [];
-        $targetKumulatif = [];
-        $aktualKumulatif = [];
-        $totalTarget = 0;
-        $totalAktual = 0;
+        // Get realisasi data
+        $realisasi = $pantauProgressModel
+            ->select('COALESCE(MAX(jumlah_realisasi_kumulatif), 0) as total_realisasi')
+            ->where('id_pcl', $id_pcl)
+            ->first();
 
-        foreach ($kurvaData as $row) {
-            $labels[] = date('d M', strtotime($row['tanggal_target']));
-            $totalTarget += (float) ($row['target_harian_absolut'] ?? 0);
-            $totalAktual += 0; // belum ada data aktual
-            $targetKumulatif[] = $totalTarget;
-            $aktualKumulatif[] = $totalAktual;
+        $realisasiKumulatif = (int) ($realisasi['total_realisasi'] ?? 0);
+        $target = (int) $pclDetail['target'];
+        $persentase = $target > 0 ? round(($realisasiKumulatif / $target) * 100, 2) : 0;
+        $selisih = $target - $realisasiKumulatif;
+
+        // Get Kurva S data
+        $kurvaData = $this->getKurvaDataPCL($id_pcl, $pclDetail, $pantauProgressModel, $kurvaPetugasModel);
+
+        $from = $this->request->getGet('from');
+        $data = [
+            'title' => 'Detail Laporan PCL',
+            'active_menu' => 'assign-admin-kab',
+            'pcl' => $pclDetail,
+            'target' => $target,
+            'realisasi' => $realisasiKumulatif,
+            'persentase' => $persentase,
+            'selisih' => $selisih,
+            'kurvaData' => $kurvaData,
+            'idPCL' => $id_pcl,
+            'from' => $from
+        ];
+
+        return view('AdminSurveiKab/AssignPetugasSurvei/kurva_s', $data);
+    }
+
+    private function getKurvaDataPCL($idPCL, $pclDetail, $pantauProgressModel, $kurvaPetugasModel)
+    {
+        // Get kurva target
+        $kurvaTarget = $kurvaPetugasModel
+            ->where('id_pcl', $idPCL)
+            ->orderBy('tanggal_target', 'ASC')
+            ->findAll();
+
+        // Get realisasi harian
+        $realisasiHarian = $this->pmlModel->db->query("
+        SELECT 
+            DATE(created_at) as tanggal,
+            SUM(jumlah_realisasi_absolut) as realisasi_harian
+        FROM pantau_progress
+        WHERE id_pcl = ?
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+    ", [$idPCL])->getResultArray();
+
+        // Build realisasi lookup
+        $realisasiLookup = [];
+        foreach ($realisasiHarian as $item) {
+            $realisasiLookup[$item['tanggal']] = (int) $item['realisasi_harian'];
         }
 
-        return view('AdminSurveiKab/AssignPetugasSurvei/kurva_s', [
-            'pcl' => $pcl,
-            'active_menu' => 'assign-admin-kab',
-            'kurvaData' => $kurvaData,
+        // Format data untuk chart
+        $labels = [];
+        $targetData = [];
+        $realisasiData = [];
+        $realisasiKumulatif = 0;
+
+        foreach ($kurvaTarget as $item) {
+            $tanggal = $item['tanggal_target'];
+            $labels[] = date('d M', strtotime($tanggal));
+            $targetData[] = (int) $item['target_kumulatif_absolut'];
+
+            if (isset($realisasiLookup[$tanggal])) {
+                $realisasiKumulatif += $realisasiLookup[$tanggal];
+            }
+            $realisasiData[] = $realisasiKumulatif;
+        }
+
+        return [
             'labels' => $labels,
-            'targetKumulatif' => $targetKumulatif,
-            'aktualKumulatif' => $aktualKumulatif
-        ]);
+            'target' => $targetData,
+            'realisasi' => $realisasiData,
+            'config' => [
+                'tanggal_mulai' => date('d M', strtotime($pclDetail['tanggal_mulai'])),
+                'tanggal_selesai' => date('d M', strtotime($pclDetail['tanggal_selesai']))
+            ]
+        ];
     }
 }

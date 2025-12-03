@@ -8,18 +8,57 @@
     <p class="text-gray-600 mt-1">Setujui laporan PML yang sudah memenuhi syarat</p>
 </div>
 
+
+
 <!-- Filter Section -->
 <div class="card mb-6">
+    <!-- Search and PerPage Section -->
+    <div style="display: grid; grid-template-columns: 1fr 200px; gap: 1rem; margin-bottom: 1.5rem;">
+        <!-- Search Box -->
+        <div>
+            <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">
+                Pencarian
+            </label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" class="input-field w-full pl-10"
+                    placeholder="Cari nama PML, kegiatan..." onkeyup="searchTable()">
+            </div>
+        </div>
+
+        <!-- Per Page Selector -->
+        <div>
+            <label for="perPageSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                Data per Halaman
+            </label>
+            <div class="relative">
+                <select name="perPage" id="perPageSelect"
+                    class="input-field w-full pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
+                    onchange="updateFilters()">
+                    <option value="5" <?= ($perPage == 5) ? 'selected' : ''; ?>>5</option>
+                    <option value="10" <?= ($perPage == 10) ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?= ($perPage == 25) ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?= ($perPage == 50) ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?= ($perPage == 100) ? 'selected' : ''; ?>>100</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <i id="perPageChevron"
+                        class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
+            </div>
+        </div>
+    </div>
     <form method="GET" action="<?= base_url('adminsurvei-kab/approval-laporan') ?>" id="filterForm">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Filter Kegiatan -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Kegiatan Wilayah</label>
-                <select name="kegiatan_wilayah" class="input-field" onchange="this.form.submit()">
+                <select name="kegiatan_wilayah" class="input-field" onchange="updateFilters()">
                     <option value="">Semua Kegiatan</option>
                     <?php foreach ($kegiatanWilayahList as $kw): ?>
-                        <option value="<?= $kw['id_kegiatan_wilayah'] ?>" 
-                            <?= ($filterKegiatan == $kw['id_kegiatan_wilayah']) ? 'selected' : '' ?>>
+                        <option value="<?= $kw['id_kegiatan_wilayah'] ?>" <?= ($filterKegiatan == $kw['id_kegiatan_wilayah']) ? 'selected' : '' ?>>
                             <?= esc($kw['nama_kegiatan_detail_proses']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -29,7 +68,7 @@
             <!-- Filter Status -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select name="status" class="input-field" onchange="this.form.submit()">
+                <select name="status" class="input-field" onchange="updateFilters()">
                     <option value="">Semua Status</option>
                     <option value="eligible" <?= ($filterStatus == 'eligible') ? 'selected' : '' ?>>
                         Siap Disetujui
@@ -46,8 +85,7 @@
             <!-- Reset Filter -->
             <div class="flex items-end">
                 <?php if (!empty($filterKegiatan) || !empty($filterStatus)): ?>
-                    <a href="<?= base_url('adminsurvei-kab/approval-laporan') ?>" 
-                       class="btn-secondary w-full text-center">
+                    <a href="<?= base_url('adminsurvei-kab/approval-laporan') ?>" class="btn-secondary w-full text-center">
                         <i class="fas fa-times-circle mr-2"></i>
                         Reset Filter
                     </a>
@@ -69,41 +107,51 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 bg-gray-50">
-                        <th class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th
+                            class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             No
                         </th>
-                        <th class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th
+                            class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Nama PML
                         </th>
-                        <th class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th
+                            class="px-4 py-3 border-r border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Kegiatan
                         </th>
-                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th
+                            class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Jumlah PCL
                         </th>
-                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th
+                            class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Progress PCL
                         </th>
-                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th
+                            class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Status
                         </th>
-                        <th class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th
+                            class="px-4 py-3 border-r border-gray-200 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Aksi
                         </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     <?php foreach ($pmlData as $index => $pml): ?>
-                        <?php 
+                        <?php
                         // Debug: Check if is_eligible is set
                         $isEligible = isset($pml['is_eligible']) ? $pml['is_eligible'] : false;
                         ?>
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-4 py-3 border-r border-gray text-sm text-gray-900"><?= $index + 1 ?></td>
+                            <td class="px-4 py-3 border-r border-gray text-sm text-gray-900">
+                                <?= ($pager->currentPage - 1) * $pager->perPage + $index + 1 ?>
+                            </td>
                             <td class="px-4 py-3 border-r border-gray">
-                                <button onclick="showDetail(<?= $pml['id_pml'] ?>)" 
-                                        class="text-left hover:text-blue-600 transition-colors duration-150">
-                                    <div class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                                <button onclick="showDetail(<?= $pml['id_pml'] ?>)"
+                                    class="text-left hover:text-blue-600 transition-colors duration-150">
+                                    <div
+                                        class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
                                         <?= esc($pml['nama_pml']) ?>
                                     </div>
                                     <div class="text-xs text-gray-500"><?= esc($pml['email']) ?></div>
@@ -114,7 +162,8 @@
                                 <div class="text-xs text-gray-500"><?= esc($pml['nama_kegiatan']) ?></div>
                             </td>
                             <td class="px-4 py-3 border-r border-gray text-center">
-                                <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                                <span
+                                    class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
                                     <i class="fas fa-users mr-1"></i>
                                     <?= $pml['total_pcl'] ?> PCL
                                 </span>
@@ -129,12 +178,13 @@
                                             </span>
                                         </div>
                                         <div class="w-full bg-gray-200 rounded-full h-3">
-                                            <?php 
+                                            <?php
                                             $avgProgress = $pml['average_progress'];
                                             $progressColor = $avgProgress >= 80 ? '#10b981' : ($avgProgress >= 50 ? '#3b82f6' : '#f59e0b');
                                             ?>
-                                            <div class="h-3 rounded-full transition-all duration-300" 
-                                                 style="width: <?= min(100, $avgProgress) ?>%; background-color: <?= $progressColor ?>;"></div>
+                                            <div class="h-3 rounded-full transition-all duration-300"
+                                                style="width: <?= min(100, $avgProgress) ?>%; background-color: <?= $progressColor ?>;">
+                                            </div>
                                         </div>
                                         <div class="text-xs text-gray-500 mt-1 text-center">
                                             <?= $pml['pcl_completed'] ?> dari <?= $pml['total_pcl'] ?> PCL selesai
@@ -150,11 +200,11 @@
                             <td class="px-4 py-3 border-r border-gray text-center">
                                 <div class="flex items-center justify-center gap-3">
                                     <!-- Switch Button untuk Approval - Selalu tampil -->
-                                    <label class="switch-button" title="<?= $isEligible ? 'Klik untuk approve/reject' : 'Belum memenuhi syarat untuk disetujui' ?>">
-                                        <input type="checkbox" 
-                                               <?= $pml['pml_status_approval'] == 1 ? 'checked' : '' ?>
-                                               <?= !$isEligible ? 'disabled' : '' ?>
-                                               onchange="toggleApproval(<?= $pml['id_pml'] ?>, '<?= esc($pml['nama_pml']) ?>', this)">
+                                    <label class="switch-button"
+                                        title="<?= $isEligible ? 'Klik untuk approve/reject' : 'Belum memenuhi syarat untuk disetujui' ?>">
+                                        <input type="checkbox" <?= $pml['pml_status_approval'] == 1 ? 'checked' : '' ?>
+                                            <?= !$isEligible ? 'disabled' : '' ?>
+                                            onchange="toggleApproval(<?= $pml['id_pml'] ?>, '<?= esc($pml['nama_pml']) ?>', this)">
                                         <span class="switch-slider">
                                             <span class="switch-on">ON</span>
                                             <span class="switch-off">OFF</span>
@@ -162,9 +212,10 @@
                                     </label>
 
                                     <?php if ($pml['pml_status_approval'] == 1 && !empty($pml['feedback_admin'])): ?>
-                                        <button onclick="showFeedback('<?= esc($pml['feedback_admin']) ?>', '<?= esc($pml['tanggal_approval']) ?>')" 
-                                                class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
-                                                title="Lihat Feedback">
+                                        <button
+                                            onclick="showFeedback('<?= esc($pml['feedback_admin']) ?>', '<?= esc($pml['tanggal_approval']) ?>')"
+                                            class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                            title="Lihat Feedback">
                                             <i class="fas fa-comment text-sm"></i>
                                         </button>
                                     <?php endif; ?>
@@ -174,6 +225,49 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+        <!-- Footer dengan Pagination -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">
+                Menampilkan data
+                <span class="font-medium"><?= (($pager->currentPage - 1) * $pager->perPage) + 1 ?></span>-<span
+                    class="font-medium"><?= min($pager->currentPage * $pager->perPage, $pager->total) ?></span>
+                dari <span class="font-medium"><?= $pager->total ?></span> data
+            </p>
+
+            <!-- Custom Pagination -->
+            <?php if ($pager->totalPages > 1): ?>
+                <div class="flex items-center gap-2">
+                    <!-- Previous Button -->
+                    <?php if ($pager->currentPage > 1): ?>
+                        <a href="?page_pml=<?= $pager->currentPage - 1 ?><?= !empty($filterKegiatan) ? '&kegiatan_wilayah=' . $filterKegiatan : '' ?><?= !empty($filterStatus) ? '&status=' . $filterStatus : '' ?>&perPage=<?= $perPage ?>"
+                            class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    <?php endif; ?>
+
+                    <!-- Page Numbers -->
+                    <?php
+                    $startPage = max(1, $pager->currentPage - 2);
+                    $endPage = min($pager->totalPages, $pager->currentPage + 2);
+
+                    for ($i = $startPage; $i <= $endPage; $i++):
+                        ?>
+                        <a href="?page_pml=<?= $i ?><?= !empty($filterKegiatan) ? '&kegiatan_wilayah=' . $filterKegiatan : '' ?><?= !empty($filterStatus) ? '&status=' . $filterStatus : '' ?>&perPage=<?= $perPage ?>"
+                            class="px-4 py-2 text-sm font-medium <?= $i == $pager->currentPage ? 'text-white bg-blue-600' : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50' ?> rounded-lg">
+                            <?= $i ?>
+                        </a>
+                    <?php endfor; ?>
+
+                    <!-- Next Button -->
+                    <?php if ($pager->currentPage < $pager->totalPages): ?>
+                        <a href="?page_pml=<?= $pager->currentPage + 1 ?><?= !empty($filterKegiatan) ? '&kegiatan_wilayah=' . $filterKegiatan : '' ?><?= !empty($filterStatus) ? '&status=' . $filterStatus : '' ?>&perPage=<?= $perPage ?>"
+                            class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 </div>
@@ -198,262 +292,301 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-/* Switch Button Styles */
-.switch-button {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 28px;
-    vertical-align: middle;
-}
+    /* Switch Button Styles */
+    .switch-button {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 28px;
+        vertical-align: middle;
+    }
 
-.switch-button input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
+    .switch-button input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
 
-.switch-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #cbd5e0;
-    transition: all .3s ease;
-    border-radius: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 6px;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-}
+    .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e0;
+        transition: all .3s ease;
+        border-radius: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 6px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 
-.switch-slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: all .3s ease;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    z-index: 2;
-}
+    .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: all .3s ease;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        z-index: 2;
+    }
 
-.switch-on,
-.switch-off {
-    font-size: 9px;
-    font-weight: 700;
-    color: white;
-    z-index: 1;
-    transition: opacity .3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .switch-on,
+    .switch-off {
+        font-size: 9px;
+        font-weight: 700;
+        color: white;
+        z-index: 1;
+        transition: opacity .3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-.switch-on {
-    opacity: 0;
-    margin-left: 2px;
-}
+    .switch-on {
+        opacity: 0;
+        margin-left: 2px;
+    }
 
-.switch-off {
-    opacity: 1;
-    margin-right: 2px;
-}
+    .switch-off {
+        opacity: 1;
+        margin-right: 2px;
+    }
 
-input:checked + .switch-slider {
-    background-color: #3b82f6;
-    box-shadow: inset 0 1px 3px rgba(59, 130, 246, 0.3);
-}
+    input:checked+.switch-slider {
+        background-color: #3b82f6;
+        box-shadow: inset 0 1px 3px rgba(59, 130, 246, 0.3);
+    }
 
-input:checked + .switch-slider:before {
-    transform: translateX(32px);
-}
+    input:checked+.switch-slider:before {
+        transform: translateX(32px);
+    }
 
-input:checked + .switch-slider .switch-on {
-    opacity: 1;
-}
+    input:checked+.switch-slider .switch-on {
+        opacity: 1;
+    }
 
-input:checked + .switch-slider .switch-off {
-    opacity: 0;
-}
+    input:checked+.switch-slider .switch-off {
+        opacity: 0;
+    }
 
-input:disabled + .switch-slider {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background-color: #e5e7eb;
-}
+    input:disabled+.switch-slider {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background-color: #e5e7eb;
+    }
 
-input:disabled + .switch-slider:before {
-    background-color: #f3f4f6;
-}
+    input:disabled+.switch-slider:before {
+        background-color: #f3f4f6;
+    }
 
-input:disabled + .switch-slider .switch-off {
-    color: #9ca3af;
-}
+    input:disabled+.switch-slider .switch-off {
+        color: #9ca3af;
+    }
 
-.switch-button:has(input:disabled) {
-    cursor: not-allowed;
-}
+    .switch-button:has(input:disabled) {
+        cursor: not-allowed;
+    }
 
-.switch-slider:has(input:disabled):hover {
-    box-shadow: none;
-}
+    .switch-slider:has(input:disabled):hover {
+        box-shadow: none;
+    }
 
-input:focus + .switch-slider {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
+    input:focus+.switch-slider {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
 
-.switch-slider:hover:not(:has(input:disabled)) {
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-}
+    .switch-slider:hover:not(:has(input:disabled)) {
+        box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    }
 </style>
 </style>
 
 <script>
-// Toggle Approval
-function toggleApproval(idPML, namaPML, checkbox) {
-    const isApproving = checkbox.checked;
-    
-    if (isApproving) {
-        // Show approval modal with feedback
-        Swal.fire({
-            title: 'Setujui Laporan PML?',
-            html: `Anda akan menyetujui laporan dari <strong>${namaPML}</strong>`,
-            icon: 'question',
-            input: 'textarea',
-            inputLabel: 'Catatan (Opsional)',
-            inputPlaceholder: 'Tambahkan catatan jika diperlukan...',
-            showCancelButton: true,
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: '<i class="fas fa-check mr-2"></i>Ya, Setujui',
-            cancelButtonText: 'Batal',
-            preConfirm: (feedback) => {
-                return { feedback: feedback || '' };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                processApproval(idPML, result.value.feedback, checkbox);
-            } else {
-                // Reset checkbox if cancelled
-                checkbox.checked = false;
-            }
+    // Handle animasi chevron untuk perPage selector
+    const perPageSelect = document.getElementById('perPageSelect');
+    const perPageChevron = document.getElementById('perPageChevron');
+
+    if (perPageSelect && perPageChevron) {
+        perPageSelect.addEventListener('focus', function () {
+            perPageChevron.classList.add('rotate-180');
         });
-    } else {
-        // Show rejection modal
-        Swal.fire({
-            title: 'Batalkan Approval?',
-            html: `Anda akan membatalkan approval untuk <strong>${namaPML}</strong>`,
-            icon: 'warning',
-            input: 'textarea',
-            inputLabel: 'Alasan Pembatalan (Wajib)',
-            inputPlaceholder: 'Jelaskan alasan pembatalan...',
-            inputValidator: (value) => {
-                if (!value) {
-                    return 'Alasan pembatalan harus diisi!';
-                }
-            },
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: '<i class="fas fa-times mr-2"></i>Ya, Batalkan',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                processReject(idPML, result.value, checkbox);
-            } else {
-                // Reset checkbox if cancelled
-                checkbox.checked = true;
-            }
+
+        perPageSelect.addEventListener('blur', function () {
+            perPageChevron.classList.remove('rotate-180');
         });
     }
-}
 
-// Show Detail Modal
-function showDetail(idPML) {
-    console.log('Opening detail for PML ID:', idPML);
-    
-    Swal.fire({
-        title: 'Memuat Data...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
+    // Function untuk update filters dengan mempertahankan parameter
+    function updateFilters() {
+        const kegiatan = document.querySelector('select[name="kegiatan_wilayah"]').value;
+        const status = document.querySelector('select[name="status"]').value;
+        const perPage = document.getElementById('perPageSelect').value;
+
+        const params = new URLSearchParams();
+        if (kegiatan) params.append('kegiatan_wilayah', kegiatan);
+        if (status) params.append('status', status);
+        if (perPage) params.append('perPage', perPage);
+
+        window.location.href = '<?= base_url('adminsurvei-kab/approval-laporan') ?>?' + params.toString();
+    }
+
+    // Search function
+    function searchTable() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('table tbody tr');
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    }
+
+    // Toggle Approval
+    function toggleApproval(idPML, namaPML, checkbox) {
+        const isApproving = checkbox.checked;
+
+        if (isApproving) {
+            // Show approval modal with feedback
+            Swal.fire({
+                title: 'Setujui Laporan PML?',
+                html: `Anda akan menyetujui laporan dari <strong>${namaPML}</strong>`,
+                icon: 'question',
+                input: 'textarea',
+                inputLabel: 'Catatan (Opsional)',
+                inputPlaceholder: 'Tambahkan catatan jika diperlukan...',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '<i class="fas fa-check mr-2"></i>Ya, Setujui',
+                cancelButtonText: 'Batal',
+                preConfirm: (feedback) => {
+                    return { feedback: feedback || '' };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processApproval(idPML, result.value.feedback, checkbox);
+                } else {
+                    // Reset checkbox if cancelled
+                    checkbox.checked = false;
+                }
+            });
+        } else {
+            // Show rejection modal
+            Swal.fire({
+                title: 'Batalkan Approval?',
+                html: `Anda akan membatalkan approval untuk <strong>${namaPML}</strong>`,
+                icon: 'warning',
+                input: 'textarea',
+                inputLabel: 'Alasan Pembatalan (Wajib)',
+                inputPlaceholder: 'Jelaskan alasan pembatalan...',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Alasan pembatalan harus diisi!';
+                    }
+                },
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '<i class="fas fa-times mr-2"></i>Ya, Batalkan',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processReject(idPML, result.value, checkbox);
+                } else {
+                    // Reset checkbox if cancelled
+                    checkbox.checked = true;
+                }
+            });
         }
-    });
+    }
 
-    const url = `<?= base_url('adminsurvei-kab/approval-laporan/detail/') ?>${idPML}`;
-    console.log('Fetching URL:', url);
+    // Show Detail Modal
+    function showDetail(idPML) {
+        console.log('Opening detail for PML ID:', idPML);
 
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        }
-    })
-        .then(response => {
-            console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers.get('content-type'));
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        Swal.fire({
+            title: 'Memuat Data...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
-            
-            return response.json();
+        });
+
+        const url = `<?= base_url('adminsurvei-kab/approval-laporan/detail/') ?>${idPML}`;
+        console.log('Fetching URL:', url);
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
         })
-        .then(result => {
-            console.log('Result:', result);
-            Swal.close();
-            
-            if (result.success) {
-                displayDetail(result.data);
-                document.getElementById('modalDetail').classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            } else {
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers.get('content-type'));
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return response.json();
+            })
+            .then(result => {
+                console.log('Result:', result);
+                Swal.close();
+
+                if (result.success) {
+                    displayDetail(result.data);
+                    document.getElementById('modalDetail').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message,
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error details:', error);
+                Swal.close();
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: result.message,
+                    text: 'Terjadi kesalahan saat memuat data: ' + error.message,
                     confirmButtonColor: '#ef4444'
                 });
-            }
-        })
-        .catch(error => {
-            console.error('Error details:', error);
-            Swal.close();
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Terjadi kesalahan saat memuat data: ' + error.message,
-                confirmButtonColor: '#ef4444'
             });
-        });
-}
+    }
 
-function displayDetail(data) {
-    let pclHTML = '';
-    let allCompleted = true;
-    let allApproved = true;
+    function displayDetail(data) {
+        let pclHTML = '';
+        let allCompleted = true;
+        let allApproved = true;
 
-    data.pcl_list.forEach((pcl, index) => {
-        const statusBadge = pcl.is_completed 
-            ? '<span class="badge badge-success">Selesai</span>' 
-            : '<span class="badge badge-warning">Belum Selesai</span>';
-        
-        const approvalBadge = pcl.status_approval == 1
-            ? '<span class="badge badge-success">Disetujui</span>'
-            : '<span class="badge badge-secondary">Belum Disetujui</span>';
+        data.pcl_list.forEach((pcl, index) => {
+            const statusBadge = pcl.is_completed
+                ? '<span class="badge badge-success">Selesai</span>'
+                : '<span class="badge badge-warning">Belum Selesai</span>';
 
-        if (!pcl.is_completed) allCompleted = false;
-        if (pcl.status_approval != 1) allApproved = false;
+            const approvalBadge = pcl.status_approval == 1
+                ? '<span class="badge badge-success">Disetujui</span>'
+                : '<span class="badge badge-secondary">Belum Disetujui</span>';
 
-        pclHTML += `
+            if (!pcl.is_completed) allCompleted = false;
+            if (pcl.status_approval != 1) allApproved = false;
+
+            pclHTML += `
             <tr class="border-b border-gray-100">
                 <td class="px-4 py-3 text-sm text-gray-900">${index + 1}</td>
                 <td class="px-4 py-3 text-sm text-gray-900">${pcl.nama_user}</td>
@@ -471,13 +604,13 @@ function displayDetail(data) {
                 <td class="px-4 py-3 text-center">${approvalBadge}</td>
             </tr>
         `;
-    });
+        });
 
-    const eligibilityHTML = (allCompleted && allApproved)
-        ? '<div class="bg-green-50 border border-green-200 rounded-lg p-4"><p class="text-sm text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>Memenuhi Syarat:</strong> Semua PCL sudah menyelesaikan target 100% dan telah disetujui oleh PML.</p></div>'
-        : '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><p class="text-sm text-yellow-700"><i class="fas fa-exclamation-triangle mr-2"></i><strong>Belum Memenuhi Syarat:</strong> PML ini belum bisa disetujui karena belum semua PCL menyelesaikan target atau belum semua PCL disetujui oleh PML.</p></div>';
+        const eligibilityHTML = (allCompleted && allApproved)
+            ? '<div class="bg-green-50 border border-green-200 rounded-lg p-4"><p class="text-sm text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>Memenuhi Syarat:</strong> Semua PCL sudah menyelesaikan target 100% dan telah disetujui oleh PML.</p></div>'
+            : '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><p class="text-sm text-yellow-700"><i class="fas fa-exclamation-triangle mr-2"></i><strong>Belum Memenuhi Syarat:</strong> PML ini belum bisa disetujui karena belum semua PCL menyelesaikan target atau belum semua PCL disetujui oleh PML.</p></div>';
 
-    const content = `
+        const content = `
         <div class="space-y-6">
             <!-- PML Info -->
             <div class="bg-gray-50 rounded-lg p-4">
@@ -530,119 +663,119 @@ function displayDetail(data) {
         </div>
     `;
 
-    document.getElementById('detailContent').innerHTML = content;
-}
+        document.getElementById('detailContent').innerHTML = content;
+    }
 
-function closeDetailModal() {
-    document.getElementById('modalDetail').classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
+    function closeDetailModal() {
+        document.getElementById('modalDetail').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
 
-function processApproval(idPML, feedback, checkbox) {
-    Swal.fire({
-        title: 'Memproses...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    const formData = new FormData();
-    formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
-    formData.append('id_pml', idPML);
-    formData.append('feedback', feedback);
-
-    fetch('<?= base_url('adminsurvei-kab/approval-laporan/approve') ?>', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: result.message,
-                confirmButtonColor: '#3b82f6'
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            checkbox.checked = false;
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: result.message,
-                confirmButtonColor: '#ef4444'
-            });
-        }
-    })
-    .catch(error => {
-        checkbox.checked = false;
+    function processApproval(idPML, feedback, checkbox) {
         Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'Terjadi kesalahan pada sistem',
-            confirmButtonColor: '#ef4444'
+            title: 'Memproses...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
-    });
-}
 
-function processReject(idPML, feedback, checkbox) {
-    Swal.fire({
-        title: 'Memproses...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
+        const formData = new FormData();
+        formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+        formData.append('id_pml', idPML);
+        formData.append('feedback', feedback);
 
-    const formData = new FormData();
-    formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
-    formData.append('id_pml', idPML);
-    formData.append('feedback', feedback);
-
-    fetch('<?= base_url('adminsurvei-kab/approval-laporan/reject') ?>', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: result.message,
-                confirmButtonColor: '#3b82f6'
-            }).then(() => {
-                window.location.reload();
+        fetch('<?= base_url('adminsurvei-kab/approval-laporan/approve') ?>', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: result.message,
+                        confirmButtonColor: '#3b82f6'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    checkbox.checked = false;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: result.message,
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                checkbox.checked = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan pada sistem',
+                    confirmButtonColor: '#ef4444'
+                });
             });
-        } else {
-            checkbox.checked = true;
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: result.message,
-                confirmButtonColor: '#ef4444'
-            });
-        }
-    })
-    .catch(error => {
-        checkbox.checked = true;
+    }
+
+    function processReject(idPML, feedback, checkbox) {
         Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'Terjadi kesalahan pada sistem',
-            confirmButtonColor: '#ef4444'
+            title: 'Memproses...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
-    });
-}
 
-// Show Feedback
-function showFeedback(feedback, tanggalApproval) {
-    Swal.fire({
-        title: 'Feedback Approval',
-        html: `
+        const formData = new FormData();
+        formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+        formData.append('id_pml', idPML);
+        formData.append('feedback', feedback);
+
+        fetch('<?= base_url('adminsurvei-kab/approval-laporan/reject') ?>', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: result.message,
+                        confirmButtonColor: '#3b82f6'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    checkbox.checked = true;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: result.message,
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                checkbox.checked = true;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan pada sistem',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
+    }
+
+    // Show Feedback
+    function showFeedback(feedback, tanggalApproval) {
+        Swal.fire({
+            title: 'Feedback Approval',
+            html: `
             <div class="text-left">
                 <p class="text-sm text-gray-600 mb-2">
                     <i class="fas fa-calendar mr-2"></i>
@@ -653,30 +786,30 @@ function showFeedback(feedback, tanggalApproval) {
                 </div>
             </div>
         `,
-        icon: 'info',
-        confirmButtonColor: '#3b82f6',
-        confirmButtonText: 'Tutup'
-    });
-}
+            icon: 'info',
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'Tutup'
+        });
+    }
 
-// Flashdata
-<?php if (session()->getFlashdata('success')): ?>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: "<?= session()->getFlashdata('success') ?>",
-        confirmButtonColor: '#3b82f6'
-    });
-<?php endif; ?>
+    // Flashdata
+    <?php if (session()->getFlashdata('success')): ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "<?= session()->getFlashdata('success') ?>",
+            confirmButtonColor: '#3b82f6'
+        });
+    <?php endif; ?>
 
-<?php if (session()->getFlashdata('error')): ?>
-    Swal.fire({
-        icon: 'error',
-        title: 'Gagal!',
-        text: "<?= session()->getFlashdata('error') ?>",
-        confirmButtonColor: '#ef4444'
-    });
-<?php endif; ?>
+    <?php if (session()->getFlashdata('error')): ?>
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: "<?= session()->getFlashdata('error') ?>",
+            confirmButtonColor: '#ef4444'
+        });
+    <?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

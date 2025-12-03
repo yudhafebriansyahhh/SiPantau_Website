@@ -221,7 +221,10 @@
                                         </span>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900"><?= esc($user['nama_user']) ?></p>
+                                        <a href="<?= base_url('superadmin/kelola-pengguna/detail/' . $user['sobat_id']) ?>"
+                                            class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                                            <?= esc($user['nama_user']) ?>
+                                        </a>
                                         <p class="text-xs text-gray-500"><?= esc($user['email']) ?></p>
                                     </div>
                                 </div>
