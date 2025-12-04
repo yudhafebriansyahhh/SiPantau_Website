@@ -26,23 +26,51 @@ class MasterKegiatanController extends BaseController
     public function index()
     {
         $filterOutput = $this->request->getGet('output');
-        
+
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
         // Get all master outputs untuk filter
         $masterOutputs = $this->masterOutputModel->orderBy('nama_output', 'ASC')->findAll();
-        
-        // Get kegiatan dengan filter
+
+        // Get kegiatan dengan pagination
         if ($filterOutput && $filterOutput != 'all') {
-            $kegiatans = $this->masterKegiatanModel->getByOutput($filterOutput);
+            $kegiatans = $this->masterKegiatanModel
+                ->select('
+                master_kegiatan.*,
+                master_output.nama_output,
+                master_output.fungsi
+            ')
+                ->join('master_output', 'master_output.id_output = master_kegiatan.id_output', 'left')
+                ->where('master_kegiatan.id_output', $filterOutput)
+                ->orderBy('master_kegiatan.id_kegiatan', 'DESC')
+                ->paginate($perPage, 'kegiatans');
         } else {
-            $kegiatans = $this->masterKegiatanModel->getWithOutput();
+            $kegiatans = $this->masterKegiatanModel
+                ->select('
+                master_kegiatan.*,
+                master_output.nama_output,
+                master_output.fungsi
+            ')
+                ->join('master_output', 'master_output.id_output = master_kegiatan.id_output', 'left')
+                ->orderBy('master_kegiatan.id_kegiatan', 'DESC')
+                ->paginate($perPage, 'kegiatans');
         }
 
         $data = [
-            'title'         => 'Kelola Master Kegiatan',
-            'active_menu'   => 'master-kegiatan',
-            'kegiatans'     => $kegiatans,
+            'title' => 'Kelola Master Kegiatan',
+            'active_menu' => 'master-kegiatan',
+            'kegiatans' => $kegiatans,
             'masterOutputs' => $masterOutputs,
-            'filterOutput'  => $filterOutput ?? 'all'
+            'filterOutput' => $filterOutput ?? 'all',
+            'perPage' => $perPage,
+            'pager' => $this->masterKegiatanModel->pager,
         ];
 
         return view('SuperAdmin/MasterKegiatan/index', $data);
@@ -54,9 +82,9 @@ class MasterKegiatanController extends BaseController
         $masterOutputs = $this->masterOutputModel->orderBy('nama_output', 'ASC')->findAll();
 
         $data = [
-            'title'         => 'Tambah Master Kegiatan',
-            'active_menu'   => 'master-kegiatan',
-            'validation'    => $this->validation,
+            'title' => 'Tambah Master Kegiatan',
+            'active_menu' => 'master-kegiatan',
+            'validation' => $this->validation,
             'masterOutputs' => $masterOutputs
         ];
 
@@ -68,34 +96,34 @@ class MasterKegiatanController extends BaseController
     {
         $rules = [
             'id_output' => [
-                'rules'  => 'required|numeric',
+                'rules' => 'required|numeric',
                 'errors' => [
                     'required' => 'Master output harus dipilih',
-                    'numeric'  => 'Master output tidak valid'
+                    'numeric' => 'Master output tidak valid'
                 ]
             ],
             'nama_kegiatan' => [
-                'rules'  => 'required|max_length[255]|is_unique[master_kegiatan.nama_kegiatan]',
+                'rules' => 'required|max_length[255]|is_unique[master_kegiatan.nama_kegiatan]',
                 'errors' => [
-                    'required'   => 'Nama kegiatan harus diisi',
+                    'required' => 'Nama kegiatan harus diisi',
                     'max_length' => 'Nama kegiatan maksimal 255 karakter',
-                    'is_unique'  => 'Nama kegiatan sudah terdaftar'
+                    'is_unique' => 'Nama kegiatan sudah terdaftar'
                 ]
             ],
             'keterangan' => [
-                'rules'  => 'permit_empty',
+                'rules' => 'permit_empty',
                 'errors' => []
             ],
             'pelaksana' => [
-                'rules'  => 'permit_empty|max_length[255]',
+                'rules' => 'permit_empty|max_length[255]',
                 'errors' => [
                     'max_length' => 'Pelaksana maksimal 255 karakter'
                 ]
             ],
             'periode' => [
-                'rules'  => 'required|max_length[50]',
+                'rules' => 'required|max_length[50]',
                 'errors' => [
-                    'required'   => 'Periode harus diisi',
+                    'required' => 'Periode harus diisi',
                     'max_length' => 'Periode maksimal 50 karakter'
                 ]
             ]
@@ -109,11 +137,11 @@ class MasterKegiatanController extends BaseController
         }
 
         $data = [
-            'id_output'     => $this->request->getPost('id_output'),
+            'id_output' => $this->request->getPost('id_output'),
             'nama_kegiatan' => $this->request->getPost('nama_kegiatan'),
-            'keterangan'    => $this->request->getPost('keterangan'),
-            'pelaksana'     => $this->request->getPost('pelaksana'),
-            'periode'       => $this->request->getPost('periode')
+            'keterangan' => $this->request->getPost('keterangan'),
+            'pelaksana' => $this->request->getPost('pelaksana'),
+            'periode' => $this->request->getPost('periode')
         ];
 
         if ($this->masterKegiatanModel->insert($data)) {
@@ -139,14 +167,28 @@ class MasterKegiatanController extends BaseController
                 ->with('error', 'Data master kegiatan tidak ditemukan');
         }
 
-        // Get kegiatan detail yang terkait
-        $kegiatanDetails = $this->masterKegiatanDetailModel->getByKegiatan($id);
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // Get kegiatan detail dengan pagination
+        $kegiatanDetails = $this->masterKegiatanDetailModel
+            ->where('id_kegiatan', $id)
+            ->orderBy('id_kegiatan_detail', 'DESC')
+            ->paginate($perPage, 'kegiatanDetails');
 
         $data = [
-            'title'            => 'Detail Master Kegiatan',
-            'active_menu'      => 'master-kegiatan',
-            'kegiatan'         => $kegiatan,
-            'kegiatanDetails'  => $kegiatanDetails
+            'title' => 'Detail Master Kegiatan',
+            'active_menu' => 'master-kegiatan',
+            'kegiatan' => $kegiatan,
+            'kegiatanDetails' => $kegiatanDetails,
+            'perPage' => $perPage,
+            'pager' => $this->masterKegiatanDetailModel->pager,
         ];
 
         return view('SuperAdmin/MasterKegiatan/show', $data);
@@ -166,10 +208,10 @@ class MasterKegiatanController extends BaseController
         $masterOutputs = $this->masterOutputModel->orderBy('nama_output', 'ASC')->findAll();
 
         $data = [
-            'title'         => 'Edit Master Kegiatan',
-            'active_menu'   => 'master-kegiatan',
-            'kegiatan'      => $kegiatan,
-            'validation'    => $this->validation,
+            'title' => 'Edit Master Kegiatan',
+            'active_menu' => 'master-kegiatan',
+            'kegiatan' => $kegiatan,
+            'validation' => $this->validation,
             'masterOutputs' => $masterOutputs
         ];
 
@@ -189,34 +231,34 @@ class MasterKegiatanController extends BaseController
 
         $rules = [
             'id_output' => [
-                'rules'  => 'required|numeric',
+                'rules' => 'required|numeric',
                 'errors' => [
                     'required' => 'Master output harus dipilih',
-                    'numeric'  => 'Master output tidak valid'
+                    'numeric' => 'Master output tidak valid'
                 ]
             ],
             'nama_kegiatan' => [
-                'rules'  => "required|max_length[255]|is_unique[master_kegiatan.nama_kegiatan,id_kegiatan,{$id}]",
+                'rules' => "required|max_length[255]|is_unique[master_kegiatan.nama_kegiatan,id_kegiatan,{$id}]",
                 'errors' => [
-                    'required'   => 'Nama kegiatan harus diisi',
+                    'required' => 'Nama kegiatan harus diisi',
                     'max_length' => 'Nama kegiatan maksimal 255 karakter',
-                    'is_unique'  => 'Nama kegiatan sudah terdaftar'
+                    'is_unique' => 'Nama kegiatan sudah terdaftar'
                 ]
             ],
             'keterangan' => [
-                'rules'  => 'permit_empty',
+                'rules' => 'permit_empty',
                 'errors' => []
             ],
             'pelaksana' => [
-                'rules'  => 'permit_empty|max_length[255]',
+                'rules' => 'permit_empty|max_length[255]',
                 'errors' => [
                     'max_length' => 'Pelaksana maksimal 255 karakter'
                 ]
             ],
             'periode' => [
-                'rules'  => 'required|max_length[50]',
+                'rules' => 'required|max_length[50]',
                 'errors' => [
-                    'required'   => 'Periode harus diisi',
+                    'required' => 'Periode harus diisi',
                     'max_length' => 'Periode maksimal 50 karakter'
                 ]
             ]
@@ -230,11 +272,11 @@ class MasterKegiatanController extends BaseController
         }
 
         $data = [
-            'id_output'     => $this->request->getPost('id_output'),
+            'id_output' => $this->request->getPost('id_output'),
             'nama_kegiatan' => $this->request->getPost('nama_kegiatan'),
-            'keterangan'    => $this->request->getPost('keterangan'),
-            'pelaksana'     => $this->request->getPost('pelaksana'),
-            'periode'       => $this->request->getPost('periode')
+            'keterangan' => $this->request->getPost('keterangan'),
+            'pelaksana' => $this->request->getPost('pelaksana'),
+            'periode' => $this->request->getPost('periode')
         ];
 
         if ($this->masterKegiatanModel->update($id, $data)) {

@@ -10,28 +10,28 @@ class SipantauUserAchievement extends Migration
     {
         $this->forge->addField([
             'id_user_achievement' => [
-                'type'           => 'INT',
-                'unsigned'       => true,
+                'type' => 'INT',
+                'unsigned' => true,
                 'auto_increment' => true,
             ],
 
             'sobat_id' => [
-                'type'     => 'INT',
+                'type' => 'INT',
                 'unsigned' => true,
-                'null'     => false,
+                'null' => false,
             ],
 
             'id_achievement' => [
-                'type'     => 'INT',
+                'type' => 'INT',
                 'unsigned' => true,
-                'null'     => false,
+                'null' => false,
             ],
 
             'created_at' => [
-                'type'    => 'DATETIME',
-                'null'    => true,
-                'default' => 'CURRENT_TIMESTAMP',
+                'type' => 'DATETIME',
+                'null' => true,
             ],
+
         ]);
 
         // Primary key

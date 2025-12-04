@@ -11,10 +11,12 @@ use CodeIgniter\Controller;
 class DashboardController extends Controller
 {
     protected $db;
+    protected $kepatuhanModel;
 
     public function __construct()
     {
         $this->db = \Config\Database::connect();
+        $this->kepatuhanModel = new \App\Models\KepatuhanModel();
     }
 
     public function index()
@@ -613,5 +615,89 @@ class DashboardController extends Controller
                 'tanggal_selesai' => date('d', strtotime($kegiatan['tanggal_selesai']))
             ]
         ];
+    }
+
+    // ======================================================
+    // GET KEPATUHAN DATA
+    // ======================================================
+    public function getKepatuhanData()
+    {
+        try {
+            $idKegiatanWilayah = $this->request->getGet('id_kegiatan_wilayah');
+            $idKabupaten = session()->get('user_kabupaten_id');
+
+            log_message('info', 'getKepatuhanData - ID Kegiatan Wilayah: ' . $idKegiatanWilayah . ', ID Kabupaten: ' . $idKabupaten);
+
+            // Validasi: pastikan kegiatan wilayah ini milik kabupaten user
+            $kegiatan = $this->db->table('kegiatan_wilayah kw')
+                ->select('kw.*, mkdp.tanggal_mulai, mkdp.tanggal_selesai, mkdp.id_kegiatan_detail_proses')
+                ->join('master_kegiatan_detail_proses mkdp', 'mkdp.id_kegiatan_detail_proses = kw.id_kegiatan_detail_proses')
+                ->where('kw.id_kegiatan_wilayah', $idKegiatanWilayah)
+                ->where('kw.id_kabupaten', $idKabupaten)
+                ->get()
+                ->getRowArray();
+
+            if (!$kegiatan) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke kegiatan ini'
+                ]);
+            }
+
+            $idKegiatanDetailProses = $kegiatan['id_kegiatan_detail_proses'];
+
+            // 1. Get Statistik - gunakan method dari KepatuhanModel
+            $stats = $this->kepatuhanModel->getStatistikKepatuhan(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah,
+                $idKabupaten
+            );
+
+            // 2. Get Chart Data - Line chart untuk trend harian
+            $chartData = $this->kepatuhanModel->getTrendKepatuhanHarian(
+                $idKegiatanDetailProses,
+                $idKabupaten
+            );
+
+            // 3. Get Leaderboard
+            $leaderboard = $this->kepatuhanModel->getLeaderboardKepatuhan(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah,
+                10,
+                $idKabupaten
+            );
+
+            // 4. Get Petugas Tidak Patuh
+            $tidakPatuh = $this->kepatuhanModel->getPetugasTidakPatuh(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah,
+                $idKabupaten
+            );
+
+            log_message('info', 'Stats calculated: ' . json_encode($stats));
+            log_message('info', 'Chart data points: ' . count($chartData));
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [
+                    'stats' => $stats,
+                    'chart' => [
+                        'type' => 'line',
+                        'data' => $chartData
+                    ],
+                    'leaderboard' => $leaderboard,
+                    'tidak_patuh' => $tidakPatuh
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error in getKepatuhanData: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+        }
     }
 }

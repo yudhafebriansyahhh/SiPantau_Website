@@ -38,13 +38,17 @@ class KelolaPenggunaController extends BaseController
         $search = $this->request->getGet('search') ?? '';
         $roleFilter = $this->request->getGet('role') ?? '';
 
-        // Get users with details
-        $users = $this->userModel->getUsersWithDetails($search, $roleFilter);
+        // TAMBAHKAN INI - Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
 
-        // Tambahkan role tambahan untuk setiap user
-        foreach ($users as &$user) {
-            $user['role_names'] = $this->getUserRoleNames($user['sobat_id'], $user['role']);
+        // TAMBAHKAN INI - Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
         }
+
+        // UBAH INI - Get users dengan pagination
+        $users = $this->userModel->getUsersWithDetailsPaginated($search, $roleFilter, $perPage);
 
         $data = [
             'title' => 'Kelola Pengguna',
@@ -52,10 +56,332 @@ class KelolaPenggunaController extends BaseController
             'users' => $users,
             'roles' => $this->roleModel->findAll(),
             'search' => $search,
-            'roleFilter' => $roleFilter
+            'roleFilter' => $roleFilter,
+            'perPage' => $perPage,  // TAMBAHKAN INI
+            'pager' => $this->userModel->pager  // TAMBAHKAN INI
         ];
 
         return view('SuperAdmin/KelolaPengguna/index', $data);
+    }
+
+    /**
+     * Detail petugas - list kegiatan yang pernah diikuti
+     */
+    public function detailPetugas($sobatId)
+    {
+        // Get petugas info
+        $petugas = $this->userModel->where('sobat_id', $sobatId)->first();
+
+        if (!$petugas) {
+            return redirect()->to('superadmin/kelola-pengguna')->with('error', 'Petugas tidak ditemukan');
+        }
+
+        // Get kegiatan sebagai PML
+        $kegiatanPML = $this->db->table('pml')
+            ->select('pml.id_pml as id, pml.target, pml.created_at,
+                 mk.nama_kegiatan, mkd.nama_kegiatan_detail, 
+                 mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
+                 mkab.nama_kabupaten,
+                 "PML" as role')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kabupaten mkab', 'kw.id_kabupaten = mkab.id_kabupaten')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
+            ->where('pml.sobat_id', $sobatId)
+            ->orderBy('mkdp.tanggal_mulai', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        // Get kegiatan sebagai PCL
+        $kegiatanPCL = $this->db->table('pcl')
+            ->select('pcl.id_pcl as id, pcl.target, pcl.created_at,
+                 mk.nama_kegiatan, mkd.nama_kegiatan_detail, 
+                 mkdp.nama_kegiatan_detail_proses, mkdp.tanggal_mulai, mkdp.tanggal_selesai,
+                 mkab.nama_kabupaten,
+                 u_pml.nama_user as nama_pml, "PCL" as role')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kabupaten mkab', 'kw.id_kabupaten = mkab.id_kabupaten')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->join('master_kegiatan mk', 'mkd.id_kegiatan = mk.id_kegiatan')
+            ->where('pcl.sobat_id', $sobatId)
+            ->orderBy('mkdp.tanggal_mulai', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        // Merge dan sort semua kegiatan
+        $kegiatanList = array_merge($kegiatanPML, $kegiatanPCL);
+        usort($kegiatanList, function ($a, $b) {
+            return strtotime($b['tanggal_mulai']) - strtotime($a['tanggal_mulai']);
+        });
+
+        $data = [
+            'title' => 'Detail Petugas',
+            'active_menu' => 'kelola-pengguna',
+            'petugas' => $petugas,
+            'kegiatanList' => $kegiatanList
+        ];
+
+        return view('SuperAdmin/KelolaPengguna/detail_petugas', $data);
+    }
+
+    /**
+     * Detail PCL - laporan progress dan transaksi
+     */
+    public function detailPCL($idPCL)
+    {
+        // Get PCL detail
+        $pclDetail = $this->db->table('pcl')
+            ->select('pcl.*, 
+                 u.nama_user as nama_pcl, 
+                 u.email, 
+                 u.hp,
+                 u.id_kabupaten,
+                 u_pml.nama_user as nama_pml,
+                 mk.nama_kabupaten,
+                 mkdp.nama_kegiatan_detail_proses,
+                 mkdp.tanggal_mulai,
+                 mkdp.tanggal_selesai,
+                 mkd.nama_kegiatan_detail')
+            ->join('sipantau_user u', 'pcl.sobat_id = u.sobat_id')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kabupaten mk', 'kw.id_kabupaten = mk.id_kabupaten')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('pcl.id_pcl', $idPCL)
+            ->get()
+            ->getRowArray();
+
+        if (!$pclDetail) {
+            return redirect()->to('superadmin/kelola-pengguna')->with('error', 'Data PCL tidak ditemukan');
+        }
+
+        // Load additional models
+        $pantauProgressModel = new \App\Models\PantauProgressModel();
+        $kurvaPetugasModel = new \App\Models\KurvaPetugasModel();
+
+        // Get realisasi data
+        $realisasi = $pantauProgressModel
+            ->select('COALESCE(MAX(jumlah_realisasi_kumulatif), 0) as total_realisasi')
+            ->where('id_pcl', $idPCL)
+            ->first();
+
+        $realisasiKumulatif = (int) ($realisasi['total_realisasi'] ?? 0);
+        $target = (int) $pclDetail['target'];
+        $persentase = $target > 0 ? round(($realisasiKumulatif / $target) * 100, 2) : 0;
+        $selisih = $target - $realisasiKumulatif;
+
+        // Get Kurva S data
+        $kurvaData = $this->getKurvaDataPCL($idPCL, $pclDetail, $pantauProgressModel, $kurvaPetugasModel);
+
+        $data = [
+            'title' => 'Detail Laporan PCL',
+            'active_menu' => 'kelola-pengguna',
+            'pcl' => $pclDetail,
+            'target' => $target,
+            'realisasi' => $realisasiKumulatif,
+            'persentase' => $persentase,
+            'selisih' => $selisih,
+            'kurvaData' => $kurvaData,
+            'idPCL' => $idPCL
+        ];
+
+        return view('SuperAdmin/KelolaPengguna/detail_pcl', $data);
+    }
+
+    /**
+     * Get Kurva S data untuk chart
+     */
+    private function getKurvaDataPCL($idPCL, $pclDetail, $pantauProgressModel, $kurvaPetugasModel)
+    {
+        // Get kurva target
+        $kurvaTarget = $kurvaPetugasModel
+            ->where('id_pcl', $idPCL)
+            ->orderBy('tanggal_target', 'ASC')
+            ->findAll();
+
+        // Get realisasi harian
+        $realisasiHarian = $this->db->query("
+        SELECT 
+            DATE(created_at) as tanggal,
+            SUM(jumlah_realisasi_absolut) as realisasi_harian
+        FROM pantau_progress
+        WHERE id_pcl = ?
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+    ", [$idPCL])->getResultArray();
+
+        // Build realisasi lookup
+        $realisasiLookup = [];
+        foreach ($realisasiHarian as $item) {
+            $realisasiLookup[$item['tanggal']] = (int) $item['realisasi_harian'];
+        }
+
+        // Format data untuk chart
+        $labels = [];
+        $targetData = [];
+        $realisasiData = [];
+        $realisasiKumulatif = 0;
+
+        foreach ($kurvaTarget as $item) {
+            $tanggal = $item['tanggal_target'];
+            $labels[] = date('d M', strtotime($tanggal));
+            $targetData[] = (int) $item['target_kumulatif_absolut'];
+
+            if (isset($realisasiLookup[$tanggal])) {
+                $realisasiKumulatif += $realisasiLookup[$tanggal];
+            }
+            $realisasiData[] = $realisasiKumulatif;
+        }
+
+        return [
+            'labels' => $labels,
+            'target' => $targetData,
+            'realisasi' => $realisasiData,
+            'config' => [
+                'tanggal_mulai' => date('d M', strtotime($pclDetail['tanggal_mulai'])),
+                'tanggal_selesai' => date('d M', strtotime($pclDetail['tanggal_selesai']))
+            ]
+        ];
+    }
+
+    /**
+     * Detail PML - progress dari PCL yang dipegang
+     */
+    public function detailPML($idPML)
+    {
+        // Get PML detail
+        $pmlModel = new \App\Models\PMLModel();
+        $pmlDetail = $pmlModel->getPMLWithDetails($idPML);
+
+        if (!$pmlDetail) {
+            return redirect()->to('superadmin/kelola-pengguna')->with('error', 'Data PML tidak ditemukan');
+        }
+
+        // Get daftar PCL beserta progress
+        $pantauProgressModel = new \App\Models\PantauProgressModel();
+        $pclModel = new \App\Models\PCLModel();
+
+        $pclList = $this->db->table('pcl')
+            ->select('pcl.id_pcl, pcl.target, pcl.sobat_id,
+                 u.nama_user as nama_pcl, u.email, u.hp')
+            ->join('sipantau_user u', 'pcl.sobat_id = u.sobat_id')
+            ->where('pcl.id_pml', $idPML)
+            ->orderBy('u.nama_user', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Enrich dengan data realisasi
+        foreach ($pclList as &$pcl) {
+            $realisasi = $pantauProgressModel
+                ->select('COALESCE(MAX(jumlah_realisasi_kumulatif), 0) as realisasi_kumulatif')
+                ->where('id_pcl', $pcl['id_pcl'])
+                ->first();
+
+            $pcl['realisasi_kumulatif'] = $realisasi['realisasi_kumulatif'] ?? 0;
+        }
+
+        $data = [
+            'title' => 'Detail PML',
+            'active_menu' => 'kelola-pengguna',
+            'pml' => $pmlDetail,
+            'pclList' => $pclList
+        ];
+
+        return view('SuperAdmin/KelolaPengguna/detail_pml', $data);
+    }
+
+    /**
+     * Get Pantau Progress via AJAX
+     */
+    public function getPantauProgress()
+    {
+        $idPCL = $this->request->getGet('id_pcl');
+        $page = $this->request->getGet('page') ?? 1;
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $pantauProgressModel = new \App\Models\PantauProgressModel();
+
+        $total = $pantauProgressModel->where('id_pcl', $idPCL)->countAllResults(false);
+        $data = $pantauProgressModel
+            ->where('id_pcl', $idPCL)
+            ->orderBy('created_at', 'DESC')
+            ->limit($perPage, $offset)
+            ->findAll();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'pagination' => [
+                'total' => $total,
+                'perPage' => $perPage,
+                'currentPage' => $page,
+                'totalPages' => ceil($total / $perPage)
+            ]
+        ]);
+    }
+
+    /**
+     * Get Laporan Transaksi via AJAX
+     */
+    public function getLaporanTransaksi()
+    {
+        $idPCL = $this->request->getGet('id_pcl');
+        $page = (int) ($this->request->getGet('page') ?? 1);
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $builder = $this->db->table('sipantau_transaksi st');
+
+        $totalBuilder = clone $builder;
+        $total = $totalBuilder->where('st.id_pcl', $idPCL)->countAllResults();
+
+        if ($total == 0) {
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [],
+                'pagination' => [
+                    'total' => 0,
+                    'perPage' => $perPage,
+                    'currentPage' => $page,
+                    'totalPages' => 0
+                ]
+            ]);
+        }
+
+        $data = $builder
+            ->select('st.id_sipantau_transaksi,
+                 st.resume,
+                 st.latitude,
+                 st.longitude,
+                 st.imagepath,
+                 st.created_at,
+                 COALESCE(mk.nama_kecamatan, "-") as nama_kecamatan,
+                 COALESCE(md.nama_desa, "-") as nama_desa')
+            ->join('master_kecamatan mk', 'st.id_kecamatan = mk.id_kecamatan', 'left')
+            ->join('master_desa md', 'st.id_desa = md.id_desa', 'left')
+            ->where('st.id_pcl', $idPCL)
+            ->orderBy('st.created_at', 'DESC')
+            ->limit($perPage, $offset)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'pagination' => [
+                'total' => $total,
+                'perPage' => $perPage,
+                'currentPage' => $page,
+                'totalPages' => ceil($total / $perPage)
+            ]
+        ]);
     }
 
     // Get user role names termasuk role tambahan dari tabel admin
@@ -71,7 +397,7 @@ class KelolaPenggunaController extends BaseController
                 $userRoles = array_map('intval', $decoded);
             }
         } else {
-            $userRoles = [(int)$roleJson];
+            $userRoles = [(int) $roleJson];
         }
 
         // Check admin status
@@ -218,7 +544,7 @@ class KelolaPenggunaController extends BaseController
             'email' => $this->request->getPost('email'),
             'hp' => $this->request->getPost('hp'),
             'id_kabupaten' => $this->request->getPost('id_kabupaten'),
-            'role' => json_encode($roleIds), 
+            'role' => json_encode($roleIds),
             'is_pegawai' => $this->request->getPost('is_pegawai'),
         ];
 
@@ -392,7 +718,8 @@ class KelolaPenggunaController extends BaseController
         $this->db->transStart();
 
         foreach ($data as $index => $row) {
-            if (empty(array_filter($row))) continue;
+            if (empty(array_filter($row)))
+                continue;
 
             $rowNumber = $index + 2;
 
@@ -413,8 +740,8 @@ class KelolaPenggunaController extends BaseController
             }
 
             // Ambil & validasi is_pegawai (F)
-            $isPegawai = trim((string)$row[5]);
-            if (!in_array($isPegawai, ['0','1'], true)) {
+            $isPegawai = trim((string) $row[5]);
+            if (!in_array($isPegawai, ['0', '1'], true)) {
                 $errors[] = "Baris {$rowNumber}: Nilai Pegawai/Mitra harus 1 (Pegawai) atau 0 (Mitra)";
                 $skipped++;
                 continue;
@@ -450,15 +777,15 @@ class KelolaPenggunaController extends BaseController
 
             // Insert user
             $userData = [
-                'sobat_id'      => trim($row[0]),
-                'nama_user'     => trim($row[1]),
-                'email'         => trim($row[2]),
-                'hp'            => trim($row[3]),
-                'id_kabupaten'  => $idKabupaten,
-                'role'          => json_encode($validRoleIdsForUser),
-                'password'      => trim($row[0]),
-                'is_active'     => 1,
-                'is_pegawai'    => (int)$isPegawai,
+                'sobat_id' => trim($row[0]),
+                'nama_user' => trim($row[1]),
+                'email' => trim($row[2]),
+                'hp' => trim($row[3]),
+                'id_kabupaten' => $idKabupaten,
+                'role' => json_encode($validRoleIdsForUser),
+                'password' => trim($row[0]),
+                'is_active' => 1,
+                'is_pegawai' => (int) $isPegawai,
             ];
 
             $this->userModel->insert($userData);
@@ -503,8 +830,16 @@ class KelolaPenggunaController extends BaseController
         ];
 
         $headers = [
-            'No', 'Sobat ID', 'Nama Lengkap', 'Email', 'No HP',
-            'Kabupaten/Kota', 'Roles', 'Pegawai/Mitra', 'Status', 'Tanggal Dibuat'
+            'No',
+            'Sobat ID',
+            'Nama Lengkap',
+            'Email',
+            'No HP',
+            'Kabupaten/Kota',
+            'Roles',
+            'Pegawai/Mitra',
+            'Status',
+            'Tanggal Dibuat'
         ];
         $column = 'A';
         foreach ($headers as $header) {
@@ -515,14 +850,22 @@ class KelolaPenggunaController extends BaseController
         $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
 
         foreach ([
-            'A' => 5, 'B' => 15, 'C' => 25, 'D' => 30, 'E' => 15,
-            'F' => 20, 'G' => 35, 'H' => 18, 'I' => 10, 'J' => 20
+            'A' => 5,
+            'B' => 15,
+            'C' => 25,
+            'D' => 30,
+            'E' => 15,
+            'F' => 20,
+            'G' => 35,
+            'H' => 18,
+            'I' => 10,
+            'J' => 20
         ] as $col => $width) {
             $sheet->getColumnDimension($col)->setWidth($width);
         }
 
         $row = 2;
-        $no  = 1;
+        $no = 1;
         foreach ($users as $user) {
             $sheet->setCellValue('A' . $row, $no);
             $sheet->setCellValue('B' . $row, $user['sobat_id']);
@@ -531,7 +874,7 @@ class KelolaPenggunaController extends BaseController
             $sheet->setCellValue('E' . $row, $user['hp']);
             $sheet->setCellValue('F' . $row, $user['nama_kabupaten'] ?? '-');
             $sheet->setCellValue('G' . $row, $user['roles_display'] ?? '-');
-            $sheet->setCellValue('H' . $row, ((string)$user['is_pegawai'] === '1') ? 'Pegawai' : 'Mitra');
+            $sheet->setCellValue('H' . $row, ((string) $user['is_pegawai'] === '1') ? 'Pegawai' : 'Mitra');
             $sheet->setCellValue('I' . $row, $user['is_active'] ? 'Aktif' : 'Nonaktif');
             $sheet->setCellValue('J' . $row, $user['created_at']);
 

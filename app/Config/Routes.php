@@ -33,6 +33,11 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
     $routes->get('get-kurva-s', 'SuperAdmin\DashboardController::getKurvaS');
     $routes->get('get-kegiatan-wilayah', 'SuperAdmin\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'SuperAdmin\DashboardController::getPetugas');
+    // ===== Dashboard Kepatuhan Routes =====
+    $routes->get('get-kepatuhan-data', 'SuperAdmin\DashboardController::getKepatuhanData');
+    $routes->get('get-detail-kepatuhan-pcl', 'SuperAdmin\DashboardController::getDetailKepatuhanPCL');
+    $routes->get('export-kepatuhan-csv', 'SuperAdmin\DashboardController::exportKepatuhanCSV');
+    $routes->get('rebuild-kepatuhan', 'SuperAdmin\DashboardController::rebuildKepatuhanSummary');
 
     // ===== Master Output =====
     $routes->group('master-output', static function ($routes) {
@@ -86,6 +91,14 @@ $routes->group('superadmin', ['filter' => 'role:1'], static function ($routes) {
         $routes->get('download-template', 'SuperAdmin\KelolaPenggunaController::downloadTemplate');
         $routes->post('import', 'SuperAdmin\KelolaPenggunaController::import');
         $routes->get('export', 'SuperAdmin\KelolaPenggunaController::export');
+
+        $routes->get('detail/(:segment)', 'SuperAdmin\KelolaPenggunaController::detailPetugas/$1');
+        $routes->get('detail-pcl/(:num)', 'SuperAdmin\KelolaPenggunaController::detailPCL/$1');
+        $routes->get('detail-pml/(:num)', 'SuperAdmin\KelolaPenggunaController::detailPML/$1');
+
+        // AJAX endpoints
+        $routes->get('get-pantau-progress', 'SuperAdmin\KelolaPenggunaController::getPantauProgress');
+        $routes->get('get-laporan-transaksi', 'SuperAdmin\KelolaPenggunaController::getLaporanTransaksi');
     });
 
     // ===== Kelola Admin Survei Provinsi =====
@@ -125,6 +138,7 @@ $routes->group('adminsurvei', ['filter' => 'role:2'], static function ($routes) 
     $routes->get('kegiatan-wilayah', 'AdminProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'AdminProv\DashboardController::getPetugas');
     $routes->get('get-kurva-s-with-realisasi', 'AdminProv\DashboardController::getKurvaSWithRealisasi');
+    $routes->get('get-kepatuhan-data', 'AdminProv\DashboardController::getKepatuhanData');
 
 
     // ===== Master Kegiatan Detail Proses =====
@@ -178,6 +192,7 @@ $routes->group('adminsurvei-kab', ['filter' => 'role:3'], static function ($rout
     $routes->get('/', 'AdminKab\DashboardController::index');
     $routes->get('get-kurva-s', 'AdminKab\DashboardController::getKurvaS');
     $routes->get('get-petugas', 'AdminKab\DashboardController::getPetugas');
+    $routes->get('get-kepatuhan-data', 'AdminKab\DashboardController::getKepatuhanData');
 
     // ===== Assign Petugas =====
     $routes->group('assign-petugas', static function ($routes) {
@@ -227,6 +242,8 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
     $routes->get('kegiatan-wilayah', 'PemantauProv\DashboardController::getKegiatanWilayah');
     $routes->get('get-petugas', 'PemantauProv\DashboardController::getPetugas');
     $routes->get('get-kurva-s-with-realisasi', 'PemantauProv\DashboardController::getKurvaSWithRealisasi');
+    $routes->get('get-kepatuhan-data', 'PemantauProv\DashboardController::getKepatuhanData');
+
 
     // ===== Menu Lainnya (yang sudah ada sebelumnya) =====
     $routes->get('detail-proses', 'PemantauProv\MasterKegiatanDetailProsesController::index');
@@ -234,15 +251,19 @@ $routes->group('pemantau-provinsi', ['filter' => 'role:2'], static function ($ro
 
     // ===== Data Petugas =====
     $routes->get('data-petugas', 'PemantauProv\DataPetugasController::index');
+    $routes->get('data-petugas/detail/(:any)', 'PemantauProv\DataPetugasController::detailPetugas/$1');
+    $routes->get('data-petugas/detail-pcl/(:num)', 'PemantauProv\DataPetugasController::detailPCL/$1');
+    $routes->get('data-petugas/detail-pml/(:num)', 'PemantauProv\DataPetugasController::detailPML/$1');
+    $routes->get('data-petugas/pantau-progress', 'PemantauProv\DataPetugasController::getPantauProgress');
+    $routes->get('data-petugas/laporan-transaksi', 'PemantauProv\DataPetugasController::getLaporanTransaksi');
 
     // ===== Laporan Petugas Routes =====
     $routes->get('laporan-petugas', 'PemantauProv\LaporanPetugasController::index');
     $routes->get('laporan-petugas/export-csv', 'PemantauProv\LaporanPetugasController::exportCSV');
+    $routes->get('laporan-petugas/detail/(:num)', 'PemantauProv\LaporanPetugasController::detailLaporanPetugas/$1');
+    $routes->get('laporan-petugas/pantau-progress', 'PemantauProv\LaporanPetugasController::getPantauProgressLaporan');
+    $routes->get('laporan-petugas/laporan-transaksi', 'PemantauProv\LaporanPetugasController::getLaporanTransaksiLaporan');
 
-    // ===== Detail Petugas Routes =====
-    $routes->get('detail-petugas/(:num)', 'PemantauProv\DetailPetugasController::index/$1');
-    $routes->get('detail-petugas/get-pantau-progress', 'PemantauProv\DetailPetugasController::getPantauProgress');
-    $routes->get('detail-petugas/get-laporan-transaksi', 'PemantauProv\DetailPetugasController::getLaporanTransaksi');
 });
 
 // ================== PEMANTAU KABUPATEN (id_role = 3) ==================
@@ -252,21 +273,28 @@ $routes->group('pemantau-kabupaten', ['filter' => 'role:3'], static function ($r
     $routes->get('kurva-kabupaten', 'PemantauKab\DashboardController::getKurvaKabupaten');
     $routes->get('get-petugas', 'PemantauKab\DashboardController::getPetugas');
     $routes->get('get-kurva-s-with-realisasi', 'PemantauKab\DashboardController::getKurvaSWithRealisasi');
+    $routes->get('get-kepatuhan-data', 'PemantauKab\DashboardController::getKepatuhanData');
+
 
     // ===== Kegiatan Wilayah =====
     $routes->get('kegiatan-wilayah', 'PemantauKab\MasterKegiatanWilayahController::index');
 
     // ===== Data Petugas =====
     $routes->get('data-petugas', 'PemantauKab\DataPetugasController::index');
+    $routes->get('data-petugas/detail/(:any)', 'PemantauKab\DataPetugasController::detailPetugas/$1');
+    $routes->get('data-petugas/detail-pcl/(:num)', 'PemantauKab\DataPetugasController::detailPCL/$1');
+    $routes->get('data-petugas/detail-pml/(:num)', 'PemantauKab\DataPetugasController::detailPML/$1');
+    $routes->get('data-petugas/pantau-progress', 'PemantauKab\DataPetugasController::getPantauProgress');
+    $routes->get('data-petugas/laporan-transaksi', 'PemantauKab\DataPetugasController::getLaporanTransaksi');
 
     // ===== Laporan Petugas Routes =====
     $routes->get('laporan-petugas', 'PemantauKab\LaporanPetugasController::index');
     $routes->get('laporan-petugas/export-csv', 'PemantauKab\LaporanPetugasController::exportCSV');
+    $routes->get('laporan-petugas/detail/(:num)', 'PemantauKab\LaporanPetugasController::detailLaporanPetugas/$1');
+    $routes->get('laporan-petugas/pantau-progress', 'PemantauKab\LaporanPetugasController::getPantauProgressLaporan');
+    $routes->get('laporan-petugas/laporan-transaksi', 'PemantauKab\LaporanPetugasController::getLaporanTransaksiLaporan');
 
-    // ===== Detail Petugas Routes =====
-    $routes->get('detail-petugas/(:num)', 'PemantauKab\DetailPetugasController::index/$1');
-    $routes->get('detail-petugas/get-pantau-progress', 'PemantauKab\DetailPetugasController::getPantauProgress');
-    $routes->get('detail-petugas/get-laporan-transaksi', 'PemantauKab\DetailPetugasController::getLaporanTransaksi');
+
 });
 
 // ================== API AUTH LOGIN ==================
@@ -278,7 +306,7 @@ $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static f
 //=================== Api Fitur Aplikasi Mobile ===============================
 $routes->group('api', [
     'namespace' => 'App\Controllers\Api',
-    'filter'    => 'jwt'
+    'filter' => 'jwt'
 ], static function ($routes) {
     $routes->get('pelaporan', 'PelaporanController::index');
     $routes->post('pelaporan', 'PelaporanController::create');

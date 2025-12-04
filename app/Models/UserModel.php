@@ -21,11 +21,11 @@ class UserModel extends Model
         'created_at',
         'updated_at'
     ];
-    
+
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
-    
+
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];
 
@@ -61,7 +61,7 @@ class UserModel extends Model
         $filteredUsers = [];
         foreach ($users as $user) {
             $this->processUserRoles($user);
-            
+
             // Filter by role if needed
             if (!empty($roleFilter)) {
                 if (in_array($roleFilter, $user['role_ids'])) {
@@ -76,6 +76,55 @@ class UserModel extends Model
     }
 
     /**
+     * Get users with details including roles WITH PAGINATION
+     */
+    public function getUsersWithDetailsPaginated($search = '', $roleFilter = '', $perPage = 10)
+    {
+        // Build query menggunakan Query Builder
+        $builder = $this->db->table('sipantau_user u')
+            ->select('u.*, k.nama_kabupaten')
+            ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
+            ->orderBy('u.nama_user', 'ASC');
+
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('u.nama_user', $search)
+                ->orLike('u.email', $search)
+                ->orLike('u.hp', $search)
+                ->groupEnd();
+        }
+
+        // Handle role filter
+        if (!empty($roleFilter)) {
+            $builder->where("JSON_CONTAINS(u.role, '{$roleFilter}', '$')");
+        }
+
+        // Get total untuk pagination
+        $total = $builder->countAllResults(false);
+
+        // Get current page
+        $page = (int) ($_GET['page_users'] ?? 1);
+        $offset = ($page - 1) * $perPage;
+
+        // Get paginated data
+        $users = $builder->limit($perPage, $offset)->get()->getResultArray();
+
+        // Process roles for each user
+        foreach ($users as &$user) {
+            $this->processUserRoles($user);
+        }
+
+        // Setup pager manually
+        $pager = \Config\Services::pager();
+        $pager->store('users', $page, $perPage, $total);
+
+        // Store pager to model property
+        $this->pager = $pager;
+
+        return $users;
+    }
+
+    /**
      * Get user with roles by ID
      */
     public function getUserWithRoles($id)
@@ -84,13 +133,13 @@ class UserModel extends Model
             ->select('u.*, k.nama_kabupaten')
             ->join('master_kabupaten k', 'u.id_kabupaten = k.id_kabupaten', 'left')
             ->where('u.sobat_id', $id);
-        
+
         $user = $builder->get()->getRowArray();
-        
+
         if ($user) {
             $this->processUserRoles($user);
         }
-        
+
         return $user;
     }
 
@@ -105,18 +154,18 @@ class UserModel extends Model
 
         if (!empty($user['role'])) {
             $roleIds = json_decode($user['role'], true);
-            
+
             if (is_array($roleIds) && !empty($roleIds)) {
                 $user['role_ids'] = $roleIds;
-                
+
                 // Get role names
                 $roleModel = new RoleModel();
                 $roles = $roleModel->whereIn('id_roleuser', $roleIds)->findAll();
-                
+
                 foreach ($roles as $role) {
                     $user['role_names'][] = $role['roleuser'];
                 }
-                
+
                 $user['roles_display'] = implode(', ', $user['role_names']);
             }
         }
@@ -166,9 +215,9 @@ class UserModel extends Model
         $total = $builder->countAllResults(false);
 
         // Pagination
-        $page = (int)($_GET['page'] ?? 1);
+        $page = (int) ($_GET['page'] ?? 1);
         $offset = ($page - 1) * $perPage;
-        
+
         $users = $builder->limit($perPage, $offset)->get()->getResultArray();
 
         // Process each user to get their roles and activities
@@ -250,7 +299,7 @@ class UserModel extends Model
 
         // Merge dan format kegiatan
         $allKegiatan = array_merge($kegiatanPML, $kegiatanPCL);
-        
+
         // Group by nama kegiatan + tahun untuk avoid duplicate
         $uniqueKegiatan = [];
         foreach ($allKegiatan as $keg) {
@@ -259,9 +308,9 @@ class UserModel extends Model
                 $uniqueKegiatan[$key] = [
                     'nama' => $keg['nama_kegiatan_detail_proses'],
                     'tahun' => $keg['tahun'],
-                    'display' => substr($keg['nama_kegiatan_detail_proses'], 0, 50) . 
-                                 (strlen($keg['nama_kegiatan_detail_proses']) > 50 ? '...' : '') . 
-                                 ' (' . $keg['tahun'] . ')'
+                    'display' => substr($keg['nama_kegiatan_detail_proses'], 0, 50) .
+                        (strlen($keg['nama_kegiatan_detail_proses']) > 50 ? '...' : '') .
+                        ' (' . $keg['tahun'] . ')'
                 ];
             }
         }

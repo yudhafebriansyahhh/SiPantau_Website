@@ -12,8 +12,8 @@ use App\Models\PantauProgressModel;
 use CodeIgniter\Controller;
 
 class DashboardController extends Controller
-{   
-    protected $db; 
+{
+    protected $db;
 
     public function __construct()
     {
@@ -26,7 +26,7 @@ class DashboardController extends Controller
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         // Jika id_admin_provinsi tidak ada di session, coba ambil dari database
         if (!$idAdminProvinsi && $roleType == 'admin_provinsi') {
             $sobatId = session()->get('sobat_id');
@@ -35,17 +35,17 @@ class DashboardController extends Controller
                     ->where('sobat_id', $sobatId)
                     ->get()
                     ->getRowArray();
-                
+
                 if ($adminProv) {
                     $idAdminProvinsi = $adminProv['id_admin_provinsi'];
                     session()->set('id_admin_provinsi', $idAdminProvinsi);
                 }
             }
         }
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if (!$isSuperAdmin && !$isAdminProvinsi) {
             return redirect()->to(base_url('unauthorized'))
                 ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
@@ -131,7 +131,7 @@ class DashboardController extends Controller
 
         return [
             'total_kegiatan' => $totalKegiatan ?? 0,
-            'kegiatan_aktif' => (int)($kegiatanAktif['total'] ?? 0),
+            'kegiatan_aktif' => (int) ($kegiatanAktif['total'] ?? 0),
             'target_tercapai' => round($targetTercapai, 0)
         ];
     }
@@ -157,9 +157,9 @@ class DashboardController extends Controller
         $countKegiatan = 0;
 
         foreach ($prosesList as $proses) {
-            $targetTotal = (int)$proses['target'];
+            $targetTotal = (int) $proses['target'];
             $realisasiTotal = $this->getRealisasiByProses($proses['id_kegiatan_detail_proses']);
-            
+
             if ($targetTotal > 0) {
                 $progress = ($realisasiTotal / $targetTotal) * 100;
                 $totalProgress += min(100, $progress);
@@ -184,7 +184,7 @@ class DashboardController extends Controller
             WHERE kw.id_kegiatan_detail_proses = ?
         ", [$idProses])->getRowArray();
 
-        return (int)($result['total_realisasi'] ?? 0);
+        return (int) ($result['total_realisasi'] ?? 0);
     }
 
     // ======================================================
@@ -216,19 +216,19 @@ class DashboardController extends Controller
             $totalRealisasi = 0;
 
             foreach ($prosesList as $proses) {
-                $totalTarget += (int)$proses['target'];
+                $totalTarget += (int) $proses['target'];
                 $totalRealisasi += $this->getRealisasiByProses($proses['id_kegiatan_detail_proses']);
             }
 
             if ($totalTarget > 0) {
                 $progress = ($totalRealisasi / $totalTarget) * 100;
-                
+
                 $progressData[] = [
                     'nama' => $detail['nama_kegiatan_detail'],
                     'progress' => min(100, round($progress, 0)),
                     'color' => $colors[$colorIndex % count($colors)]
                 ];
-                
+
                 $colorIndex++;
             }
         }
@@ -242,26 +242,26 @@ class DashboardController extends Controller
     public function getKurvaProvinsi()
     {
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
-        
+
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         // Validasi akses untuk Admin Provinsi
         if ($isAdminProvinsi && $idProses) {
             $prosesModel = new MasterKegiatanDetailProsesModel();
             $proses = $prosesModel->find($idProses);
-            
+
             if ($proses) {
                 $adminModel = new MasterKegiatanDetailAdminModel();
                 $hasAccess = $adminModel
                     ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
                     ->where('id_admin_provinsi', $idAdminProvinsi)
                     ->first();
-                
+
                 if (!$hasAccess) {
                     return $this->response->setJSON([
                         'labels' => [],
@@ -272,7 +272,7 @@ class DashboardController extends Controller
                 }
             }
         }
-        
+
         $model = new KurvaSProvinsiModel();
         $builder = $model
             ->select('tanggal_target, target_persen_kumulatif, target_kumulatif_absolut, target_harian_absolut')
@@ -293,8 +293,9 @@ class DashboardController extends Controller
                     ->get()
                     ->getRowArray();
             }
-            
-            if ($latest) $builder->where('id_kegiatan_detail_proses', $latest['id_kegiatan_detail_proses']);
+
+            if ($latest)
+                $builder->where('id_kegiatan_detail_proses', $latest['id_kegiatan_detail_proses']);
         }
 
         $records = $builder->findAll();
@@ -307,31 +308,31 @@ class DashboardController extends Controller
     public function getKegiatanWilayah()
     {
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
-        
+
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if ($isAdminProvinsi && $idProses) {
             $prosesModel = new MasterKegiatanDetailProsesModel();
             $proses = $prosesModel->find($idProses);
-            
+
             if ($proses) {
                 $adminModel = new MasterKegiatanDetailAdminModel();
                 $hasAccess = $adminModel
                     ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
                     ->where('id_admin_provinsi', $idAdminProvinsi)
                     ->first();
-                
+
                 if (!$hasAccess) {
                     return $this->response->setJSON([]);
                 }
             }
         }
-        
+
         $wilayahModel = new MasterKegiatanWilayahModel();
         $records = $wilayahModel
             ->select('kegiatan_wilayah.id_kegiatan_wilayah, master_kabupaten.nama_kabupaten')
@@ -348,29 +349,29 @@ class DashboardController extends Controller
     public function getKurvaKabupaten()
     {
         $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
-        
+
         $role = session()->get('role');
         $roleType = session()->get('role_type');
         $idAdminProvinsi = session()->get('id_admin_provinsi');
-        
+
         $isSuperAdmin = ($role == 1);
         $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-        
+
         if ($isAdminProvinsi && $idWilayah) {
             $wilayahModel = new MasterKegiatanWilayahModel();
             $wilayah = $wilayahModel->find($idWilayah);
-            
+
             if ($wilayah) {
                 $prosesModel = new MasterKegiatanDetailProsesModel();
                 $proses = $prosesModel->find($wilayah['id_kegiatan_detail_proses']);
-                
+
                 if ($proses) {
                     $adminModel = new MasterKegiatanDetailAdminModel();
                     $hasAccess = $adminModel
                         ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
                         ->where('id_admin_provinsi', $idAdminProvinsi)
                         ->first();
-                    
+
                     if (!$hasAccess) {
                         return $this->response->setJSON([
                             'labels' => [],
@@ -382,7 +383,7 @@ class DashboardController extends Controller
                 }
             }
         }
-        
+
         $model = new KurvaSkabModel();
         $records = $model
             ->where('id_kegiatan_wilayah', $idWilayah)
@@ -445,24 +446,33 @@ class DashboardController extends Controller
     {
         $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
         $idProses = $this->request->getGet('id_kegiatan_detail_proses');
+        $page = $this->request->getGet('page') ?? 1;
+        $perPage = $this->request->getGet('perPage') ?? 10;
+        $search = $this->request->getGet('search') ?? '';
         $idAdminProvinsi = session()->get('id_admin_provinsi');
 
         // Validasi akses
         if ($idProses) {
             $prosesModel = new MasterKegiatanDetailProsesModel();
             $proses = $prosesModel->find($idProses);
-            
+
             if ($proses) {
-                $adminModel = new MasterKegiatanDetailAdminModel();
+                $adminModel = new \App\Models\MasterKegiatanDetailAdminModel();
                 $hasAccess = $adminModel
                     ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
                     ->where('id_admin_provinsi', $idAdminProvinsi)
                     ->first();
-                
+
                 if (!$hasAccess) {
                     return $this->response->setJSON([
                         'success' => true,
-                        'data' => []
+                        'data' => [],
+                        'pagination' => [
+                            'total' => 0,
+                            'per_page' => $perPage,
+                            'current_page' => 1,
+                            'total_pages' => 0
+                        ]
                     ]);
                 }
             }
@@ -471,18 +481,30 @@ class DashboardController extends Controller
         if (!$idProses) {
             return $this->response->setJSON([
                 'success' => true,
-                'data' => []
+                'data' => [],
+                'pagination' => [
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => 1,
+                    'total_pages' => 0
+                ]
             ]);
         }
 
-        // Get detail kegiatan untuk cek tanggal mulai dan selesai
+        // Get detail kegiatan untuk cek tanggal
         $prosesModel = new MasterKegiatanDetailProsesModel();
         $detailProses = $prosesModel->find($idProses);
 
         if (!$detailProses) {
             return $this->response->setJSON([
                 'success' => true,
-                'data' => []
+                'data' => [],
+                'pagination' => [
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => 1,
+                    'total_pages' => 0
+                ]
             ]);
         }
 
@@ -498,62 +520,81 @@ class DashboardController extends Controller
             $statusKegiatanGlobal = 'Selesai';
         }
 
+        // Build query dasar
+        $baseQuery = "
+        SELECT 
+            u.nama_user,
+            u.sobat_id,
+            pcl.id_pcl,
+            mk.nama_kabupaten,
+            pcl.target,
+            COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi_total,
+            'PCL' as role
+        FROM pcl
+        JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
+        JOIN pml ON pcl.id_pml = pml.id_pml
+        JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+        JOIN master_kabupaten mk ON kw.id_kabupaten = mk.id_kabupaten
+        LEFT JOIN pantau_progress pp ON pp.id_pcl = pcl.id_pcl
+    ";
+
+        // Where conditions
+        $whereConditions = [];
+        $params = [];
+
         if (!$idWilayah || $idWilayah == 'all') {
-            $petugas = $this->db->query("
-                SELECT 
-                    u.nama_user,
-                    u.sobat_id,
-                    pcl.id_pcl,
-                    mk.nama_kabupaten,
-                    pcl.target,
-                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi_total,
-                    'PCL' as role
-                FROM pcl
-                JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
-                JOIN pml ON pcl.id_pml = pml.id_pml
-                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
-                JOIN master_kabupaten mk ON kw.id_kabupaten = mk.id_kabupaten
-                LEFT JOIN pantau_progress pp ON pp.id_pcl = pcl.id_pcl
-                WHERE kw.id_kegiatan_detail_proses = ?
-                GROUP BY pcl.id_pcl, u.nama_user, u.sobat_id, mk.nama_kabupaten, pcl.target
-                ORDER BY mk.nama_kabupaten, u.nama_user
-            ", [$idProses])->getResultArray();
+            $whereConditions[] = "kw.id_kegiatan_detail_proses = ?";
+            $params[] = $idProses;
         } else {
-            $petugas = $this->db->query("
-                SELECT 
-                    u.nama_user,
-                    u.sobat_id,
-                    pcl.id_pcl,
-                    mk.nama_kabupaten,
-                    pcl.target,
-                    COALESCE(MAX(pp.jumlah_realisasi_kumulatif), 0) as realisasi_total,
-                    'PCL' as role
-                FROM pcl
-                JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
-                JOIN pml ON pcl.id_pml = pml.id_pml
-                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
-                JOIN master_kabupaten mk ON kw.id_kabupaten = mk.id_kabupaten
-                LEFT JOIN pantau_progress pp ON pp.id_pcl = pcl.id_pcl
-                WHERE kw.id_kegiatan_wilayah = ?
-                GROUP BY pcl.id_pcl, u.nama_user, u.sobat_id, mk.nama_kabupaten, pcl.target
-                ORDER BY u.nama_user
-            ", [$idWilayah])->getResultArray();
+            $whereConditions[] = "kw.id_kegiatan_wilayah = ?";
+            $params[] = $idWilayah;
         }
+
+        // Search filter
+        if (!empty($search)) {
+            $whereConditions[] = "(u.nama_user LIKE ? OR u.sobat_id LIKE ?)";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+        }
+
+        $whereClause = !empty($whereConditions) ? "WHERE " . implode(" AND ", $whereConditions) : "";
+
+        // Count total records
+        $countQuery = "
+        SELECT COUNT(DISTINCT pcl.id_pcl) as total
+        FROM pcl
+        JOIN sipantau_user u ON pcl.sobat_id = u.sobat_id
+        JOIN pml ON pcl.id_pml = pml.id_pml
+        JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+        JOIN master_kabupaten mk ON kw.id_kabupaten = mk.id_kabupaten
+        {$whereClause}
+    ";
+
+        $totalRecords = $this->db->query($countQuery, $params)->getRowArray()['total'] ?? 0;
+        $totalPages = ceil($totalRecords / $perPage);
+        $offset = ($page - 1) * $perPage;
+
+        // Get paginated data
+        $query = "{$baseQuery}
+        {$whereClause}
+        GROUP BY pcl.id_pcl, u.nama_user, u.sobat_id, mk.nama_kabupaten, pcl.target
+        ORDER BY " . ($idWilayah == 'all' ? 'mk.nama_kabupaten, u.nama_user' : 'u.nama_user') . "
+        LIMIT {$perPage} OFFSET {$offset}
+    ";
+
+        $petugas = $this->db->query($query, $params)->getResultArray();
 
         // Process setiap petugas
         foreach ($petugas as &$p) {
-            $target = (int)$p['target'];
-            $realisasiTotal = (int)$p['realisasi_total'];
+            $target = (int) $p['target'];
+            $realisasiTotal = (int) $p['realisasi_total'];
 
-            // Hitung progress keseluruhan
             $progress = $target > 0 ? round(($realisasiTotal / $target) * 100, 0) : 0;
             $p['progress'] = min(100, $progress);
 
-            // Set status kegiatan (sama dengan global)
             $p['status_kegiatan'] = $statusKegiatanGlobal;
             $p['status_kegiatan_class'] = $this->getStatusKegiatanClass($statusKegiatanGlobal);
 
-            // Cek status harian
             $statusHarian = $this->getStatusHarian(
                 $p['id_pcl'],
                 $statusKegiatanGlobal,
@@ -569,7 +610,13 @@ class DashboardController extends Controller
 
         return $this->response->setJSON([
             'success' => true,
-            'data' => $petugas
+            'data' => $petugas,
+            'pagination' => [
+                'total' => $totalRecords,
+                'per_page' => (int) $perPage,
+                'current_page' => (int) $page,
+                'total_pages' => $totalPages
+            ]
         ]);
     }
 
@@ -620,7 +667,7 @@ class DashboardController extends Controller
             AND is_hari_kerja = 1
         ", [$idPCL, $today])->getRowArray();
 
-        $targetHarianValue = $targetHarian ? (int)$targetHarian['target_harian_absolut'] : 0;
+        $targetHarianValue = $targetHarian ? (int) $targetHarian['target_harian_absolut'] : 0;
 
         // Jika belum lapor
         if (!$laporanHariIni) {
@@ -632,7 +679,7 @@ class DashboardController extends Controller
             ];
         }
 
-        $realisasiHariIni = (int)$laporanHariIni['jumlah_realisasi_absolut'];
+        $realisasiHariIni = (int) $laporanHariIni['jumlah_realisasi_absolut'];
 
         // Jika tidak ada target harian (hari libur atau belum ada kurva)
         if ($targetHarianValue === 0) {
@@ -669,121 +716,173 @@ class DashboardController extends Controller
         }
     }
 
-// ======================================================
+    // ======================================================
 // GET KURVA S WITH REALISASI
 // ======================================================
-public function getKurvaSWithRealisasi()
-{
-    $idProses = $this->request->getGet('id_kegiatan_detail_proses');
-    $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
-    
-    $role = session()->get('role');
-    $roleType = session()->get('role_type');
-    $idAdminProvinsi = session()->get('id_admin_provinsi');
-    
-    $isSuperAdmin = ($role == 1);
-    $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
-    
-    if (!$idProses) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'ID Proses tidak valid'
-        ]);
-    }
-    
-    // Validasi akses untuk Admin Provinsi
-    if ($isAdminProvinsi) {
-        $prosesModel = new MasterKegiatanDetailProsesModel();
-        $proses = $prosesModel->find($idProses);
-        
-        if ($proses) {
-            $adminModel = new MasterKegiatanDetailAdminModel();
-            $hasAccess = $adminModel
-                ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
-                ->where('id_admin_provinsi', $idAdminProvinsi)
-                ->first();
-            
-            if (!$hasAccess) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki akses ke kegiatan ini'
-                ]);
+    public function getKurvaSWithRealisasi()
+    {
+        $idProses = $this->request->getGet('id_kegiatan_detail_proses');
+        $idWilayah = $this->request->getGet('id_kegiatan_wilayah');
+
+        $role = session()->get('role');
+        $roleType = session()->get('role_type');
+        $idAdminProvinsi = session()->get('id_admin_provinsi');
+
+        $isSuperAdmin = ($role == 1);
+        $isAdminProvinsi = ($role == 2 && $roleType == 'admin_provinsi' && $idAdminProvinsi);
+
+        if (!$idProses) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ID Proses tidak valid'
+            ]);
+        }
+
+        // Validasi akses untuk Admin Provinsi
+        if ($isAdminProvinsi) {
+            $prosesModel = new MasterKegiatanDetailProsesModel();
+            $proses = $prosesModel->find($idProses);
+
+            if ($proses) {
+                $adminModel = new MasterKegiatanDetailAdminModel();
+                $hasAccess = $adminModel
+                    ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
+                    ->where('id_admin_provinsi', $idAdminProvinsi)
+                    ->first();
+
+                if (!$hasAccess) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Anda tidak memiliki akses ke kegiatan ini'
+                    ]);
+                }
             }
         }
-    }
-    
-    // Get detail proses untuk config
-    $prosesModel = new MasterKegiatanDetailProsesModel();
-    $detailProses = $prosesModel->find($idProses);
-    
-    if (!$detailProses) {
+
+        // Get detail proses untuk config
+        $prosesModel = new MasterKegiatanDetailProsesModel();
+        $detailProses = $prosesModel->find($idProses);
+
+        if (!$detailProses) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Data proses tidak ditemukan'
+            ]);
+        }
+
+        // Get data kurva target dari kurva_s_provinsi atau kurva_s_kab
+        if ($idWilayah) {
+            // Jika filter kabupaten dipilih, ambil dari kurva_s_kab
+            $kurvaTarget = $this->db->table('kurva_kabupaten')
+                ->where('id_kegiatan_wilayah', $idWilayah)
+                ->orderBy('tanggal_target', 'ASC')
+                ->get()
+                ->getResultArray();
+        } else {
+            // Jika tidak ada filter kabupaten, ambil dari kurva_s_provinsi
+            $kurvaTarget = $this->db->table('kurva_provinsi')
+                ->where('id_kegiatan_detail_proses', $idProses)
+                ->orderBy('tanggal_target', 'ASC')
+                ->get()
+                ->getResultArray();
+        }
+
+        // Get data realisasi
+        $realisasiData = $this->getRealisasiDataForChart($idProses, $idWilayah);
+
+        // Format data untuk chart
+        $chartData = $this->formatKurvaDataWithRealisasi($kurvaTarget, $realisasiData, $detailProses);
+
         return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Data proses tidak ditemukan'
+            'success' => true,
+            'data' => $chartData
         ]);
     }
-    
-    // Get data kurva target dari kurva_s_provinsi atau kurva_s_kab
-    if ($idWilayah) {
-        // Jika filter kabupaten dipilih, ambil dari kurva_s_kab
-        $kurvaTarget = $this->db->table('kurva_kabupaten')
-            ->where('id_kegiatan_wilayah', $idWilayah)
-            ->orderBy('tanggal_target', 'ASC')
-            ->get()
-            ->getResultArray();
-    } else {
-        // Jika tidak ada filter kabupaten, ambil dari kurva_s_provinsi
-        $kurvaTarget = $this->db->table('kurva_provinsi')
-            ->where('id_kegiatan_detail_proses', $idProses)
-            ->orderBy('tanggal_target', 'ASC')
-            ->get()
-            ->getResultArray();
-    }
-    
-    // Get data realisasi
-    $realisasiData = $this->getRealisasiDataForChart($idProses, $idWilayah);
-    
-    // Format data untuk chart
-    $chartData = $this->formatKurvaDataWithRealisasi($kurvaTarget, $realisasiData, $detailProses);
-    
-    return $this->response->setJSON([
-        'success' => true,
-        'data' => $chartData
-    ]);
-}
 
-// ======================================================
+    // ======================================================
 // GET REALISASI DATA FOR CHART
 // ======================================================
-private function getRealisasiDataForChart($idProses, $idWilayah = null)
-{
-    $builder = $this->db->table('pantau_progress pp')
-        ->select('DATE(pp.created_at) as tanggal, MAX(pp.jumlah_realisasi_kumulatif) as realisasi_kumulatif')
-        ->join('pcl', 'pp.id_pcl = pcl.id_pcl')
-        ->join('pml', 'pcl.id_pml = pml.id_pml')
-        ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
-        ->where('kw.id_kegiatan_detail_proses', $idProses);
+    private function getRealisasiDataForChart($idProses, $idWilayah = null)
+    {
+        $builder = $this->db->table('pantau_progress pp')
+            ->select('DATE(pp.created_at) as tanggal, MAX(pp.jumlah_realisasi_kumulatif) as realisasi_kumulatif')
+            ->join('pcl', 'pp.id_pcl = pcl.id_pcl')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->where('kw.id_kegiatan_detail_proses', $idProses);
 
-    if ($idWilayah) {
-        $builder->where('kw.id_kegiatan_wilayah', $idWilayah);
-    }
+        if ($idWilayah) {
+            $builder->where('kw.id_kegiatan_wilayah', $idWilayah);
+        }
 
-    $builder->groupBy('DATE(pp.created_at)')
+        $builder->groupBy('DATE(pp.created_at)')
             ->orderBy('DATE(pp.created_at)', 'ASC');
 
-    return $builder->get()->getResultArray();
-}
+        return $builder->get()->getResultArray();
+    }
 
-// ======================================================
+    // ======================================================
 // FORMAT KURVA DATA WITH REALISASI
 // ======================================================
-private function formatKurvaDataWithRealisasi($kurvaTarget, $realisasiData, $detailProses)
-{
-    if (empty($kurvaTarget)) {
+    private function formatKurvaDataWithRealisasi($kurvaTarget, $realisasiData, $detailProses)
+    {
+        if (empty($kurvaTarget)) {
+            return [
+                'labels' => [],
+                'target' => [],
+                'realisasi' => [],
+                'config' => [
+                    'nama' => $detailProses['nama_kegiatan_detail_proses'],
+                    'tanggal_mulai' => date('d', strtotime($detailProses['tanggal_mulai'])),
+                    'tanggal_selesai' => date('d', strtotime($detailProses['tanggal_selesai']))
+                ]
+            ];
+        }
+
+        // Build realisasi lookup (tanggal => realisasi kumulatif)
+        $realisasiLookup = [];
+        foreach ($realisasiData as $item) {
+            $realisasiLookup[$item['tanggal']] = (int) $item['realisasi_kumulatif'];
+        }
+
+        // Remove duplicate dates, keep the last entry
+        $unique = [];
+        foreach ($kurvaTarget as $row) {
+            $tgl = $row['tanggal_target'];
+            $unique[$tgl] = $row;
+        }
+        ksort($unique);
+
+        $labels = [];
+        $targetData = [];
+        $realisasiDataFormatted = [];
+
+        // Track last known realisasi untuk fill gaps
+        $lastRealisasi = 0;
+
+        foreach ($unique as $tanggal => $row) {
+            $labels[] = date('d M', strtotime($tanggal));
+            $targetData[] = (int) $row['target_kumulatif_absolut'];
+
+            // Cek apakah ada realisasi di tanggal ini
+            if (isset($realisasiLookup[$tanggal])) {
+                $lastRealisasi = $realisasiLookup[$tanggal];
+            }
+
+            $realisasiDataFormatted[] = $lastRealisasi;
+        }
+
+        // Ensure monotonic increase for target
+        for ($i = 1; $i < count($targetData); $i++) {
+            if ($targetData[$i] < $targetData[$i - 1]) {
+                $targetData[$i] = $targetData[$i - 1];
+            }
+        }
+
         return [
-            'labels' => [],
-            'target' => [],
-            'realisasi' => [],
+            'labels' => array_values($labels),
+            'target' => array_values($targetData),
+            'realisasi' => array_values($realisasiDataFormatted),
             'config' => [
                 'nama' => $detailProses['nama_kegiatan_detail_proses'],
                 'tanggal_mulai' => date('d', strtotime($detailProses['tanggal_mulai'])),
@@ -792,55 +891,109 @@ private function formatKurvaDataWithRealisasi($kurvaTarget, $realisasiData, $det
         ];
     }
 
-    // Build realisasi lookup (tanggal => realisasi kumulatif)
-    $realisasiLookup = [];
-    foreach ($realisasiData as $item) {
-        $realisasiLookup[$item['tanggal']] = (int)$item['realisasi_kumulatif'];
-    }
+    public function getKepatuhanData()
+    {
+        try {
+            // Get parameters
+            $idKegiatanDetailProses = $this->request->getGet('id_kegiatan_detail_proses');
+            $idKegiatanWilayah = $this->request->getGet('id_kegiatan_wilayah') ?? 'all';
+            $idAdminProvinsi = session()->get('id_admin_provinsi');
 
-    // Remove duplicate dates, keep the last entry
-    $unique = [];
-    foreach ($kurvaTarget as $row) {
-        $tgl = $row['tanggal_target'];
-        $unique[$tgl] = $row;
-    }
-    ksort($unique);
+            // Validation
+            if (!$idKegiatanDetailProses) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'ID Kegiatan Detail Proses diperlukan'
+                ]);
+            }
 
-    $labels = [];
-    $targetData = [];
-    $realisasiDataFormatted = [];
-    
-    // Track last known realisasi untuk fill gaps
-    $lastRealisasi = 0;
+            // Validasi akses admin provinsi ke kegiatan ini
+            $prosesModel = new MasterKegiatanDetailProsesModel();
+            $proses = $prosesModel->find($idKegiatanDetailProses);
 
-    foreach ($unique as $tanggal => $row) {
-        $labels[] = date('d M', strtotime($tanggal));
-        $targetData[] = (int)$row['target_kumulatif_absolut'];
+            if ($proses) {
+                $adminModel = new \App\Models\MasterKegiatanDetailAdminModel();
+                $hasAccess = $adminModel
+                    ->where('id_kegiatan_detail', $proses['id_kegiatan_detail'])
+                    ->where('id_admin_provinsi', $idAdminProvinsi)
+                    ->first();
 
-        // Cek apakah ada realisasi di tanggal ini
-        if (isset($realisasiLookup[$tanggal])) {
-            $lastRealisasi = $realisasiLookup[$tanggal];
+                if (!$hasAccess) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Anda tidak memiliki akses ke kegiatan ini'
+                    ]);
+                }
+            }
+
+            $kepatuhanModel = new \App\Models\KepatuhanModel();
+
+            // 1. Get Statistik
+            $stats = $kepatuhanModel->getStatistikKepatuhan(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah
+            );
+
+            // 2. Get Chart Data
+            $chartData = [];
+            $chartType = 'line';
+
+            if ($idKegiatanWilayah === 'all') {
+                // Bar chart untuk perbandingan antar kabupaten
+                $chartData = $kepatuhanModel->getKepatuhanPerKabupaten(
+                    $idKegiatanDetailProses
+                );
+                $chartType = 'bar';
+            } else {
+                // Line chart untuk trend harian satu wilayah
+                $kegiatanWilayah = $this->db->table('kegiatan_wilayah')
+                    ->select('id_kabupaten')
+                    ->where('id_kegiatan_wilayah', $idKegiatanWilayah)
+                    ->get()
+                    ->getRowArray();
+
+                if ($kegiatanWilayah) {
+                    $chartData = $kepatuhanModel->getTrendKepatuhanHarian(
+                        $idKegiatanDetailProses,
+                        $kegiatanWilayah['id_kabupaten']
+                    );
+                }
+                $chartType = 'line';
+            }
+
+            // 3. Get Leaderboard
+            $leaderboard = $kepatuhanModel->getLeaderboardKepatuhan(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah,
+                10
+            );
+
+            // 4. Get Petugas Tidak Patuh
+            $tidakPatuh = $kepatuhanModel->getPetugasTidakPatuh(
+                $idKegiatanDetailProses,
+                $idKegiatanWilayah
+            );
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [
+                    'stats' => $stats,
+                    'chart' => [
+                        'type' => $chartType,
+                        'data' => $chartData
+                    ],
+                    'leaderboard' => $leaderboard,
+                    'tidak_patuh' => $tidakPatuh
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error in getKepatuhanData: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
         }
-        
-        $realisasiDataFormatted[] = $lastRealisasi;
     }
-
-    // Ensure monotonic increase for target
-    for ($i = 1; $i < count($targetData); $i++) {
-        if ($targetData[$i] < $targetData[$i - 1]) {
-            $targetData[$i] = $targetData[$i - 1];
-        }
-    }
-
-    return [
-        'labels' => array_values($labels),
-        'target' => array_values($targetData),
-        'realisasi' => array_values($realisasiDataFormatted),
-        'config' => [
-            'nama' => $detailProses['nama_kegiatan_detail_proses'],
-            'tanggal_mulai' => date('d', strtotime($detailProses['tanggal_mulai'])),
-            'tanggal_selesai' => date('d', strtotime($detailProses['tanggal_selesai']))
-        ]
-    ];
-}
 }

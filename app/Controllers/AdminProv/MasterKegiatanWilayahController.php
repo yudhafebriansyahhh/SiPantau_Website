@@ -71,43 +71,59 @@ class MasterKegiatanWilayahController extends BaseController
             session()->set('kegiatan_wilayah_filter_kabupaten', $filterKabupaten);
         }
 
-        // Build query dengan progress
-        $builder = $this->db->table('kegiatan_wilayah kw')
-            ->select('kw.*, mkdp.nama_kegiatan_detail_proses, mkdp.target as target_proses, 
-                      mkdp.tanggal_mulai, mkdp.tanggal_selesai, mk.nama_kabupaten,
-                      mkd.nama_kegiatan_detail, mkg.nama_kegiatan, mkdp.id_kegiatan_detail')
-            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
-            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
-            ->join('master_kegiatan mkg', 'mkd.id_kegiatan = mkg.id_kegiatan')
-            ->join('master_kabupaten mk', 'kw.id_kabupaten = mk.id_kabupaten');
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // Build query untuk pagination
+        $builder = $this->masterKegiatanWilayahModel
+            ->select('kegiatan_wilayah.*, 
+              master_kegiatan_detail_proses.nama_kegiatan_detail_proses, 
+              master_kegiatan_detail_proses.target as target_proses,
+              master_kegiatan_detail_proses.tanggal_mulai, 
+              master_kegiatan_detail_proses.tanggal_selesai,
+              master_kabupaten.nama_kabupaten,
+              master_kegiatan_detail.nama_kegiatan_detail,
+              master_kegiatan.nama_kegiatan,
+              master_kegiatan_detail_proses.id_kegiatan_detail')
+            ->join('master_kegiatan_detail_proses', 'kegiatan_wilayah.id_kegiatan_detail_proses = master_kegiatan_detail_proses.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail', 'master_kegiatan_detail_proses.id_kegiatan_detail = master_kegiatan_detail.id_kegiatan_detail')
+            ->join('master_kegiatan', 'master_kegiatan_detail.id_kegiatan = master_kegiatan.id_kegiatan')
+            ->join('master_kabupaten', 'kegiatan_wilayah.id_kabupaten = master_kabupaten.id_kabupaten');
 
         // Filter berdasarkan assignment untuk Admin Provinsi
         if ($isAdminProvinsi) {
-            $builder->join('master_kegiatan_detail_admin mkda', 'mkda.id_kegiatan_detail = mkdp.id_kegiatan_detail')
-                ->where('mkda.id_admin_provinsi', $idAdminProvinsi);
+            $builder->join('master_kegiatan_detail_admin', 'master_kegiatan_detail_admin.id_kegiatan_detail = master_kegiatan_detail_proses.id_kegiatan_detail')
+                ->where('master_kegiatan_detail_admin.id_admin_provinsi', $idAdminProvinsi);
         }
-
-        $builder->orderBy('mkd.nama_kegiatan_detail', 'ASC')
-            ->orderBy('mk.nama_kabupaten', 'ASC');
 
         // Apply filters
         if (!empty($filterKegiatan)) {
-            $builder->where('mkdp.id_kegiatan_detail', $filterKegiatan);
+            $builder->where('master_kegiatan_detail_proses.id_kegiatan_detail', $filterKegiatan);
         }
 
         if (!empty($filterProses)) {
-            $builder->where('kw.id_kegiatan_detail_proses', $filterProses);
+            $builder->where('kegiatan_wilayah.id_kegiatan_detail_proses', $filterProses);
         }
 
         if (!empty($filterKabupaten)) {
-            $builder->where('kw.id_kabupaten', $filterKabupaten);
+            $builder->where('kegiatan_wilayah.id_kabupaten', $filterKabupaten);
         }
 
-        $kegiatanWilayah = $builder->get()->getResultArray();
+        $builder->orderBy('master_kegiatan_detail.nama_kegiatan_detail', 'ASC')
+            ->orderBy('master_kabupaten.nama_kabupaten', 'ASC');
+
+        // Paginate
+        $kegiatanWilayah = $builder->paginate($perPage, 'kegiatan_wilayah');
 
         // Calculate progress for each kegiatan wilayah
         foreach ($kegiatanWilayah as &$kw) {
-            $targetWilayah = (int)$kw['target_wilayah'];
+            $targetWilayah = (int) $kw['target_wilayah'];
 
             $realisasi = $this->db->table('pantau_progress pp')
                 ->select('COALESCE(SUM(pp.jumlah_realisasi_kumulatif), 0) as total_realisasi', false)
@@ -120,7 +136,7 @@ class MasterKegiatanWilayahController extends BaseController
 
             $totalRealisasi = 0;
             foreach ($realisasi as $item) {
-                $totalRealisasi += (int)$item['total_realisasi'];
+                $totalRealisasi += (int) $item['total_realisasi'];
             }
 
             if ($targetWilayah > 0) {
@@ -191,7 +207,9 @@ class MasterKegiatanWilayahController extends BaseController
             'filterKegiatan' => $filterKegiatan,
             'filterProses' => $filterProses,
             'filterKabupaten' => $filterKabupaten,
-            'isSuperAdmin' => $isSuperAdmin
+            'isSuperAdmin' => $isSuperAdmin,
+            'perPage' => $perPage,
+            'pager' => $this->masterKegiatanWilayahModel->pager,
         ];
         return view('AdminSurveiProv/MasterKegiatanWilayah/index', $data);
     }
@@ -215,9 +233,9 @@ class MasterKegiatanWilayahController extends BaseController
 
         $rules = [
             'kegiatan_detail' => 'required|numeric',
-            'kabupaten'       => 'required|numeric',
-            'target'          => 'required|numeric',
-            'keterangan'      => 'required|string|max_length[255]'
+            'kabupaten' => 'required|numeric',
+            'target' => 'required|numeric',
+            'keterangan' => 'required|string|max_length[255]'
         ];
 
         if (!$this->validate($rules)) {
@@ -229,7 +247,7 @@ class MasterKegiatanWilayahController extends BaseController
 
         $idDetailProses = $this->request->getPost('kegiatan_detail');
         $idKabupaten = $this->request->getPost('kabupaten');
-        $targetWilayah = (int)$this->request->getPost('target');
+        $targetWilayah = (int) $this->request->getPost('target');
         $keterangan = $this->request->getPost('keterangan');
 
         // Validasi untuk Admin Provinsi: Pastikan kegiatan detail proses ini accessible
@@ -274,7 +292,7 @@ class MasterKegiatanWilayahController extends BaseController
             ]);
         }
 
-        $targetProv = (int)$detailProses['target'];
+        $targetProv = (int) $detailProses['target'];
         $tanggalMulai = $detailProses['tanggal_mulai'];
         $tanggalSelesai = $detailProses['tanggal_selesai'];
         $tanggal100 = $detailProses['tanggal_selesai_target'] ?? $tanggalSelesai;
@@ -297,10 +315,10 @@ class MasterKegiatanWilayahController extends BaseController
 
         $this->masterKegiatanWilayahModel->insert([
             'id_kegiatan_detail_proses' => $idDetailProses,
-            'id_kabupaten'              => $idKabupaten,
-            'target_wilayah'            => $targetWilayah,
-            'keterangan'                => $keterangan,
-            'status'                    => 'Aktif'
+            'id_kabupaten' => $idKabupaten,
+            'target_wilayah' => $targetWilayah,
+            'keterangan' => $keterangan,
+            'status' => 'Aktif'
         ]);
 
         $idWilayah = $this->masterKegiatanWilayahModel->getInsertID();
@@ -375,9 +393,9 @@ class MasterKegiatanWilayahController extends BaseController
 
         $rules = [
             'kegiatan_detail' => 'required|numeric',
-            'kabupaten'       => 'required|numeric',
-            'target'          => 'required|numeric',
-            'keterangan'      => 'required|string|max_length[255]'
+            'kabupaten' => 'required|numeric',
+            'target' => 'required|numeric',
+            'keterangan' => 'required|string|max_length[255]'
         ];
 
         if (!$this->validate($rules)) {
@@ -397,7 +415,7 @@ class MasterKegiatanWilayahController extends BaseController
 
         $idDetailProses = $this->request->getPost('kegiatan_detail');
         $idKabupaten = $this->request->getPost('kabupaten');
-        $targetWilayah = (int)$this->request->getPost('target');
+        $targetWilayah = (int) $this->request->getPost('target');
         $keterangan = $this->request->getPost('keterangan');
 
         // Validasi untuk Admin Provinsi: Pastikan kegiatan detail proses ini accessible
@@ -443,7 +461,7 @@ class MasterKegiatanWilayahController extends BaseController
             ]);
         }
 
-        $targetProv = (int)$detailProses['target'];
+        $targetProv = (int) $detailProses['target'];
         $tanggalMulai = $detailProses['tanggal_mulai'];
         $tanggalSelesai = $detailProses['tanggal_selesai'];
         $tanggal100 = $detailProses['tanggal_selesai_target'] ?? $tanggalSelesai;
@@ -468,10 +486,10 @@ class MasterKegiatanWilayahController extends BaseController
         // Update data
         $this->masterKegiatanWilayahModel->update($id, [
             'id_kegiatan_detail_proses' => $idDetailProses,
-            'id_kabupaten'              => $idKabupaten,
-            'target_wilayah'            => $targetWilayah,
-            'keterangan'                => $keterangan,
-            'updated_at'                => date('Y-m-d H:i:s')
+            'id_kabupaten' => $idKabupaten,
+            'target_wilayah' => $targetWilayah,
+            'keterangan' => $keterangan,
+            'updated_at' => date('Y-m-d H:i:s')
         ]);
 
         // Regenerate kurva S
@@ -544,12 +562,12 @@ class MasterKegiatanWilayahController extends BaseController
         $kurvaModel = new KurvaSkabModel();
         $kurvaModel->where('id_kegiatan_wilayah', $idWilayah)->delete();
 
-        $totalTarget = (int)$target;
-        $persenAwal  = (float)$persenAwal;
+        $totalTarget = (int) $target;
+        $persenAwal = (float) $persenAwal;
 
-        $start   = new DateTime($tanggalMulai);
-        $tgl100  = new DateTime($tanggal100);
-        $end     = new DateTime($tanggalSelesai);
+        $start = new DateTime($tanggalMulai);
+        $tgl100 = new DateTime($tanggal100);
+        $end = new DateTime($tanggalSelesai);
         $end->modify('+1 day');
 
         $interval = new DateInterval('P1D');
@@ -632,8 +650,8 @@ class MasterKegiatanWilayahController extends BaseController
 
         return $this->response->setJSON([
             'target_prov' => $targetProv,
-            'terpakai'    => $terpakai,
-            'sisa'        => $sisa
+            'terpakai' => $terpakai,
+            'sisa' => $sisa
         ]);
     }
 
@@ -694,7 +712,7 @@ class MasterKegiatanWilayahController extends BaseController
 
         // Get nama kegiatan detail
         $kegiatanDetail = $this->masterDetailModel->find($detailProses['id_kegiatan_detail']);
-        
+
         // Get kabupaten yang belum di-assign
         $assignedKabupaten = $this->masterKegiatanWilayahModel
             ->where('id_kegiatan_detail_proses', $idKegiatanDetailProses)
@@ -707,8 +725,8 @@ class MasterKegiatanWilayahController extends BaseController
         $availableKabupaten = $builder->findAll();
 
         // Hitung sisa target
-        $targetProv = (int)$detailProses['target'];
-        $terpakai = (int)$this->masterKegiatanWilayahModel
+        $targetProv = (int) $detailProses['target'];
+        $terpakai = (int) $this->masterKegiatanWilayahModel
             ->where('id_kegiatan_detail_proses', $idKegiatanDetailProses)
             ->selectSum('target_wilayah')
             ->get()
@@ -734,20 +752,20 @@ class MasterKegiatanWilayahController extends BaseController
         $sheet1->setCellValue('B1', $kegiatanDetail['nama_kegiatan_detail'] ?? '-');
         $sheet1->mergeCells('B1:D1');
         $sheet1->getStyle('A1')->getFont()->setBold(true);
-        
+
         $sheet1->setCellValue('A2', 'Kegiatan Detail Proses:');
         $sheet1->setCellValue('B2', $detailProses['nama_kegiatan_detail_proses']);
         $sheet1->mergeCells('B2:D2');
         $sheet1->getStyle('A2')->getFont()->setBold(true);
-        
+
         $sheet1->setCellValue('A3', 'Target Provinsi:');
         $sheet1->setCellValue('B3', number_format($targetProv));
         $sheet1->getStyle('A3')->getFont()->setBold(true);
-        
+
         $sheet1->setCellValue('A4', 'Target Terpakai:');
         $sheet1->setCellValue('B4', number_format($terpakai));
         $sheet1->getStyle('A4')->getFont()->setBold(true);
-        
+
         $sheet1->setCellValue('A5', 'Sisa Target:');
         $sheet1->setCellValue('B5', number_format($sisaTarget));
         $sheet1->getStyle('A5')->getFont()->setBold(true);
@@ -791,17 +809,17 @@ class MasterKegiatanWilayahController extends BaseController
         // Add formula for total di baris terakhir + 2
         $lastDataRow = $row - 1;
         $totalRow = $lastDataRow + 2;
-        
+
         $sheet1->setCellValue("A{$totalRow}", 'TOTAL TARGET:');
         $sheet1->mergeCells("A{$totalRow}:B{$totalRow}");
         $sheet1->getStyle("A{$totalRow}")->getFont()->setBold(true);
         $sheet1->getStyle("A{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        
+
         // Formula SUM untuk total
         $sheet1->setCellValue("C{$totalRow}", "=SUM(C8:C{$lastDataRow})");
         $sheet1->getStyle("C{$totalRow}")->getFont()->setBold(true);
         $sheet1->getStyle("C{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
-        
+
         // Sisa target
         $sisaRow = $totalRow + 1;
         $sheet1->setCellValue("A{$sisaRow}", 'SISA TARGET:');
@@ -847,18 +865,18 @@ class MasterKegiatanWilayahController extends BaseController
 
         $sheet2->setCellValue('A10', 'INFORMASI KEGIATAN:');
         $sheet2->getStyle('A10')->getFont()->setBold(true);
-        
+
         $sheet2->setCellValue('A11', 'Kegiatan Detail:');
         $sheet2->setCellValue('B11', $kegiatanDetail['nama_kegiatan_detail'] ?? '-');
         $sheet2->mergeCells('B11:D11');
-        
+
         $sheet2->setCellValue('A12', 'Kegiatan Detail Proses:');
         $sheet2->setCellValue('B12', $detailProses['nama_kegiatan_detail_proses']);
         $sheet2->mergeCells('B12:D12');
-        
+
         $sheet2->setCellValue('A13', 'Target Provinsi:');
         $sheet2->setCellValue('B13', number_format($targetProv));
-        
+
         $sheet2->setCellValue('A14', 'Sisa Target Tersedia:');
         $sheet2->setCellValue('B14', number_format($sisaTarget));
         $sheet2->getStyle('B14')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('008000'));
@@ -870,7 +888,7 @@ class MasterKegiatanWilayahController extends BaseController
         // Generate filename
         $namaKegiatan = preg_replace('/[^A-Za-z0-9_\-]/', '_', $detailProses['nama_kegiatan_detail_proses']);
         $filename = 'Template_Kegiatan_Wilayah_' . $namaKegiatan . '_' . date('YmdHis') . '.xlsx';
-        
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');
@@ -952,14 +970,14 @@ class MasterKegiatanWilayahController extends BaseController
             $data = $sheet->toArray();
 
             // Get target info
-            $targetProv = (int)$detailProses['target'];
+            $targetProv = (int) $detailProses['target'];
             $tanggalMulai = $detailProses['tanggal_mulai'];
             $tanggalSelesai = $detailProses['tanggal_selesai'];
             $tanggal100 = $detailProses['tanggal_selesai_target'] ?? $tanggalSelesai;
             $persenAwal = $detailProses['persentase_target_awal'] ?? 0;
 
             // Hitung terpakai saat ini
-            $terpakaiSebelum = (int)$this->masterKegiatanWilayahModel
+            $terpakaiSebelum = (int) $this->masterKegiatanWilayahModel
                 ->where('id_kegiatan_detail_proses', $idKegiatanDetailProses)
                 ->selectSum('target_wilayah')
                 ->get()
@@ -990,12 +1008,12 @@ class MasterKegiatanWilayahController extends BaseController
                 }
 
                 // Skip jika target kosong atau 0
-                if (empty($row[2]) || trim($row[2]) === '' || (int)$row[2] === 0) {
+                if (empty($row[2]) || trim($row[2]) === '' || (int) $row[2] === 0) {
                     continue;
                 }
 
                 $idKabupaten = trim($row[0]);
-                $targetWilayah = (int)trim($row[2]);
+                $targetWilayah = (int) trim($row[2]);
                 $keterangan = !empty($row[3]) ? trim($row[3]) : 'Import dari Excel';
 
                 // Validasi kabupaten

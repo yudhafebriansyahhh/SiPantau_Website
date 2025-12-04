@@ -40,6 +40,15 @@ class KelolaSurveiProvinsiController extends BaseController
         $search = $this->request->getGet('search') ?? '';
         $roleFilter = $this->request->getGet('role') ?? '';
 
+        // TAMBAHKAN INI - Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // TAMBAHKAN INI - Validasi perPage
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
         // Get all admin survei provinsi dengan informasi user dan kegiatan
         $builder = $this->db->table('admin_survei_provinsi asp')
             ->select('asp.id_admin_provinsi, asp.sobat_id, u.nama_user, u.email, u.hp, u.is_active, u.role, k.nama_kabupaten')
@@ -55,7 +64,15 @@ class KelolaSurveiProvinsiController extends BaseController
                 ->groupEnd();
         }
 
-        $adminList = $builder->get()->getResultArray();
+        // TAMBAHKAN INI - Get total untuk pagination
+        $total = $builder->countAllResults(false);
+
+        // TAMBAHKAN INI - Get current page dan offset
+        $page = (int) ($this->request->getGet('page_admin') ?? 1);
+        $offset = ($page - 1) * $perPage;
+
+        // UBAH INI - Tambahkan limit dan offset
+        $adminList = $builder->limit($perPage, $offset)->get()->getResultArray();
 
         // Get kegiatan untuk setiap admin
         foreach ($adminList as &$admin) {
@@ -74,11 +91,17 @@ class KelolaSurveiProvinsiController extends BaseController
             $admin['role_names'] = $this->getUserRoleNames($admin['sobat_id'], $admin['role']);
         }
 
+        // TAMBAHKAN INI - Setup pager
+        $pager = \Config\Services::pager();
+        $pager->store('admin', $page, $perPage, $total);
+
         $data = [
             'title' => 'Kelola Admin Survei Provinsi',
             'active_menu' => 'kelola-admin-surveyprov',
             'admin_list' => $adminList,
-            'search' => $search
+            'search' => $search,
+            'perPage' => $perPage,      // TAMBAHKAN INI
+            'pager' => $pager           // TAMBAHKAN INI
         ];
 
         return view('SuperAdmin/KelolaAdminSurvey/index', $data);

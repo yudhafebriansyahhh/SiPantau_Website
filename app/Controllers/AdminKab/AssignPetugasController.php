@@ -43,7 +43,7 @@ class AssignPetugasController extends BaseController
     public function index()
     {
         $sobatId = session()->get('sobat_id');
-        
+
         if (!$sobatId) {
             return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
@@ -64,9 +64,18 @@ class AssignPetugasController extends BaseController
         $idAdminKabupaten = $admin['id_admin_kabupaten'];
         $idKegiatanWilayah = $this->request->getGet('kegiatan');
 
-        // Ambil PML hanya untuk kegiatan yang di-assign ke admin ini
-        $dataPML = $this->pmlModel->getPMLByKabupatenAndAdmin($idKabupaten, $idAdminKabupaten, $idKegiatanWilayah);
-        
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        // Ambil PML dengan pagination hanya untuk kegiatan yang di-assign ke admin ini
+        $dataPML = $this->pmlModel->getPMLByKabupatenAndAdminPaginated($idKabupaten, $idAdminKabupaten, $idKegiatanWilayah, $perPage);
+
         // Ambil kegiatan list hanya yang di-assign ke admin ini
         $kegiatanList = $this->kegiatanWilayahModel->getByKabupatenAndAdmin($idKabupaten, $idAdminKabupaten);
 
@@ -76,7 +85,9 @@ class AssignPetugasController extends BaseController
             'admin' => $admin,
             'dataPML' => $dataPML,
             'kegiatanList' => $kegiatanList,
-            'selectedKegiatan' => $idKegiatanWilayah
+            'selectedKegiatan' => $idKegiatanWilayah,
+            'perPage' => $perPage,
+            'pager' => $this->pmlModel->pager,
         ];
 
         return view('AdminSurveiKab/AssignPetugasSurvei/index', $data);
@@ -86,7 +97,7 @@ class AssignPetugasController extends BaseController
     public function create()
     {
         $sobatId = session()->get('sobat_id');
-        
+
         if (!$sobatId) {
             return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
@@ -105,7 +116,7 @@ class AssignPetugasController extends BaseController
 
         $idKabupaten = $admin['id_kabupaten'];
         $idAdminKabupaten = $admin['id_admin_kabupaten'];
-        
+
         // Hanya tampilkan kegiatan yang di-assign ke admin ini
         $kegiatanList = $this->kegiatanWilayahModel->getByKabupatenAndAdmin($idKabupaten, $idAdminKabupaten);
 
@@ -218,7 +229,7 @@ class AssignPetugasController extends BaseController
         }
 
         // Validasi input
-        $pmlTarget = (int)$this->request->getPost('pml_target');
+        $pmlTarget = (int) $this->request->getPost('pml_target');
         $kegiatanSurvei = $this->request->getPost('kegiatan_survei');
         $pclData = $this->request->getPost('pcl') ?? [];
 
@@ -279,7 +290,7 @@ class AssignPetugasController extends BaseController
 
         $sobatId = session()->get('sobat_id');
         $admin = $this->adminKabModel->where('sobat_id', $sobatId)->first();
-        
+
         if (!$admin) {
             return $this->response->setJSON([
                 'success' => false,
@@ -289,7 +300,7 @@ class AssignPetugasController extends BaseController
         }
 
         $idKegiatanWilayah = $this->request->getPost('id_kegiatan_wilayah');
-        
+
         if (!$idKegiatanWilayah) {
             return $this->response->setJSON([
                 'success' => false,
@@ -311,7 +322,7 @@ class AssignPetugasController extends BaseController
         try {
             // Get kegiatan wilayah
             $kegiatanWilayah = $this->kegiatanWilayahModel->find($idKegiatanWilayah);
-            
+
             if (!$kegiatanWilayah) {
                 return $this->response->setJSON([
                     'success' => false,
@@ -322,7 +333,7 @@ class AssignPetugasController extends BaseController
 
             if (!isset($kegiatanWilayah['target_wilayah'])) {
                 log_message('error', 'Field target_wilayah tidak ditemukan. Data: ' . json_encode($kegiatanWilayah));
-                
+
                 return $this->response->setJSON([
                     'success' => false,
                     'error' => 'Field target tidak ditemukan di database. Silakan periksa struktur tabel.',
@@ -331,7 +342,7 @@ class AssignPetugasController extends BaseController
                 ]);
             }
 
-            $targetWilayah = (int)$kegiatanWilayah['target_wilayah'];
+            $targetWilayah = (int) $kegiatanWilayah['target_wilayah'];
 
             // Hitung total target PML yang sudah di-assign untuk kegiatan ini
             $totalTargetPML = $this->pmlModel->db->table('pml')
@@ -341,18 +352,18 @@ class AssignPetugasController extends BaseController
                 ->getRow()
                 ->total_target ?? 0;
 
-            $sisaTarget = $targetWilayah - (int)$totalTargetPML;
+            $sisaTarget = $targetWilayah - (int) $totalTargetPML;
 
             return $this->response->setJSON([
                 'success' => true,
                 'target_wilayah' => $targetWilayah,
-                'target_terpakai' => (int)$totalTargetPML,
+                'target_terpakai' => (int) $totalTargetPML,
                 'sisa_target' => max(0, $sisaTarget),
                 'csrf_hash' => csrf_hash()
             ]);
         } catch (\Exception $e) {
             log_message('error', 'Error getSisaTargetKegiatanWilayah: ' . $e->getMessage());
-            
+
             return $this->response->setJSON([
                 'success' => false,
                 'error' => 'Terjadi kesalahan: ' . $e->getMessage(),
@@ -379,14 +390,14 @@ class AssignPetugasController extends BaseController
 
         if (!$admin) {
             return $this->response->setJSON([
-                'success' => false, 
+                'success' => false,
                 'error' => 'Unauthorized',
                 'csrf_hash' => csrf_hash()
             ]);
         }
 
         $idKegiatanWilayah = $this->request->getPost('id_kegiatan_wilayah');
-        
+
         // Cek akses admin ke kegiatan ini
         $isAssigned = $this->kegiatanWilayahAdminModel->isAssigned($admin['id_admin_kabupaten'], $idKegiatanWilayah);
         if (!$isAssigned) {
@@ -401,7 +412,7 @@ class AssignPetugasController extends BaseController
         $users = $this->pmlModel->getAvailablePMLForKegiatan($admin['id_kabupaten'], $idKegiatanWilayah, $sobatId);
 
         return $this->response->setJSON([
-            'success' => true, 
+            'success' => true,
             'data' => $users,
             'csrf_hash' => csrf_hash()
         ]);
@@ -425,7 +436,7 @@ class AssignPetugasController extends BaseController
 
         if (!$admin) {
             return $this->response->setJSON([
-                'success' => false, 
+                'success' => false,
                 'error' => 'Unauthorized',
                 'csrf_hash' => csrf_hash()
             ]);
@@ -449,14 +460,14 @@ class AssignPetugasController extends BaseController
 
         // Get available PCL (exclude PML yang dipilih dan yang terlibat di kegiatan ini)
         $users = $this->pclModel->getAvailablePCLForKegiatan(
-            $admin['id_kabupaten'], 
-            $idKegiatanWilayah, 
-            $idPML, 
+            $admin['id_kabupaten'],
+            $idKegiatanWilayah,
+            $idPML,
             $pmlSobatId
         );
 
         return $this->response->setJSON([
-            'success' => true, 
+            'success' => true,
             'data' => $users,
             'csrf_hash' => csrf_hash()
         ]);
@@ -471,11 +482,11 @@ class AssignPetugasController extends BaseController
 
         $idPML = $this->request->getPost('id_pml');
         $excludePCLId = $this->request->getPost('exclude_pcl_id');
-        
+
         $sisaTarget = $this->pclModel->getSisaTargetPML($idPML, $excludePCLId);
 
         return $this->response->setJSON([
-            'success' => true, 
+            'success' => true,
             'sisa_target' => $sisaTarget,
             'csrf_hash' => csrf_hash()
         ]);
@@ -485,7 +496,7 @@ class AssignPetugasController extends BaseController
     public function store()
     {
         $sobatId = session()->get('sobat_id');
-        
+
         if (!$sobatId) {
             return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
@@ -513,7 +524,7 @@ class AssignPetugasController extends BaseController
 
         $idKegiatanWilayah = $this->request->getPost('kegiatan_survei');
         $pmlSobatId = $this->request->getPost('pml_sobat_id');
-        $pmlTarget = (int)$this->request->getPost('pml_target');
+        $pmlTarget = (int) $this->request->getPost('pml_target');
         $pclData = $this->request->getPost('pcl');
 
         // Validasi: Cek apakah admin punya akses ke kegiatan ini
@@ -533,8 +544,8 @@ class AssignPetugasController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Kegiatan wilayah tidak ditemukan');
         }
 
-        $targetWilayah = (int)$kegiatanWilayah['target_wilayah'];
-        
+        $targetWilayah = (int) $kegiatanWilayah['target_wilayah'];
+
         // Hitung total target PML yang sudah ada
         $totalTargetPMLExisting = $this->pmlModel->db->table('pml')
             ->selectSum('target', 'total_target')
@@ -543,11 +554,13 @@ class AssignPetugasController extends BaseController
             ->getRow()
             ->total_target ?? 0;
 
-        $sisaTargetWilayah = $targetWilayah - (int)$totalTargetPMLExisting;
+        $sisaTargetWilayah = $targetWilayah - (int) $totalTargetPMLExisting;
 
         if ($pmlTarget > $sisaTargetWilayah) {
-            return redirect()->back()->withInput()->with('error', 
-                "Target PML ($pmlTarget) melebihi sisa target kegiatan wilayah yang tersedia ($sisaTargetWilayah)");
+            return redirect()->back()->withInput()->with(
+                'error',
+                "Target PML ($pmlTarget) melebihi sisa target kegiatan wilayah yang tersedia ($sisaTargetWilayah)"
+            );
         }
 
         // Validasi 2: total target PCL tidak melebihi target PML
@@ -555,14 +568,16 @@ class AssignPetugasController extends BaseController
         if ($pclData && is_array($pclData)) {
             foreach ($pclData as $pcl) {
                 if (!empty($pcl['target'])) {
-                    $totalTargetPCL += (int)$pcl['target'];
+                    $totalTargetPCL += (int) $pcl['target'];
                 }
             }
         }
 
         if ($totalTargetPCL > $pmlTarget) {
-            return redirect()->back()->withInput()->with('error', 
-                "Total target PCL ($totalTargetPCL) melebihi target PML ($pmlTarget)");
+            return redirect()->back()->withInput()->with(
+                'error',
+                "Total target PCL ($totalTargetPCL) melebihi target PML ($pmlTarget)"
+            );
         }
 
         $this->pmlModel->db->transStart();
@@ -624,11 +639,11 @@ class AssignPetugasController extends BaseController
     private function generateKurvaPetugas($idPCL, $target, $persenAwal, $tanggalMulai, $tanggal100, $tanggalSelesai)
     {
         $totalTarget = (int) $target;
-        $persenAwal  = (float) $persenAwal;
+        $persenAwal = (float) $persenAwal;
 
-        $start   = new DateTime($tanggalMulai);
-        $tgl100  = new DateTime($tanggal100);
-        $end     = new DateTime($tanggalSelesai);
+        $start = new DateTime($tanggalMulai);
+        $tgl100 = new DateTime($tanggal100);
+        $end = new DateTime($tanggalSelesai);
         $end->modify('+1 day');
 
         $interval = new DateInterval('P1D');
@@ -659,7 +674,8 @@ class AssignPetugasController extends BaseController
             $normalizedSigmoid = ($sigmoid - $sigmoidMin) / ($sigmoidMax - $sigmoidMin);
 
             $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $normalizedSigmoid;
-            if ($kumulatifPersen > 100) $kumulatifPersen = 100;
+            if ($kumulatifPersen > 100)
+                $kumulatifPersen = 100;
 
             $workdayData[$date->format('Y-m-d')] = $kumulatifPersen;
         }
@@ -725,7 +741,7 @@ class AssignPetugasController extends BaseController
     public function detail($idPML)
     {
         $sobatId = session()->get('sobat_id');
-        
+
         if (!$sobatId) {
             return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
@@ -773,7 +789,7 @@ class AssignPetugasController extends BaseController
     public function delete($idPML)
     {
         $sobatId = session()->get('sobat_id');
-        
+
         if (!$sobatId) {
             return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
@@ -790,7 +806,7 @@ class AssignPetugasController extends BaseController
         }
 
         $pml = $this->pmlModel->getPMLWithDetails($idPML);
-        
+
         if (!$pml) {
             return redirect()->to('/adminsurvei-kab/assign-petugas')->with('error', 'Data tidak ditemukan');
         }
@@ -817,7 +833,7 @@ class AssignPetugasController extends BaseController
     public function detailPML($id_pml)
     {
         $sobatId = session()->get('sobat_id');
-        
+
         if (!$sobatId) {
             return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
@@ -881,7 +897,7 @@ class AssignPetugasController extends BaseController
     public function pclDetail($id_pcl)
     {
         $sobatId = session()->get('sobat_id');
-        
+
         if (!$sobatId) {
             return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
@@ -897,43 +913,132 @@ class AssignPetugasController extends BaseController
             return redirect()->to('/')->with('error', 'Anda tidak memiliki akses');
         }
 
-        // Gunakan fungsi bawaan model → lebih konsisten
-        $pcl = $this->pclModel->getPCLWithDetails($id_pcl);
-        if (!$pcl) {
+        // Get PCL detail
+        $pclDetail = $this->pclModel->db->table('pcl')
+            ->select('pcl.*, 
+                 u.nama_user as nama_pcl, 
+                 u.email, 
+                 u.hp,
+                 u.id_kabupaten,
+                 u_pml.nama_user as nama_pml,
+                 pml.id_pml,
+                 kw.id_kegiatan_wilayah,
+                 mk.nama_kabupaten,
+                 mkdp.nama_kegiatan_detail_proses,
+                 mkdp.tanggal_mulai,
+                 mkdp.tanggal_selesai,
+                 mkd.nama_kegiatan_detail')
+            ->join('sipantau_user u', 'pcl.sobat_id = u.sobat_id')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('sipantau_user u_pml', 'pml.sobat_id = u_pml.sobat_id')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kabupaten mk', 'kw.id_kabupaten = mk.id_kabupaten')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('pcl.id_pcl', $id_pcl)
+            ->get()
+            ->getRowArray();
+
+        if (!$pclDetail) {
             return redirect()->back()->with('error', 'Data PCL tidak ditemukan.');
         }
 
+        // Validasi kabupaten
+        if ($pclDetail['id_kabupaten'] != $admin['id_kabupaten']) {
+            return redirect()->to('unauthorized')->with('error', 'Anda tidak memiliki akses ke data ini');
+        }
+
         // Cek apakah kegiatan ini di-assign ke admin yang login
-        $isAssigned = $this->kegiatanWilayahAdminModel->isAssigned($admin['id_admin_kabupaten'], $pcl['id_kegiatan_wilayah']);
+        $isAssigned = $this->kegiatanWilayahAdminModel->isAssigned($admin['id_admin_kabupaten'], $pclDetail['id_kegiatan_wilayah']);
         if (!$isAssigned) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini');
         }
 
-        // Ambil data Kurva S dari model
-        $kurvaData = $this->kurvaModel->getByPCL($id_pcl);
+        // Load additional models
+        $pantauProgressModel = new \App\Models\PantauProgressModel();
+        $kurvaPetugasModel = new \App\Models\KurvaPetugasModel();
 
-        // Siapkan data kumulatif untuk chart
-        $labels = [];
-        $targetKumulatif = [];
-        $aktualKumulatif = [];
-        $totalTarget = 0;
-        $totalAktual = 0;
+        // Get realisasi data
+        $realisasi = $pantauProgressModel
+            ->select('COALESCE(MAX(jumlah_realisasi_kumulatif), 0) as total_realisasi')
+            ->where('id_pcl', $id_pcl)
+            ->first();
 
-        foreach ($kurvaData as $row) {
-            $labels[] = date('d M', strtotime($row['tanggal_target']));
-            $totalTarget += (float) ($row['target_harian_absolut'] ?? 0);
-            $totalAktual += 0; // belum ada data aktual
-            $targetKumulatif[] = $totalTarget;
-            $aktualKumulatif[] = $totalAktual;
+        $realisasiKumulatif = (int) ($realisasi['total_realisasi'] ?? 0);
+        $target = (int) $pclDetail['target'];
+        $persentase = $target > 0 ? round(($realisasiKumulatif / $target) * 100, 2) : 0;
+        $selisih = $target - $realisasiKumulatif;
+
+        // Get Kurva S data
+        $kurvaData = $this->getKurvaDataPCL($id_pcl, $pclDetail, $pantauProgressModel, $kurvaPetugasModel);
+
+        $from = $this->request->getGet('from');
+        $data = [
+            'title' => 'Detail Laporan PCL',
+            'active_menu' => 'assign-admin-kab',
+            'pcl' => $pclDetail,
+            'target' => $target,
+            'realisasi' => $realisasiKumulatif,
+            'persentase' => $persentase,
+            'selisih' => $selisih,
+            'kurvaData' => $kurvaData,
+            'idPCL' => $id_pcl,
+            'from' => $from
+        ];
+
+        return view('AdminSurveiKab/AssignPetugasSurvei/kurva_s', $data);
+    }
+
+    private function getKurvaDataPCL($idPCL, $pclDetail, $pantauProgressModel, $kurvaPetugasModel)
+    {
+        // Get kurva target
+        $kurvaTarget = $kurvaPetugasModel
+            ->where('id_pcl', $idPCL)
+            ->orderBy('tanggal_target', 'ASC')
+            ->findAll();
+
+        // Get realisasi harian
+        $realisasiHarian = $this->pmlModel->db->query("
+        SELECT 
+            DATE(created_at) as tanggal,
+            SUM(jumlah_realisasi_absolut) as realisasi_harian
+        FROM pantau_progress
+        WHERE id_pcl = ?
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+    ", [$idPCL])->getResultArray();
+
+        // Build realisasi lookup
+        $realisasiLookup = [];
+        foreach ($realisasiHarian as $item) {
+            $realisasiLookup[$item['tanggal']] = (int) $item['realisasi_harian'];
         }
 
-        return view('AdminSurveiKab/AssignPetugasSurvei/kurva_s', [
-            'pcl'              => $pcl,
-            'active_menu' => 'assign-admin-kab',
-            'kurvaData'        => $kurvaData,
-            'labels'           => $labels,
-            'targetKumulatif'  => $targetKumulatif,
-            'aktualKumulatif'  => $aktualKumulatif
-        ]);
+        // Format data untuk chart
+        $labels = [];
+        $targetData = [];
+        $realisasiData = [];
+        $realisasiKumulatif = 0;
+
+        foreach ($kurvaTarget as $item) {
+            $tanggal = $item['tanggal_target'];
+            $labels[] = date('d M', strtotime($tanggal));
+            $targetData[] = (int) $item['target_kumulatif_absolut'];
+
+            if (isset($realisasiLookup[$tanggal])) {
+                $realisasiKumulatif += $realisasiLookup[$tanggal];
+            }
+            $realisasiData[] = $realisasiKumulatif;
+        }
+
+        return [
+            'labels' => $labels,
+            'target' => $targetData,
+            'realisasi' => $realisasiData,
+            'config' => [
+                'tanggal_mulai' => date('d M', strtotime($pclDetail['tanggal_mulai'])),
+                'tanggal_selesai' => date('d M', strtotime($pclDetail['tanggal_selesai']))
+            ]
+        ];
     }
 }

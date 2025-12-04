@@ -1,10 +1,10 @@
-<?= $this->extend('layouts/pemantau_kabupaten_layout') ?>
+<?= $this->extend('layouts/pemantau_provinsi_layout') ?>
 
 <?= $this->section('content') ?>
 
 <!-- Back Button & Title -->
 <div class="mb-6">
-    <a href="<?= base_url('pemantau-kabupaten/laporan-petugas') ?>"
+    <a href="<?= base_url('pemantau-provinsi/data-petugas') ?>"
         class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
         <i class="fas fa-arrow-left mr-2"></i>
         <span>Kembali</span>
@@ -239,8 +239,7 @@
 
 <script>
     const idPCL = <?= $idPCL ?>;
-    // PERBAIKAN: Gunakan route yang benar sesuai dengan Routes.php
-    const baseUrl = '<?= base_url('pemantau-kabupaten/laporan-petugas') ?>';
+    const baseUrl = '<?= base_url('pemantau-provinsi/data-petugas') ?>';
     const kurvaData = <?= json_encode($kurvaData) ?>;
 
     let chartInstance = null;
@@ -502,10 +501,10 @@
 </script>
 
 <style>
-.tab-button.active {
-    border-bottom: 2px solid #2563eb;
-    color: #2563eb;
-}
+    .tab-button.active {
+        border-bottom: 2px solid #2563eb;
+        color: #2563eb;
+    }
 </style>
 
 <?= $this->endSection() ?>

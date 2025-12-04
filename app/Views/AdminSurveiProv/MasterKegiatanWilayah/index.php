@@ -80,27 +80,57 @@
         </form>
     </div>
 
-    <!-- Search and Action Buttons -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <!-- Search, PerPage, and Action Buttons -->
+    <div style="display: grid; grid-template-columns: 1fr 200px 200px 200px; gap: 1rem; margin-bottom: 1.5rem;">
         <!-- Search Box -->
-        <div class="relative w-full sm:w-96">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
+        <div>
+            <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">
+                Pencarian
+            </label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" class="input-field w-full pl-10"
+                    placeholder="Cari kegiatan atau kabupaten..." onkeyup="searchTable()">
             </div>
-            <input type="text" id="searchInput" class="input-field w-full pl-10"
-                placeholder="Cari kegiatan atau kabupaten..." onkeyup="searchTable()">
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <!-- Import Button -->
-            <button onclick="openImportModal()" class="btn-secondary whitespace-nowrap w-full sm:w-auto text-center">
+        <!-- Per Page Selector -->
+        <div>
+            <label for="perPageSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                Data per Halaman
+            </label>
+            <div class="relative">
+                <select name="perPage" id="perPageSelect"
+                    class="input-field w-full pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
+                    onchange="updatePerPage()">
+                    <option value="5" <?= ($perPage == 5) ? 'selected' : ''; ?>>5</option>
+                    <option value="10" <?= ($perPage == 10) ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?= ($perPage == 25) ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?= ($perPage == 50) ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?= ($perPage == 100) ? 'selected' : ''; ?>>100</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <i id="perPageChevron"
+                        class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Button -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
+            <button onclick="openImportModal()" class="btn-secondary whitespace-nowrap w-full text-center">
                 <i class="fas fa-file-excel mr-2"></i>
                 Import Excel
             </button>
+        </div>
 
-            <!-- Add Button -->
-            <button onclick="openModal()" class="btn-primary whitespace-nowrap w-full sm:w-auto text-center">
+        <!-- Add Button -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
+            <button onclick="openModal()" class="btn-primary whitespace-nowrap w-full text-center">
                 <i class="fas fa-plus mr-2"></i>
                 Tambah Kegiatan
             </button>
@@ -136,7 +166,9 @@
                 <?php if (!empty($kegiatanWilayah)): ?>
                     <?php foreach ($kegiatanWilayah as $index => $kg): ?>
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-4 py-3 text-sm text-gray-900"><?= $index + 1 ?></td>
+                            <td class="px-4 py-3 text-sm text-gray-900">
+                                <?= ($pager->getCurrentPage('kegiatan_wilayah') - 1) * $pager->getPerPage('kegiatan_wilayah') + $index + 1 ?>
+                            </td>
                             <td class="px-4 py-3 text-sm text-gray-900"><?= esc($kg['nama_kegiatan_detail_proses']) ?></td>
                             <td class="px-4 py-3 text-sm text-gray-600"><?= esc($kg['nama_kabupaten']) ?></td>
                             <td class="px-4 py-3 text-xs text-gray-600"><?= esc($kg['tanggal_mulai']) ?></td>
@@ -202,6 +234,24 @@
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
+    <!-- Footer dengan Pagination -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-gray-600">
+            Menampilkan data
+            <span
+                class="font-medium"><?= (($pager->getCurrentPage('kegiatan_wilayah') - 1) * $pager->getPerPage('kegiatan_wilayah')) + 1 ?></span>-<span
+                class="font-medium"><?= min($pager->getCurrentPage('kegiatan_wilayah') * $pager->getPerPage('kegiatan_wilayah'), $pager->getTotal('kegiatan_wilayah')) ?></span>
+            dari <span class="font-medium"><?= $pager->getTotal('kegiatan_wilayah') ?></span> data
+            <?php if ($filterKegiatan || $filterProses || $filterKabupaten): ?>
+                <span class="text-blue-600">(terfilter)</span>
+            <?php endif; ?>
+        </p>
+
+        <!-- Custom Pagination -->
+        <?php if ($pager->getPageCount('kegiatan_wilayah') > 1): ?>
+            <?= $pager->links('kegiatan_wilayah', 'tailwind_pager') ?>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -460,6 +510,33 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    // ==================== PERPAGE FUNCTIONS ====================
+    // Handle animasi chevron untuk perPage selector
+    const perPageSelect = document.getElementById('perPageSelect');
+    const perPageChevron = document.getElementById('perPageChevron');
+
+    if (perPageSelect && perPageChevron) {
+        perPageSelect.addEventListener('focus', function () {
+            perPageChevron.classList.add('rotate-180');
+        });
+
+        perPageSelect.addEventListener('blur', function () {
+            perPageChevron.classList.remove('rotate-180');
+        });
+    }
+
+    // Function untuk update perPage dengan mempertahankan filter
+    function updatePerPage() {
+        const perPage = document.getElementById('perPageSelect').value;
+        const params = new URLSearchParams(window.location.search);
+
+        // Set perPage baru
+        params.set('perPage', perPage);
+
+        // Redirect dengan parameter yang sudah ada
+        window.location.href = '<?= base_url('adminsurvei/master-kegiatan-wilayah') ?>?' + params.toString();
+    }
+    
     // ==================== FILTER FUNCTIONS ====================
     function loadKegiatanProses(idKegiatanDetail) {
         const filterProses = document.getElementById('filterKegiatanProses');

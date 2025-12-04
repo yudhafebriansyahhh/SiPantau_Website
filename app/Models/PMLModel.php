@@ -87,6 +87,36 @@ class PMLModel extends Model
     }
 
     /**
+     * Get PML by Kabupaten dan Admin dengan Pagination
+     * NEW METHOD - untuk pagination
+     */
+    public function getPMLByKabupatenAndAdminPaginated($idKabupaten, $idAdminKabupaten, $idKegiatanWilayah = null, $perPage = 10)
+    {
+        $builder = $this->select('pml.id_pml, pml.target, pml.sobat_id,
+                u.nama_user as nama_pml, u.email,
+                kw.id_kegiatan_wilayah,
+                mkd.nama_kegiatan_detail,
+                mkdp.nama_kegiatan_detail_proses,
+                (SELECT COUNT(*) FROM pcl WHERE pcl.id_pml = pml.id_pml) as jumlah_pcl,
+                (SELECT COALESCE(SUM(target), 0) FROM pcl WHERE pcl.id_pml = pml.id_pml) as total_target_pcl')
+            ->join('sipantau_user u', 'pml.sobat_id = u.sobat_id')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('kegiatan_wilayah_admin kwa', 'kw.id_kegiatan_wilayah = kwa.id_kegiatan_wilayah')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('kw.id_kabupaten', $idKabupaten)
+            ->where('kwa.id_admin_kabupaten', $idAdminKabupaten)
+            ->orderBy('mkdp.tanggal_mulai', 'DESC')
+            ->orderBy('pml.created_at', 'DESC');
+
+        if ($idKegiatanWilayah) {
+            $builder->where('kw.id_kegiatan_wilayah', $idKegiatanWilayah);
+        }
+
+        return $builder->paginate($perPage, 'pml_list');
+    }
+
+    /**
      * Get PML by ID dengan detail
      * ORIGINAL METHOD - TIDAK DIUBAH
      */
@@ -150,14 +180,14 @@ class PMLModel extends Model
         }
 
         // Exclude user yang sudah menjadi PML di kegiatan ini
-        $builder->whereNotIn('u.sobat_id', function($subquery) use ($idKegiatanWilayah) {
+        $builder->whereNotIn('u.sobat_id', function ($subquery) use ($idKegiatanWilayah) {
             return $subquery->select('sobat_id')
                 ->from('pml')
                 ->where('id_kegiatan_wilayah', $idKegiatanWilayah);
         });
 
         // Exclude user yang sudah menjadi PCL di kegiatan ini
-        $builder->whereNotIn('u.sobat_id', function($subquery) use ($idKegiatanWilayah) {
+        $builder->whereNotIn('u.sobat_id', function ($subquery) use ($idKegiatanWilayah) {
             return $subquery->select('pcl.sobat_id')
                 ->from('pcl')
                 ->join('pml', 'pml.id_pml = pcl.id_pml')
@@ -165,7 +195,7 @@ class PMLModel extends Model
         });
 
         // Exclude admin kabupaten yang meng-handle kegiatan ini
-        $builder->whereNotIn('u.sobat_id', function($subquery) use ($idKegiatanWilayah) {
+        $builder->whereNotIn('u.sobat_id', function ($subquery) use ($idKegiatanWilayah) {
             return $subquery->select('ask.sobat_id')
                 ->from('admin_survei_kabupaten ask')
                 ->join('kegiatan_wilayah_admin kwa', 'kwa.id_admin_kabupaten = ask.id_admin_kabupaten')

@@ -59,7 +59,7 @@
                         <td class="px-4 py-3"><?= number_format($pcl['target']) ?></td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center space-x-2">
-                                <a href="<?= base_url('adminsurvei-kab/data-petugas/detail-pcl/' . $pcl['id_pcl']) ?>"
+                                <a href="<?= base_url('adminsurvei-kab/assign-petugas/pcl-detail/' . $pcl['id_pcl']) ?>"
                                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">
                                    Detail
                                 </a>
