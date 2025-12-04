@@ -8,6 +8,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Models\PantauProgressModel;
 use App\Models\PCLModel;
+use App\Models\KurvaPetugasModel;
 
 class PantauProgressController extends BaseController
 {
@@ -24,66 +25,58 @@ class PantauProgressController extends BaseController
      * GET /api/pantau-progress
      */
     public function index()
-{
-    $authHeader = $this->request->getHeaderLine('Authorization');
-    if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-        return $this->failUnauthorized('Token tidak ditemukan');
-    }
+    {
+        $authHeader = $this->request->getHeaderLine('Authorization');
+        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            return $this->failUnauthorized('Token tidak ditemukan');
+        }
 
-    try {
-        // Decode JWT tetap wajib login
-        $decoded = JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
-        $sobat_id = $decoded->data->sobat_id;
+        try {
+            $decoded = JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
+            $sobat_id = $decoded->data->sobat_id;
 
-        $progressModel = new PantauProgressModel();
+            $progressModel = new PantauProgressModel();
+            $filterIdPcl = $this->request->getGet('id_pcl');
 
-        // Ambil filter opsional id_pcl
-        $filterIdPcl = $this->request->getGet('id_pcl');
+            if (!empty($filterIdPcl)) {
+                $data = $progressModel
+                    ->where('id_pcl', $filterIdPcl)
+                    ->orderBy('created_at', 'DESC')
+                    ->findAll();
 
-        if (!empty($filterIdPcl)) {
-            // Jika ada filter id_pcl → ambil data progress sesuai id_pcl
-            $data = $progressModel
-                ->where('id_pcl', $filterIdPcl)
-                ->orderBy('created_at', 'DESC')
-                ->findAll();
+                $totalKumulatif = (int) $progressModel
+                    ->where('id_pcl', $filterIdPcl)
+                    ->selectSum('jumlah_realisasi_absolut')
+                    ->first()['jumlah_realisasi_absolut'] ?? 0;
 
-            $totalKumulatif = (int) $progressModel
-                ->where('id_pcl', $filterIdPcl)
-                ->selectSum('jumlah_realisasi_absolut')
-                ->first()['jumlah_realisasi_absolut'] ?? 0;
+                return $this->respond([
+                    'status' => 'success',
+                    'id_pcl' => (int) $filterIdPcl,
+                    'total_kumulatif' => $totalKumulatif,
+                    'total_entry' => count($data),
+                    'data' => $data
+                ]);
+            }
+
+            $allRecords = $progressModel->orderBy('created_at', 'DESC')->findAll();
+            $totalKumulatif = (int) $progressModel->selectSum('jumlah_realisasi_absolut')->first()['jumlah_realisasi_absolut'] ?? 0;
 
             return $this->respond([
                 'status' => 'success',
-                'id_pcl' => (int) $filterIdPcl,
+                'total_entry' => count($allRecords),
                 'total_kumulatif' => $totalKumulatif,
-                'total_entry' => count($data),
-                'data' => $data
+                'data' => $allRecords
             ]);
+
+        } catch (\Firebase\JWT\ExpiredException $e) {
+            return $this->failUnauthorized('Token kadaluarsa');
+        } catch (\Exception $e) {
+            return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
         }
-
-        // Tanpa filter → tampilkan seluruh progress
-        $allRecords = $progressModel->orderBy('created_at', 'DESC')->findAll();
-
-        $totalKumulatif = (int) $progressModel->selectSum('jumlah_realisasi_absolut')->first()['jumlah_realisasi_absolut'] ?? 0;
-
-        return $this->respond([
-            'status' => 'success',
-            'total_entry' => count($allRecords),
-            'total_kumulatif' => $totalKumulatif,
-            'data' => $allRecords
-        ]);
-
-    } catch (\Firebase\JWT\ExpiredException $e) {
-        return $this->failUnauthorized('Token kadaluarsa');
-    } catch (\Exception $e) {
-        return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
     }
-}
-
 
     /**
      * POST /api/pantau-progress
-     * Insert atau update jika masih tanggal yang sama
      */
     public function create()
     {
@@ -93,12 +86,10 @@ class PantauProgressController extends BaseController
         }
 
         try {
-            // Decode JWT
             $token = trim(str_replace('"', '', $matches[1]));
             $decoded = JWT::decode($token, new Key($this->jwtKey, 'HS256'));
             $sobat_id = $decoded->data->sobat_id;
 
-            // Validasi PCL
             $pclModel = new PCLModel();
             $pclList = $pclModel->where('sobat_id', $sobat_id)->findAll();
 
@@ -108,7 +99,6 @@ class PantauProgressController extends BaseController
 
             $pclIds = array_column($pclList, 'id_pcl');
 
-            // Ambil data POST
             $data = $this->request->getPost();
             if (empty($data)) $data = $_POST;
 
@@ -122,7 +112,7 @@ class PantauProgressController extends BaseController
 
             $progressModel = new PantauProgressModel();
 
-            // Ambil kumulatif terakhir
+            // Ambil kumulatif terakhir (variabel tetap)
             $last = $progressModel
                 ->where('id_pcl', $data['id_pcl'])
                 ->orderBy('created_at', 'DESC')
@@ -132,29 +122,47 @@ class PantauProgressController extends BaseController
 
             $inputAbsolut = (int)$data['jumlah_realisasi_absolut'];
 
-            // Batas 2x kumulatif terakhir
-            $maxAllowed = $lastKumulatif * 2;
+            /**
+             * =======================================================
+             * VALIDASI BARU: batas = 2x target_komulatif_absolut Kurva S
+             * variabel request & response TIDAK diubah
+             * =======================================================
+             */
+            $kurvaModel = new KurvaPetugasModel();
+            $today = date('Y-m-d');
 
-            if ($lastKumulatif > 0 && $inputAbsolut > $maxAllowed) {
+            $kurvaToday = $kurvaModel
+                ->where('id_pcl', $data['id_pcl'])
+                ->where('tanggal_target', $today)
+                ->first();
+
+            if (!$kurvaToday) {
                 return $this->failValidationErrors(
-                    "Jumlah realisasi absolut maksimal {$maxAllowed} berdasarkan aturan (2x kumulatif terakhir = {$lastKumulatif})."
+                    "Target harian belum ditentukan untuk tanggal {$today}."
                 );
             }
 
-            // ================================
-            // CEK DATA TANGGAL YANG SAMA
-            // ================================
-            $today = date('Y-m-d');
+            $targetHarian = (int)$kurvaToday['target_kumulatif_absolut'];
 
+            // variabel tetap → hanya rumus isi yang diganti
+            $maxAllowed = $targetHarian * 2;
+
+            if ($inputAbsolut > $maxAllowed) {
+                return $this->failValidationErrors(
+                    "Jumlah realisasi absolut maksimal {$maxAllowed} berdasarkan aturan (2x target harian = {$targetHarian})."
+                );
+            }
+
+            // =================================
+            // CEK PROGRESS HARI INI
+            // =================================
             $existingToday = $progressModel
                 ->where('id_pcl', $data['id_pcl'])
                 ->where("DATE(created_at)", $today)
                 ->orderBy('created_at', 'DESC')
                 ->first();
 
-            // Jika SUDAH ADA progres hari ini → UPDATE
             if ($existingToday) {
-
                 $newAbsolut = $existingToday['jumlah_realisasi_absolut'] + $inputAbsolut;
                 $newKumulatif = $existingToday['jumlah_realisasi_kumulatif'] + $inputAbsolut;
 
@@ -174,9 +182,7 @@ class PantauProgressController extends BaseController
                 ]);
             }
 
-            // ================================
-            // TIDAK ADA progres hari ini → INSERT baru
-            // ================================
+            // INSERT BARU
             $newKumulatif = $lastKumulatif + $inputAbsolut;
 
             $insertData = [
@@ -214,7 +220,6 @@ class PantauProgressController extends BaseController
         }
 
         try {
-            // Verifikasi token
             JWT::decode($matches[1], new Key($this->jwtKey, 'HS256'));
 
             if (empty($id) || !is_numeric($id)) {
