@@ -319,7 +319,7 @@
 
     <!-- Custom Pagination -->
     <?php if ($pager->getPageCount('feedbacks') > 1): ?>
-        <div class="flex items-center gap-1">
+        <div class="flex justify-end items-center gap-1">
             <?php
             $currentPage = $pager->getCurrentPage('feedbacks');
             $totalPages = $pager->getPageCount('feedbacks');
