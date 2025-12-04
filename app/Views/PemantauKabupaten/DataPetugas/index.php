@@ -20,7 +20,8 @@
     <!-- Header Section -->
     <div class="mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">DATA MITRA BPS
-            <?= strtoupper(esc($kabupaten['nama_kabupaten'] ?? 'KABUPATEN')) ?></h2>
+            <?= strtoupper(esc($kabupaten['nama_kabupaten'] ?? 'KABUPATEN')) ?>
+        </h2>
 
         <!-- Search dan Per Page Section -->
         <div style="display: grid; grid-template-columns: 1fr 200px; gap: 1rem; margin-bottom: 1.5rem;">
@@ -160,8 +161,11 @@
     <!-- Footer dengan Pagination -->
     <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p class="text-sm text-gray-600">
-            Menampilkan <span class="font-medium"><?= count($dataPetugas) ?></span> dari
-            <span class="font-medium"><?= $totalData ?></span> total data
+            Menampilkan data
+            <span
+                class="font-medium"><?= (($pager->getCurrentPage('dataPetugas') - 1) * $pager->getPerPage('dataPetugas')) + 1 ?></span>-<span
+                class="font-medium"><?= min($pager->getCurrentPage('dataPetugas') * $pager->getPerPage('dataPetugas'), $pager->getTotal('dataPetugas')) ?></span>
+            dari <span class="font-medium"><?= $pager->getTotal('dataPetugas') ?></span> data
         </p>
 
         <!-- Custom Pagination -->

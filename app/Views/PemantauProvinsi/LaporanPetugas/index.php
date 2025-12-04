@@ -80,7 +80,7 @@
 
             <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <!-- Search Box -->
-                <div class="w-full sm:w-64">
+                <div class="w-full sm:w-96">
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
@@ -182,8 +182,10 @@
         <!-- Pagination -->
         <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
             <p class="text-sm text-gray-600">
-                Menampilkan <span class="font-medium"><?= (($currentPage - 1) * $perPage) + 1 ?></span>
-                dari <span class="font-medium"><?= $totalData ?></span> total data
+                Menampilkan data
+                <span class="font-medium"><?= (($currentPage - 1) * $perPage) + 1 ?></span>-<span
+                    class="font-medium"><?= min($currentPage * $perPage, $totalData) ?></span>
+                dari <span class="font-medium"><?= $totalData ?></span> data
             </p>
 
             <?php if ($totalData > $perPage): ?>
@@ -191,23 +193,68 @@
                     <?php
                     $totalPages = ceil($totalData / $perPage);
                     $currentPage = (int) ($currentPage ?? 1);
+
+                    // Previous button
+                    $prevDisabled = $currentPage <= 1 ? 'opacity-50 pointer-events-none' : '';
+                    $prevParams = array_merge($_GET, ['page' => max(1, $currentPage - 1)]);
                     ?>
 
-                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => max(1, $currentPage - 1)])) ?>"
-                        class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors <?= $currentPage <= 1 ? 'opacity-50 pointer-events-none' : '' ?>">
-                        Previous
+                    <a href="?<?= http_build_query($prevParams) ?>"
+                        class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors <?= $prevDisabled ?>">
+                        <i class="fas fa-chevron-left"></i> Previous
                     </a>
 
-                    <?php for ($i = max(1, $currentPage - 2); $i <= min($totalPages, $currentPage + 2); $i++): ?>
+                    <?php
+                    // Determine page range to show
+                    $startPage = max(1, $currentPage - 2);
+                    $endPage = min($totalPages, $currentPage + 2);
+
+                    // Show first page if not in range
+                    if ($startPage > 1): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>"
+                            class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors">
+                            1
+                        </a>
+                        <?php if ($startPage > 2): ?>
+                            <span class="px-3 py-1 text-gray-400">...</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php
+                    // Show page numbers
+                    for ($i = $startPage; $i <= $endPage; $i++):
+                        $isActive = $i == $currentPage;
+                        $pageClass = $isActive
+                            ? 'bg-blue-600 text-white'
+                            : 'border border-gray-300 hover:bg-gray-50';
+                        ?>
                         <a href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>"
-                            class="px-3 py-1 <?= $i == $currentPage ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50' ?> rounded text-sm transition-colors">
+                            class="px-3 py-1 <?= $pageClass ?> rounded text-sm transition-colors">
                             <?= $i ?>
                         </a>
                     <?php endfor; ?>
 
-                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => min($totalPages, $currentPage + 1)])) ?>"
-                        class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors <?= $currentPage >= $totalPages ? 'opacity-50 pointer-events-none' : '' ?>">
-                        Next
+                    <?php
+                    // Show last page if not in range
+                    if ($endPage < $totalPages): ?>
+                        <?php if ($endPage < $totalPages - 1): ?>
+                            <span class="px-3 py-1 text-gray-400">...</span>
+                        <?php endif; ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $totalPages])) ?>"
+                            class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors">
+                            <?= $totalPages ?>
+                        </a>
+                    <?php endif; ?>
+
+                    <?php
+                    // Next button
+                    $nextDisabled = $currentPage >= $totalPages ? 'opacity-50 pointer-events-none' : '';
+                    $nextParams = array_merge($_GET, ['page' => min($totalPages, $currentPage + 1)]);
+                    ?>
+
+                    <a href="?<?= http_build_query($nextParams) ?>"
+                        class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors <?= $nextDisabled ?>">
+                        Next <i class="fas fa-chevron-right"></i>
                     </a>
                 </div>
             <?php endif; ?>

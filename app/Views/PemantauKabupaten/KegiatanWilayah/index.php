@@ -24,12 +24,8 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="fas fa-search text-gray-400"></i>
                 </div>
-                <input
-                    type="text"
-                    id="searchInput"
-                    class="input-field w-full pl-10"
-                    placeholder="Cari kegiatan detail atau keterangan..."
-                    onkeyup="searchTable()">
+                <input type="text" id="searchInput" class="input-field w-full pl-10"
+                    placeholder="Cari kegiatan detail atau keterangan..." onkeyup="searchTable()">
             </div>
         </div>
 
@@ -39,9 +35,7 @@
                 Data per Halaman
             </label>
             <div class="relative">
-                <select
-                    name="perPage"
-                    id="perPageSelect"
+                <select name="perPage" id="perPageSelect"
                     class="input-field w-full pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
                     onchange="updatePerPage()">
                     <option value="5" <?= ($perPage == 5) ? 'selected' : ''; ?>>5</option>
@@ -51,7 +45,8 @@
                     <option value="100" <?= ($perPage == 100) ? 'selected' : ''; ?>>100</option>
                 </select>
                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <i id="perPageChevron" class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                    <i id="perPageChevron"
+                        class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
                 </div>
             </div>
         </div>
@@ -62,29 +57,46 @@
         <table class="w-full" id="kegiatanWilayahTable">
             <thead>
                 <tr class="border-b border-gray-200 bg-gray-50">
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-16">No</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200">Nama Kegiatan Detail Proses</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-32">Tanggal Mulai</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-32">Tanggal Selesai</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-64">Keterangan</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-32">Target Wilayah</th>
+                    <th
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-16">
+                        No</th>
+                    <th
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200">
+                        Nama Kegiatan Detail Proses</th>
+                    <th
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-32">
+                        Tanggal Mulai</th>
+                    <th
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-32">
+                        Tanggal Selesai</th>
+                    <th
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-64">
+                        Keterangan</th>
+                    <th
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase border border-gray-200 w-32">
+                        Target Wilayah</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                <?php if (!empty($kegiatanWilayah)) : ?>
-                    <?php foreach ($kegiatanWilayah as $index => $kg) : ?>
+                <?php if (!empty($kegiatanWilayah)): ?>
+                    <?php foreach ($kegiatanWilayah as $index => $kg): ?>
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-4 border border-gray-200 text-sm text-center text-gray-900">
                                 <?= ($pager->getCurrentPage('kegiatanWilayah') - 1) * $pager->getPerPage('kegiatanWilayah') + $index + 1 ?>
                             </td>
-                            <td class="px-4 py-4 border border-gray-200 text-sm"><?= esc($kg['nama_kegiatan_detail_proses']) ?></td>
-                            <td class="px-4 py-4 border border-gray-200 text-sm text-center text-gray-600"><?= esc($kg['tanggal_mulai']) ?></td>
-                            <td class="px-4 py-4 border border-gray-200 text-sm text-center text-gray-600"><?= esc($kg['tanggal_selesai']) ?></td>
-                            <td class="px-4 py-4 border border-gray-200 text-sm text-gray-600"><?= esc($kg['keterangan']) ?></td>
-                            <td class="px-4 py-4 border border-gray-200 text-center text-sm font-medium"><?= esc($kg['target_wilayah']) ?></td>
+                            <td class="px-4 py-4 border border-gray-200 text-sm"><?= esc($kg['nama_kegiatan_detail_proses']) ?>
+                            </td>
+                            <td class="px-4 py-4 border border-gray-200 text-sm text-center text-gray-600">
+                                <?= esc($kg['tanggal_mulai']) ?></td>
+                            <td class="px-4 py-4 border border-gray-200 text-sm text-center text-gray-600">
+                                <?= esc($kg['tanggal_selesai']) ?></td>
+                            <td class="px-4 py-4 border border-gray-200 text-sm text-gray-600"><?= esc($kg['keterangan']) ?>
+                            </td>
+                            <td class="px-4 py-4 border border-gray-200 text-center text-sm font-medium">
+                                <?= esc($kg['target_wilayah']) ?></td>
                         </tr>
                     <?php endforeach; ?>
-                <?php else : ?>
+                <?php else: ?>
                     <tr>
                         <td colspan="6" class="px-4 py-6 text-center text-gray-500">
                             Belum ada data kegiatan.
@@ -98,8 +110,11 @@
     <!-- Footer dengan Pagination -->
     <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p class="text-sm text-gray-600">
-            Menampilkan <span class="font-medium"><?= count($kegiatanWilayah) ?></span> dari 
-            <span class="font-medium"><?= $pager->getTotal('kegiatanWilayah') ?></span> total data
+            Menampilkan data
+            <span
+                class="font-medium"><?= (($pager->getCurrentPage('kegiatanWilayah') - 1) * $pager->getPerPage('kegiatanWilayah')) + 1 ?></span>-<span
+                class="font-medium"><?= min($pager->getCurrentPage('kegiatanWilayah') * $pager->getPerPage('kegiatanWilayah'), $pager->getTotal('kegiatanWilayah')) ?></span>
+            dari <span class="font-medium"><?= $pager->getTotal('kegiatanWilayah') ?></span> data
         </p>
 
         <!-- Custom Pagination -->
@@ -113,23 +128,23 @@
     // Handle animasi chevron untuk perPage selector
     const perPageSelect = document.getElementById('perPageSelect');
     const perPageChevron = document.getElementById('perPageChevron');
-    
-    perPageSelect.addEventListener('focus', function() {
+
+    perPageSelect.addEventListener('focus', function () {
         perPageChevron.classList.add('rotate-180');
     });
-    
-    perPageSelect.addEventListener('blur', function() {
+
+    perPageSelect.addEventListener('blur', function () {
         perPageChevron.classList.remove('rotate-180');
     });
 
     // Function untuk update perPage
     function updatePerPage() {
         const perPage = document.getElementById('perPageSelect').value;
-        
+
         // Build URL dengan parameter
         const params = new URLSearchParams();
         if (perPage) params.append('perPage', perPage);
-        
+
         // Redirect ke URL dengan parameter baru
         window.location.href = '<?= base_url('pemantau-kabupaten/kegiatan-wilayah') ?>?' + params.toString();
     }

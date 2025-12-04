@@ -170,7 +170,7 @@
 </div>
 
 <!-- Filters & Table -->
-<div class="card">
+<div class="card" id="tableSection">
     <!-- Filter Section - Layout Baru -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <!-- Search Box -->
@@ -317,48 +317,91 @@
         </table>
     </div>
 
-    <!-- Custom Pagination -->
-    <?php if ($pager->getPageCount('feedbacks') > 1): ?>
-        <div class="flex items-center gap-1">
-            <?php
-            $currentPage = $pager->getCurrentPage('feedbacks');
-            $totalPages = $pager->getPageCount('feedbacks');
-            ?>
+    <!-- Footer dengan Pagination -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-gray-600">
+            Menampilkan data
+            <span
+                class="font-medium"><?= (($pager->getCurrentPage('feedbacks') - 1) * $pager->getPerPage('feedbacks')) + 1 ?></span>-<span
+                class="font-medium"><?= min($pager->getCurrentPage('feedbacks') * $pager->getPerPage('feedbacks'), $pager->getTotal('feedbacks')) ?></span>
+            dari <span class="font-medium"><?= $pager->getTotal('feedbacks') ?></span> data
+        </p>
 
-            <!-- Previous Button -->
-            <?php if ($currentPage > 1): ?>
-                <a href="?<?= http_build_query(array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => $currentPage - 1])) ?>"
-                    onclick="scrollToTable()"
-                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-chevron-left"></i>
+        <!-- Custom Pagination -->
+        <?php if ($pager->getPageCount('feedbacks') > 1): ?>
+            <div class="flex gap-1">
+                <?php
+                $currentPage = $pager->getCurrentPage('feedbacks');
+                $totalPages = $pager->getPageCount('feedbacks');
+
+                // Previous button
+                $prevDisabled = $currentPage <= 1 ? 'opacity-50 pointer-events-none' : '';
+                $prevParams = array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => max(1, $currentPage - 1)]);
+                ?>
+
+                <a href="?<?= http_build_query($prevParams) ?>" onclick="scrollToTable()"
+                    class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors <?= $prevDisabled ?>">
+                    <i class="fas fa-chevron-left"></i> Previous
                 </a>
-            <?php endif; ?>
 
-            <!-- Page Numbers -->
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <?php if ($i == $currentPage): ?>
-                    <span class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg">
-                        <?= $i ?>
-                    </span>
-                <?php else: ?>
-                    <a href="?<?= http_build_query(array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => $i])) ?>"
+                <?php
+                // Determine page range to show
+                $startPage = max(1, $currentPage - 2);
+                $endPage = min($totalPages, $currentPage + 2);
+
+                // Show first page if not in range
+                if ($startPage > 1): ?>
+                    <a href="?<?= http_build_query(array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => 1])) ?>"
                         onclick="scrollToTable()"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors">
+                        1
+                    </a>
+                    <?php if ($startPage > 2): ?>
+                        <span class="px-3 py-1 text-gray-400">...</span>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <?php
+                // Show page numbers
+                for ($i = $startPage; $i <= $endPage; $i++):
+                    $isActive = $i == $currentPage;
+                    $pageClass = $isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'border border-gray-300 hover:bg-gray-50';
+                    $pageParams = array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => $i]);
+                    ?>
+                    <a href="?<?= http_build_query($pageParams) ?>" onclick="scrollToTable()"
+                        class="px-3 py-1 <?= $pageClass ?> rounded text-sm transition-colors">
                         <?= $i ?>
                     </a>
-                <?php endif; ?>
-            <?php endfor; ?>
+                <?php endfor; ?>
 
-            <!-- Next Button -->
-            <?php if ($currentPage < $totalPages): ?>
-                <a href="?<?= http_build_query(array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => $currentPage + 1])) ?>"
-                    onclick="scrollToTable()"
-                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-chevron-right"></i>
+                <?php
+                // Show last page if not in range
+                if ($endPage < $totalPages): ?>
+                    <?php if ($endPage < $totalPages - 1): ?>
+                        <span class="px-3 py-1 text-gray-400">...</span>
+                    <?php endif; ?>
+                    <a href="?<?= http_build_query(array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => $totalPages])) ?>"
+                        onclick="scrollToTable()"
+                        class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors">
+                        <?= $totalPages ?>
+                    </a>
+                <?php endif; ?>
+
+                <?php
+                // Next button
+                $nextDisabled = $currentPage >= $totalPages ? 'opacity-50 pointer-events-none' : '';
+                $nextParams = array_merge($filters, ['perPage' => $perPage, 'page_feedbacks' => min($totalPages, $currentPage + 1)]);
+                ?>
+
+                <a href="?<?= http_build_query($nextParams) ?>" onclick="scrollToTable()"
+                    class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors <?= $nextDisabled ?>">
+                    Next <i class="fas fa-chevron-right"></i>
                 </a>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <!-- ApexCharts CDN -->
@@ -710,7 +753,7 @@
     function resetFilters() {
         window.location.href = '<?= base_url('superadmin/rating-aplikasi') ?>';
     }
-    
+
     function scrollToTable() {
         setTimeout(() => {
             const tableSection = document.getElementById('tableSection');
