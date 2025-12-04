@@ -305,20 +305,43 @@ class KepatuhanModel extends Model
                 $terakhirLapor = $laporanTerakhir['terakhir_lapor'] ?? null;
                 $hariTidakLapor = 0;
 
+                // PERBAIKAN: Tentukan batas akhir perhitungan
+                $today = new \DateTime();
+                $tanggalSelesai = new \DateTime($kegiatan['tanggal_selesai']);
+
+                // Gunakan yang lebih kecil antara hari ini dan tanggal selesai
+                $batasAkhir = ($today < $tanggalSelesai) ? $today : $tanggalSelesai;
+
                 if ($terakhirLapor) {
-                    // Hitung hari kerja sejak terakhir lapor sampai hari ini
+                    // Hitung hari kerja sejak terakhir lapor sampai batas akhir
                     $lastDate = new \DateTime($terakhirLapor);
-                    $today = new \DateTime();
-                    $today = min($today, new \DateTime($kegiatan['tanggal_selesai']));
 
-                    $hariTidakLapor = $this->hitungHariKerja($lastDate, $today) - 1; // -1 karena tidak hitung hari terakhir lapor
+                    // PENTING: Cek apakah terakhir lapor sudah melewati tanggal selesai
+                    if ($lastDate >= $tanggalSelesai) {
+                        // Jika terakhir lapor sudah setelah/sama dengan tanggal selesai kegiatan
+                        // maka tidak ada hari tidak lapor (kegiatan sudah selesai)
+                        $hariTidakLapor = 0;
+                    } else {
+                        // Hitung dari hari setelah terakhir lapor sampai batas akhir
+                        $hitungDari = clone $lastDate;
+                        $hitungDari->modify('+1 day'); // Mulai dari hari setelah terakhir lapor
+
+                        if ($hitungDari <= $batasAkhir) {
+                            $hariTidakLapor = $this->hitungHariKerja($hitungDari, $batasAkhir);
+                        } else {
+                            $hariTidakLapor = 0;
+                        }
+                    }
                 } else {
-                    // Belum pernah lapor, hitung dari tanggal mulai kegiatan
+                    // Belum pernah lapor
                     $mulai = new \DateTime($kegiatan['tanggal_mulai']);
-                    $today = new \DateTime();
-                    $today = min($today, new \DateTime($kegiatan['tanggal_selesai']));
 
-                    $hariTidakLapor = $this->hitungHariKerja($mulai, $today);
+                    // PENTING: Hanya hitung jika kegiatan sudah dimulai
+                    if ($mulai <= $batasAkhir) {
+                        $hariTidakLapor = $this->hitungHariKerja($mulai, $batasAkhir);
+                    } else {
+                        $hariTidakLapor = 0;
+                    }
                 }
 
                 // Get nama kabupaten
@@ -345,6 +368,7 @@ class KepatuhanModel extends Model
             }
         }
 
+        // Sort by hari tidak lapor DESC
         usort($tidakPatuh, function ($a, $b) {
             return $b['hari_tidak_lapor'] <=> $a['hari_tidak_lapor'];
         });
