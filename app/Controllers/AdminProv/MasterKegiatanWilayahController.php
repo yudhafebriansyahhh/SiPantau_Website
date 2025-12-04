@@ -1013,7 +1013,7 @@ class MasterKegiatanWilayahController extends BaseController
                 }
 
                 $idKabupaten = trim($row[0]);
-                $targetWilayah = (int) trim($row[2]);
+                $targetWilayah = (int) preg_replace('/[^0-9]/', '', trim($row[2]));
                 $keterangan = !empty($row[3]) ? trim($row[3]) : 'Import dari Excel';
 
                 // Validasi kabupaten
