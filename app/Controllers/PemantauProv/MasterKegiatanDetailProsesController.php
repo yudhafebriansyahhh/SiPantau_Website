@@ -23,24 +23,33 @@ class MasterKegiatanDetailProsesController extends BaseController
     public function index()
     {
         $kegiatanDetailFilter = $this->request->getGet('kegiatan_detail');
-        $perPage = 3; // Jumlah data per halaman
-        
+
+        // Ambil perPage dari GET, default 10
+        $perPage = $this->request->getGet('perPage') ?? 10;
+
+        // Validasi perPage agar hanya nilai yang diizinkan
+        $allowedPerPage = [5, 10, 25, 50, 100];
+        if (!in_array((int) $perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
         // Gunakan query builder dari model
         $builder = $this->masterDetailProsesModel
             ->select('master_kegiatan_detail_proses.*, master_kegiatan_detail.nama_kegiatan_detail')
             ->join('master_kegiatan_detail', 'master_kegiatan_detail.id_kegiatan_detail = master_kegiatan_detail_proses.id_kegiatan_detail');
-        
+
         // Filter jika ada
         if ($kegiatanDetailFilter) {
             $builder->where('master_kegiatan_detail_proses.id_kegiatan_detail', $kegiatanDetailFilter);
         }
 
         $data = [
-            'title'                  => 'Kelola Master Kegiatan Detail Proses',
-            'active_menu'            => 'detail-proses',
-            'kegiatanDetails'        => $builder->paginate($perPage, 'default'),
-            'pager'                  => $builder->pager,
-            'kegiatanDetailList'     => $this->masterDetailModel->findAll(),
+            'title' => 'Kelola Master Kegiatan Detail Proses',
+            'active_menu' => 'detail-proses',
+            'kegiatanDetails' => $builder->paginate($perPage, 'detail_proses'), // Ubah group name
+            'pager' => $builder->pager,
+            'perPage' => $perPage, // Tambahkan ini
+            'kegiatanDetailList' => $this->masterDetailModel->findAll(),
             'selectedKegiatanDetail' => $kegiatanDetailFilter
         ];
 

@@ -17,18 +17,45 @@
 <!-- Main Card -->
 <div class="card">
     <!-- Search dan Filter Section -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div style="display: grid; grid-template-columns: 1fr 200px 250px; gap: 1rem; margin-bottom: 1.5rem;">
         <!-- Search Box -->
-        <div class="relative w-full sm:w-96">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
+        <div>
+            <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">
+                Pencarian
+            </label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" class="input-field w-full pl-10"
+                    placeholder="Cari kegiatan detail atau satuan..." onkeyup="searchTable()">
             </div>
-            <input type="text" id="searchInput" class="input-field w-full pl-10"
-                placeholder="Cari kegiatan detail atau satuan..." onkeyup="searchTable()">
+        </div>
+
+        <!-- Per Page Selector -->
+        <div>
+            <label for="perPageSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                Data per Halaman
+            </label>
+            <div class="relative">
+                <select name="perPage" id="perPageSelect"
+                    class="input-field w-full pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
+                    onchange="updatePerPage()">
+                    <option value="5" <?= ($perPage == 5) ? 'selected' : ''; ?>>5</option>
+                    <option value="10" <?= ($perPage == 10) ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?= ($perPage == 25) ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?= ($perPage == 50) ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?= ($perPage == 100) ? 'selected' : ''; ?>>100</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <i id="perPageChevron"
+                        class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
+            </div>
         </div>
 
         <!-- Filter Kegiatan Detail -->
-        <div class="w-full sm:w-96">
+        <div>
             <label for="kegiatanDetailFilter" class="block text-sm font-medium text-gray-700 mb-1">
                 Filter Kegiatan Detail
             </label>
@@ -47,7 +74,6 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
-
 
                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                     <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
@@ -86,7 +112,7 @@
                     <?php foreach ($kegiatanDetails as $index => $detail): ?>
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-4 py-4 text-sm text-gray-900">
-                                <?= ($pager->getCurrentPage() - 1) * $pager->getPerPage() + $index + 1 ?>
+                                <?= ($pager->getCurrentPage('detail_proses') - 1) * $pager->getPerPage('detail_proses') + $index + 1 ?>
                             </td>
                             <td class="px-4 py-4 text-sm text-gray-900"><?= esc($detail['nama_kegiatan_detail']) ?></td>
                             <td class="px-4 py-4 text-sm text-gray-600"><?= esc($detail['nama_kegiatan_detail_proses']) ?></td>
@@ -112,13 +138,16 @@
     <!-- Footer dengan Pagination -->
     <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p class="text-sm text-gray-600">
-            Menampilkan <span class="font-medium"><?= count($kegiatanDetails) ?></span> dari
-            <span class="font-medium"><?= $pager->getTotal() ?></span> total data
+            Menampilkan data
+            <span
+                class="font-medium"><?= (($pager->getCurrentPage('detail_proses') - 1) * $pager->getPerPage('detail_proses')) + 1 ?></span>-<span
+                class="font-medium"><?= min($pager->getCurrentPage('detail_proses') * $pager->getPerPage('detail_proses'), $pager->getTotal('detail_proses')) ?></span>
+            dari <span class="font-medium"><?= $pager->getTotal('detail_proses') ?></span> data
         </p>
 
-        <!-- ✅ Custom Pagination -->
-        <?php if ($pager->getPageCount() > 1): ?>
-            <?= $pager->links('default', 'tailwind_pager') ?>
+        <!-- Custom Pagination -->
+        <?php if ($pager->getPageCount('detail_proses') > 1): ?>
+            <?= $pager->links('detail_proses', 'tailwind_pager') ?>
         <?php endif; ?>
     </div>
 </div>
@@ -127,12 +156,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // 🔄 Auto submit filter kegiatan detail
+    // Auto submit filter kegiatan detail
     document.getElementById('kegiatanDetailFilter').addEventListener('change', function () {
         document.getElementById('filterForm').submit();
     });
 
-    // 🔍 Fitur pencarian tabel
+    // Fitur pencarian tabel
     function searchTable() {
         const input = document.getElementById('searchInput');
         const filter = input.value.toLowerCase();
@@ -144,7 +173,7 @@
         });
     }
 
-    // ✅ Alert sukses
+    // Alert sukses
     <?php if (session()->getFlashdata('success')): ?>
         Swal.fire({
             icon: 'success',
@@ -154,6 +183,42 @@
             timer: 2000
         });
     <?php endif; ?>
+
+    // Handle animasi chevron untuk perPage selector
+    const perPageSelect = document.getElementById('perPageSelect');
+    const perPageChevron = document.getElementById('perPageChevron');
+
+    perPageSelect.addEventListener('focus', function () {
+        perPageChevron.classList.add('rotate-180');
+    });
+
+    perPageSelect.addEventListener('blur', function () {
+        perPageChevron.classList.remove('rotate-180');
+    });
+
+    // Function untuk update perPage
+    function updatePerPage() {
+        const perPage = document.getElementById('perPageSelect').value;
+        const kegiatanDetail = document.getElementById('kegiatanDetailFilter').value;
+        const params = new URLSearchParams();
+
+        if (perPage) params.append('perPage', perPage);
+        if (kegiatanDetail) params.append('kegiatan_detail', kegiatanDetail);
+
+        window.location.href = '<?= base_url('pemantau/master-kegiatan-detail-proses') ?>?' + params.toString();
+    }
+
+    // Update submit filter untuk preserve perPage
+    document.getElementById('kegiatanDetailFilter').addEventListener('change', function () {
+        const perPage = document.getElementById('perPageSelect').value;
+        const kegiatanDetail = this.value;
+        const params = new URLSearchParams();
+
+        if (perPage) params.append('perPage', perPage);
+        if (kegiatanDetail) params.append('kegiatan_detail', kegiatanDetail);
+
+        window.location.href = '<?= base_url('pemantau/master-kegiatan-detail-proses') ?>?' + params.toString();
+    });
 </script>
 
 <?= $this->endSection() ?>
