@@ -13,15 +13,12 @@ class KurvaSkabModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [ 
-        'id_kurva_kabupaten',
         'id_kegiatan_wilayah',
         'tanggal_target',
         'target_persen_kumulatif',
         'target_harian_absolut',
         'target_kumulatif_absolut',
         'is_hari_kerja',
-        'created_at',
-        'updated_at',
     ];
 
     protected bool $allowEmptyInserts = false;
