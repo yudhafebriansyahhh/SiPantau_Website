@@ -39,40 +39,98 @@ class DataPetugasController extends BaseController
 
         $idKabupaten = $user['id_kabupaten'];
 
-        // Ambil parameter search dari GET
+        // Ambil parameter dari GET
         $search = $this->request->getGet('search');
-
-        // Ambil perPage dari GET, default 10
+        $selectedKegiatanProses = $this->request->getGet('kegiatan_proses');
         $perPage = $this->request->getGet('perPage') ?? 10;
+        $sortBy = $this->request->getGet('sort_by') ?? '';
+        $sortOrder = $this->request->getGet('sort_order') ?? 'asc';
 
-        // Validasi perPage agar hanya nilai yang diizinkan
+        // Validasi perPage
         $allowedPerPage = [5, 10, 25, 50, 100];
         if (!in_array((int) $perPage, $allowedPerPage)) {
             $perPage = 10;
         }
 
-        // Get data petugas - HANYA untuk kabupaten user ini
-        $dataPetugas = $this->userModel->getUsersWithPetugasHistory($idKabupaten, $search, $perPage);
+        // Validasi sort order
+        $sortOrder = in_array($sortOrder, ['asc', 'desc']) ? $sortOrder : 'asc';
 
-        // Get nama kabupaten untuk ditampilkan
+        // Get nama kabupaten
         $kabupaten = $this->db->table('master_kabupaten')
             ->where('id_kabupaten', $idKabupaten)
             ->get()
             ->getRowArray();
 
+        // Get kegiatan proses list untuk filter - SEMUA kegiatan di kabupaten ini
+        $kegiatanProsesList = $this->getKegiatanProsesListByKabupaten($idKabupaten);
+
+        // Get all data petugas dengan filter
+        $allPetugas = $this->getAllPetugasDataByKabupaten($idKabupaten, $selectedKegiatanProses, $search);
+
+        // PENTING: Enrich data SEBELUM sorting
+        foreach ($allPetugas as &$petugas) {
+            $petugas['roles'] = $this->getPetugasRoles($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
+            $petugas['kegiatan'] = $this->getPetugasKegiatan($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
+            $petugas['rating_data'] = $this->getAverageRating($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
+
+            // Tambahkan field untuk sorting
+            $petugas['jumlah_kegiatan'] = count($petugas['kegiatan']);
+        }
+
+        // Apply sorting
+        if (!empty($sortBy)) {
+            usort($allPetugas, function ($a, $b) use ($sortBy, $sortOrder) {
+                $result = 0;
+
+                switch ($sortBy) {
+                    case 'nama':
+                        $result = strcasecmp($a['nama_user'], $b['nama_user']);
+                        break;
+
+                    case 'rating':
+                        $ratingA = $a['rating_data']['avg_rating'] ?? 0;
+                        $ratingB = $b['rating_data']['avg_rating'] ?? 0;
+                        $result = $ratingA <=> $ratingB;
+                        break;
+
+                    case 'kegiatan':
+                        $result = $a['jumlah_kegiatan'] <=> $b['jumlah_kegiatan'];
+                        break;
+                }
+
+                return $sortOrder === 'desc' ? -$result : $result;
+            });
+        }
+
+        // Manual pagination
+        $totalData = count($allPetugas);
+        $currentPage = $this->request->getVar('page_dataPetugas') ?? 1;
+        $offset = ($currentPage - 1) * $perPage;
+
+        $dataPetugas = array_slice($allPetugas, $offset, $perPage);
+
+        // Create pager manually
+        $pager = \Config\Services::pager();
+        $pager->store('dataPetugas', $currentPage, $perPage, $totalData);
+
         $data = [
             'title' => 'Pemantau Kabupaten - Data Petugas',
             'active_menu' => 'data-petugas',
-            'dataPetugas' => $dataPetugas['data'],
+            'kabupaten' => $kabupaten,
+            'dataPetugas' => $dataPetugas,
+            'kegiatanProsesList' => $kegiatanProsesList,
+            'selectedKegiatanProses' => $selectedKegiatanProses,
             'search' => $search,
             'perPage' => $perPage,
-            'pager' => $dataPetugas['pager'],
-            'totalData' => $dataPetugas['total'],
-            'kabupaten' => $kabupaten
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
+            'pager' => $pager,
+            'totalData' => $totalData
         ];
 
         return view('PemantauKabupaten/DataPetugas/index', $data);
     }
+
 
     /**
      * Detail petugas - list kegiatan yang pernah diikuti
@@ -136,6 +194,186 @@ class DataPetugasController extends BaseController
         ];
 
         return view('PemantauKabupaten/DataPetugas/detail_petugas', $data);
+    }
+
+    /**
+     * Get kegiatan proses list untuk kabupaten (SEMUA kegiatan, tidak filter admin)
+     */
+    private function getKegiatanProsesListByKabupaten($idKabupaten)
+    {
+        return $this->db->table('kegiatan_wilayah kw')
+            ->select('mkdp.id_kegiatan_detail_proses, 
+                 mkdp.nama_kegiatan_detail_proses,
+                 mkd.nama_kegiatan_detail')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('kw.id_kabupaten', $idKabupaten)
+            ->groupBy('mkdp.id_kegiatan_detail_proses, mkdp.nama_kegiatan_detail_proses, mkd.nama_kegiatan_detail')
+            ->orderBy('mkdp.tanggal_mulai', 'DESC')
+            ->get()
+            ->getResultArray();
+    }
+
+    /**
+     * Get all petugas data untuk kabupaten (SEMUA petugas, tidak filter admin)
+     */
+    private function getAllPetugasDataByKabupaten($idKabupaten, $kegiatanProsesFilter = null, $search = null)
+    {
+        $builder = $this->userModel->db->table('sipantau_user u')
+            ->select('u.sobat_id, u.nama_user, u.is_active')
+            ->where('u.id_kabupaten', $idKabupaten);
+
+        // Apply search filter
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('u.nama_user', $search)
+                ->orLike('u.sobat_id', $search)
+                ->groupEnd();
+        }
+
+        // Filter berdasarkan kegiatan jika ada
+        if (!empty($kegiatanProsesFilter)) {
+            $builder->where('(
+            u.sobat_id IN (
+                SELECT pml.sobat_id 
+                FROM pml 
+                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+                WHERE kw.id_kegiatan_detail_proses = ' . $this->userModel->db->escape($kegiatanProsesFilter) . '
+                AND kw.id_kabupaten = ' . $this->userModel->db->escape($idKabupaten) . '
+            )
+            OR u.sobat_id IN (
+                SELECT pcl.sobat_id 
+                FROM pcl
+                JOIN pml ON pcl.id_pml = pml.id_pml
+                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+                WHERE kw.id_kegiatan_detail_proses = ' . $this->userModel->db->escape($kegiatanProsesFilter) . '
+                AND kw.id_kabupaten = ' . $this->userModel->db->escape($idKabupaten) . '
+            )
+        )');
+        }
+
+        $builder->groupBy('u.sobat_id, u.nama_user, u.is_active')
+            ->orderBy('u.nama_user', 'ASC');
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Get roles petugas (PML/PCL)
+     */
+    private function getPetugasRoles($sobatId, $idKabupaten, $kegiatanProsesFilter = null)
+    {
+        $roles = [];
+
+        // Check PML
+        $builderPML = $this->db->table('pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->where('pml.sobat_id', $sobatId)
+            ->where('kw.id_kabupaten', $idKabupaten);
+
+        if ($kegiatanProsesFilter) {
+            $builderPML->where('kw.id_kegiatan_detail_proses', $kegiatanProsesFilter);
+        }
+
+        if ($builderPML->countAllResults() > 0) {
+            $roles[] = 'PML';
+        }
+
+        // Check PCL
+        $builderPCL = $this->db->table('pcl')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->where('pcl.sobat_id', $sobatId)
+            ->where('kw.id_kabupaten', $idKabupaten);
+
+        if ($kegiatanProsesFilter) {
+            $builderPCL->where('kw.id_kegiatan_detail_proses', $kegiatanProsesFilter);
+        }
+
+        if ($builderPCL->countAllResults() > 0) {
+            $roles[] = 'PCL';
+        }
+
+        return array_unique($roles);
+    }
+
+    /**
+     * Get daftar kegiatan petugas
+     */
+    private function getPetugasKegiatan($sobatId, $idKabupaten, $kegiatanProsesFilter = null)
+    {
+        $kegiatan = [];
+
+        // Get kegiatan sebagai PML
+        $builderPML = $this->db->table('pml')
+            ->select('mkdp.nama_kegiatan_detail_proses, mkd.tahun')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('pml.sobat_id', $sobatId)
+            ->where('kw.id_kabupaten', $idKabupaten);
+
+        if ($kegiatanProsesFilter) {
+            $builderPML->where('kw.id_kegiatan_detail_proses', $kegiatanProsesFilter);
+        }
+
+        $pmlKegiatan = $builderPML->get()->getResultArray();
+        foreach ($pmlKegiatan as $kg) {
+            $kegiatan[] = [
+                'display' => $kg['nama_kegiatan_detail_proses'] . ' (' . $kg['tahun'] . ')'
+            ];
+        }
+
+        // Get kegiatan sebagai PCL
+        $builderPCL = $this->db->table('pcl')
+            ->select('mkdp.nama_kegiatan_detail_proses, mkd.tahun')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->join('master_kegiatan_detail mkd', 'mkdp.id_kegiatan_detail = mkd.id_kegiatan_detail')
+            ->where('pcl.sobat_id', $sobatId)
+            ->where('kw.id_kabupaten', $idKabupaten);
+
+        if ($kegiatanProsesFilter) {
+            $builderPCL->where('kw.id_kegiatan_detail_proses', $kegiatanProsesFilter);
+        }
+
+        $pclKegiatan = $builderPCL->get()->getResultArray();
+        foreach ($pclKegiatan as $kg) {
+            $kegiatan[] = [
+                'display' => $kg['nama_kegiatan_detail_proses'] . ' (' . $kg['tahun'] . ')'
+            ];
+        }
+
+        // Remove duplicates
+        $kegiatan = array_map("unserialize", array_unique(array_map("serialize", $kegiatan)));
+
+        return $kegiatan;
+    }
+
+    /**
+     * Get rata-rata rating petugas dari semua kegiatan PCL
+     */
+    private function getAverageRating($sobatId, $idKabupaten, $kegiatanProsesFilter = null)
+    {
+        $builder = $this->db->table('pcl')
+            ->selectAvg('pcl.rating', 'avg_rating')
+            ->select('COUNT(pcl.id_pcl) as total_kegiatan')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->where('pcl.sobat_id', $sobatId)
+            ->where('kw.id_kabupaten', $idKabupaten);
+
+        if ($kegiatanProsesFilter) {
+            $builder->where('kw.id_kegiatan_detail_proses', $kegiatanProsesFilter);
+        }
+
+        $result = $builder->get()->getRowArray();
+
+        return [
+            'avg_rating' => $result['avg_rating'] ? round($result['avg_rating'], 1) : 0,
+            'total_kegiatan' => (int) $result['total_kegiatan']
+        ];
     }
 
     /**

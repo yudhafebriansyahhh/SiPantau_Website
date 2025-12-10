@@ -20,8 +20,40 @@
     <div class="mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">DATA MITRA BPS PROVINSI RIAU</h2>
 
-        <!-- Search dan Filter Section -->
-        <div style="display: grid; grid-template-columns: 1fr 1.2fr 200px; gap: 1rem; margin-bottom: 1.5rem;">
+        <!-- Filter dan Search Section -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <!-- Filter Kegiatan Proses -->
+            <div>
+                <label for="kegiatanProsesFilter" class="block text-sm font-medium text-gray-700 mb-1">
+                    Filter Kegiatan
+                </label>
+                <select id="kegiatanProsesFilter" class="input-field w-full" onchange="updateFilters()">
+                    <option value="">Semua Kegiatan</option>
+                    <?php foreach ($kegiatanProsesList as $kegiatan): ?>
+                        <option value="<?= $kegiatan['id_kegiatan_detail_proses'] ?>"
+                            <?= ($selectedKegiatanProses == $kegiatan['id_kegiatan_detail_proses']) ? 'selected' : '' ?>>
+                            <?= esc($kegiatan['nama_kegiatan_detail']) ?> -
+                            <?= esc($kegiatan['nama_kegiatan_detail_proses']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Filter Kabupaten -->
+            <div>
+                <label for="kabupatenFilter" class="block text-sm font-medium text-gray-700 mb-1">
+                    Filter Kabupaten
+                </label>
+                <select id="kabupatenFilter" class="input-field w-full" onchange="updateFilters()">
+                    <option value="">Semua Kabupaten</option>
+                    <?php foreach ($kabupatenList as $kab): ?>
+                        <option value="<?= $kab['id_kabupaten']; ?>" <?= ($selectedKabupaten == $kab['id_kabupaten']) ? 'selected' : ''; ?>>
+                            <?= esc($kab['nama_kabupaten']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
             <!-- Search Box -->
             <div>
                 <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">
@@ -37,52 +69,18 @@
                 </div>
             </div>
 
-            <!-- Filter Kabupaten -->
-            <div style="margin-left: 0.5rem;">
-                <label for="kabupatenFilter" class="block text-sm font-medium text-gray-700 mb-1">
-                    Filter Kabupaten
-                </label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-filter text-gray-400"></i>
-                    </div>
-                    <select name="kabupaten" id="kabupatenFilter"
-                        class="input-field w-full pl-10 pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
-                        style="text-overflow: ellipsis;" onchange="updateFilters()">
-                        <option value="">-- Semua Kabupaten --</option>
-                        <?php foreach ($kabupatenList as $kab): ?>
-                            <option value="<?= $kab['id_kabupaten']; ?>" <?= ($selectedKabupaten == $kab['id_kabupaten']) ? 'selected' : ''; ?>>
-                                <?= esc($kab['nama_kabupaten']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <i id="kabupatenChevron"
-                            class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
-                    </div>
-                </div>
-            </div>
-
             <!-- Per Page Selector -->
             <div>
                 <label for="perPageSelect" class="block text-sm font-medium text-gray-700 mb-1">
                     Data per Halaman
                 </label>
-                <div class="relative">
-                    <select name="perPage" id="perPageSelect"
-                        class="input-field w-full pr-10 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
-                        onchange="updateFilters()">
-                        <option value="5" <?= ($perPage == 5) ? 'selected' : ''; ?>>5</option>
-                        <option value="10" <?= ($perPage == 10) ? 'selected' : ''; ?>>10</option>
-                        <option value="25" <?= ($perPage == 25) ? 'selected' : ''; ?>>25</option>
-                        <option value="50" <?= ($perPage == 50) ? 'selected' : ''; ?>>50</option>
-                        <option value="100" <?= ($perPage == 100) ? 'selected' : ''; ?>>100</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <i id="perPageChevron"
-                            class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
-                    </div>
-                </div>
+                <select id="perPageSelect" class="input-field w-full" onchange="updateFilters()">
+                    <option value="5" <?= ($perPage == 5) ? 'selected' : ''; ?>>5</option>
+                    <option value="10" <?= ($perPage == 10) ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?= ($perPage == 25) ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?= ($perPage == 50) ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?= ($perPage == 100) ? 'selected' : ''; ?>>100</option>
+                </select>
             </div>
         </div>
     </div>
@@ -97,12 +95,20 @@
                         No
                     </th>
                     <th
-                        class="px-4 py-3 text-left text-xs font-semibold text-gray-700 border border-gray-300 whitespace-nowrap">
-                        Kab/Kota
+                        class="px-4 py-3 text-center text-xs font-semibold text-gray-700 border border-gray-300 whitespace-nowrap w-16">
+                        Nama Kabupaten
                     </th>
-                    <th
-                        class="px-4 py-3 text-left text-xs font-semibold text-gray-700 border border-gray-300 whitespace-nowrap">
-                        Nama Mitra
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-700 border border-gray-300 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors"
+                        onclick="sortTable('nama')">
+                        <div class="flex items-center justify-between">
+                            <span>Nama Mitra</span>
+                            <div class="flex flex-col gap-0.5 ml-2">
+                                <i
+                                    class="fas fa-caret-up text-sm transition-colors <?= ($sortBy == 'nama' && $sortOrder == 'asc') ? 'text-blue-600' : 'text-gray-300' ?>"></i>
+                                <i
+                                    class="fas fa-caret-down text-sm -mt-1 transition-colors <?= ($sortBy == 'nama' && $sortOrder == 'desc') ? 'text-blue-600' : 'text-gray-300' ?>"></i>
+                            </div>
+                        </div>
                     </th>
                     <th
                         class="px-4 py-3 text-left text-xs font-semibold text-gray-700 border border-gray-300 whitespace-nowrap">
@@ -116,8 +122,29 @@
                         class="px-4 py-3 text-center text-xs font-semibold text-gray-700 border border-gray-300 whitespace-nowrap">
                         Status
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 border border-gray-300">
-                        Kegiatan yang Diikuti
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-700 border border-gray-300 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors"
+                        onclick="sortTable('rating')">
+                        <div class="flex items-center justify-between">
+                            <span>Rata-rata Rating</span>
+                            <div class="flex flex-col gap-0.5 ml-2">
+                                <i
+                                    class="fas fa-caret-up text-sm transition-colors <?= ($sortBy == 'rating' && $sortOrder == 'asc') ? 'text-blue-600' : 'text-gray-300' ?>"></i>
+                                <i
+                                    class="fas fa-caret-down text-sm -mt-1 transition-colors <?= ($sortBy == 'rating' && $sortOrder == 'desc') ? 'text-blue-600' : 'text-gray-300' ?>"></i>
+                            </div>
+                        </div>
+                    </th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-700 border border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors"
+                        onclick="sortTable('kegiatan')">
+                        <div class="flex items-center justify-between">
+                            <span>Kegiatan yang Diikuti</span>
+                            <div class="flex flex-col gap-0.5 ml-2">
+                                <i
+                                    class="fas fa-caret-up text-sm transition-colors <?= ($sortBy == 'kegiatan' && $sortOrder == 'asc') ? 'text-blue-600' : 'text-gray-300' ?>"></i>
+                                <i
+                                    class="fas fa-caret-down text-sm -mt-1 transition-colors <?= ($sortBy == 'kegiatan' && $sortOrder == 'desc') ? 'text-blue-600' : 'text-gray-300' ?>"></i>
+                            </div>
+                        </div>
                     </th>
                 </tr>
             </thead>
@@ -160,6 +187,42 @@
                                 <span class="inline-flex px-3 py-1 <?= $statusClass ?> text-xs font-semibold rounded-full">
                                     <?= $statusText ?>
                                 </span>
+                            </td>
+                            <!-- KOLOM RATING BARU -->
+                            <td class="px-4 py-3 text-center border border-gray-300">
+                                <?php if ($petugas['rating_data']['total_kegiatan'] > 0): ?>
+                                    <div class="flex flex-col items-center gap-1">
+                                        <div class="flex items-center gap-1">
+                                            <?php
+                                            $avgRating = $petugas['rating_data']['avg_rating'];
+                                            for ($i = 1; $i <= 5; $i++):
+                                                if ($i <= floor($avgRating)) {
+                                                    // Full star
+                                                    echo '<i class="fas fa-star" style="font-size: 14px; color: #fbbf24;"></i>';
+                                                } elseif ($i == ceil($avgRating) && $avgRating - floor($avgRating) >= 0.5) {
+                                                    // Half star
+                                                    echo '<i class="fas fa-star-half-alt" style="font-size: 14px; color: #fbbf24;"></i>';
+                                                } else {
+                                                    // Empty star
+                                                    echo '<i class="far fa-star" style="font-size: 14px; color: #d1d5db;"></i>';
+                                                }
+                                            endfor;
+                                            ?>
+                                        </div>
+                                        <span class="text-xs font-semibold text-gray-700">
+                                            <?= number_format($avgRating, 1) ?>
+                                        </span>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="flex flex-col items-center gap-1">
+                                        <div class="flex items-center gap-1">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="far fa-star" style="font-size: 14px; color: #d1d5db;"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <span class="text-xs text-gray-400">Belum ada rating</span>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                             <td class="px-4 py-3 text-sm border border-gray-300">
                                 <?php if (!empty($petugas['kegiatan'])): ?>
@@ -205,42 +268,84 @@
     </div>
 </div>
 
+<style>
+    /* Styling untuk sortable column header */
+    thead th[onclick] {
+        user-select: none;
+    }
+
+    thead th[onclick]:active {
+        background-color: #e5e7eb !important;
+    }
+
+    /* Smooth transition untuk icon */
+    thead th i {
+        transition: color 0.2s ease;
+    }
+
+    /* Hover effect untuk icon */
+    thead th[onclick]:hover i {
+        color: #6b7280 !important;
+    }
+
+    thead th[onclick]:hover i.text-blue-600 {
+        color: #2563eb !important;
+    }
+</style>
+
 <script>
-    // Handle animasi chevron untuk kabupaten filter
-    const kabupatenFilter = document.getElementById('kabupatenFilter');
-    const kabupatenChevron = document.getElementById('kabupatenChevron');
+    // Function untuk sorting table
+    function sortTable(column) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSort = urlParams.get('sort_by');
+        const currentOrder = urlParams.get('sort_order');
 
-    kabupatenFilter.addEventListener('focus', function () {
-        kabupatenChevron.classList.add('rotate-180');
-    });
+        let newOrder = 'asc';
 
-    kabupatenFilter.addEventListener('blur', function () {
-        kabupatenChevron.classList.remove('rotate-180');
-    });
+        // Toggle order jika kolom yang sama diklik
+        if (currentSort === column) {
+            newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+        }
 
-    // Handle animasi chevron untuk perPage selector
-    const perPageSelect = document.getElementById('perPageSelect');
-    const perPageChevron = document.getElementById('perPageChevron');
+        urlParams.set('sort_by', column);
+        urlParams.set('sort_order', newOrder);
 
-    perPageSelect.addEventListener('focus', function () {
-        perPageChevron.classList.add('rotate-180');
-    });
-
-    perPageSelect.addEventListener('blur', function () {
-        perPageChevron.classList.remove('rotate-180');
-    });
+        window.location.href = '<?= base_url('pemantau-provinsi/data-petugas') ?>?' + urlParams.toString();
+    }
 
     // Function untuk update filters dengan mempertahankan parameter yang ada
     function updateFilters() {
+        const kegiatanProses = document.getElementById('kegiatanProsesFilter').value;
         const kabupaten = document.getElementById('kabupatenFilter').value;
         const perPage = document.getElementById('perPageSelect').value;
         const search = document.getElementById('searchInput').value;
 
-        // Build URL dengan parameter
-        const params = new URLSearchParams();
-        if (kabupaten) params.append('kabupaten', kabupaten);
-        if (perPage) params.append('perPage', perPage);
-        if (search) params.append('search', search);
+        const params = new URLSearchParams(window.location.search);
+
+        // Update parameters
+        if (kegiatanProses) {
+            params.set('kegiatan_proses', kegiatanProses);
+        } else {
+            params.delete('kegiatan_proses');
+        }
+
+        if (kabupaten) {
+            params.set('kabupaten', kabupaten);
+        } else {
+            params.delete('kabupaten');
+        }
+
+        if (perPage) {
+            params.set('perPage', perPage);
+        } else {
+            params.delete('perPage');
+        }
+
+        if (search) {
+            params.set('search', search);
+        } else {
+            params.delete('search');
+        }
 
         // Redirect ke URL dengan parameter baru
         window.location.href = '<?= base_url('pemantau-provinsi/data-petugas') ?>?' + params.toString();

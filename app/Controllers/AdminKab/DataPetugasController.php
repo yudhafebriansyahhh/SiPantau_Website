@@ -61,12 +61,52 @@ class DataPetugasController extends BaseController
         $selectedKegiatanProses = $this->request->getGet('kegiatan_proses');
         $search = $this->request->getGet('search');
         $perPage = $this->request->getGet('perPage') ?? 10;
+        $sortBy = $this->request->getGet('sort_by') ?? '';
+        $sortOrder = $this->request->getGet('sort_order') ?? 'asc';
+
+        // Validasi sort order
+        $sortOrder = in_array($sortOrder, ['asc', 'desc']) ? $sortOrder : 'asc';
 
         // Get kegiatan proses yang di-assign ke admin ini
         $kegiatanProsesList = $this->getAssignedKegiatanProses($idAdminKabupaten);
 
         // Get all data petugas first
         $allPetugas = $this->getAllPetugasData($idKabupaten, $selectedKegiatanProses, $search);
+
+        // PENTING: Enrich data SEBELUM sorting
+        foreach ($allPetugas as &$petugas) {
+            $petugas['roles'] = $this->getPetugasRoles($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
+            $petugas['kegiatan'] = $this->getPetugasKegiatan($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
+            $petugas['rating_data'] = $this->getAverageRating($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
+
+            // Tambahkan field untuk sorting
+            $petugas['jumlah_kegiatan'] = count($petugas['kegiatan']);
+        }
+
+        // Apply sorting
+        if (!empty($sortBy)) {
+            usort($allPetugas, function ($a, $b) use ($sortBy, $sortOrder) {
+                $result = 0;
+
+                switch ($sortBy) {
+                    case 'nama':
+                        $result = strcasecmp($a['nama_user'], $b['nama_user']);
+                        break;
+
+                    case 'rating':
+                        $ratingA = $a['rating_data']['avg_rating'] ?? 0;
+                        $ratingB = $b['rating_data']['avg_rating'] ?? 0;
+                        $result = $ratingA <=> $ratingB;
+                        break;
+
+                    case 'kegiatan':
+                        $result = $a['jumlah_kegiatan'] <=> $b['jumlah_kegiatan'];
+                        break;
+                }
+
+                return $sortOrder === 'desc' ? -$result : $result;
+            });
+        }
 
         // Manual pagination
         $totalData = count($allPetugas);
@@ -79,12 +119,6 @@ class DataPetugasController extends BaseController
         $pager = \Config\Services::pager();
         $pager->store('dataPetugas', $currentPage, $perPage, $totalData);
 
-        // Enrich data dengan role dan kegiatan
-        foreach ($dataPetugas as &$petugas) {
-            $petugas['roles'] = $this->getPetugasRoles($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
-            $petugas['kegiatan'] = $this->getPetugasKegiatan($petugas['sobat_id'], $idKabupaten, $selectedKegiatanProses);
-        }
-
         $data = [
             'title' => 'Data Petugas',
             'active_menu' => 'data-petugas',
@@ -94,6 +128,8 @@ class DataPetugasController extends BaseController
             'selectedKegiatanProses' => $selectedKegiatanProses,
             'search' => $search,
             'perPage' => $perPage,
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
             'pager' => $pager,
             'totalData' => $totalData
         ];
@@ -101,6 +137,9 @@ class DataPetugasController extends BaseController
         return view('AdminSurveiKab/DataPetugas/index', $data);
     }
 
+    /**
+     * Get all petugas data dengan filter
+     */
     /**
      * Get all petugas data dengan filter
      */
@@ -121,31 +160,53 @@ class DataPetugasController extends BaseController
         // Filter berdasarkan kegiatan jika ada
         if (!empty($kegiatanProsesFilter)) {
             $builder->where('(
-                u.sobat_id IN (
-                    SELECT pml.sobat_id 
-                    FROM pml 
-                    JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
-                    WHERE kw.id_kegiatan_detail_proses = ' . $this->userModel->db->escape($kegiatanProsesFilter) . '
-                    AND kw.id_kabupaten = ' . $this->userModel->db->escape($idKabupaten) . '
-                )
-                OR u.sobat_id IN (
-                    SELECT pcl.sobat_id 
-                    FROM pcl
-                    JOIN pml ON pcl.id_pml = pml.id_pml
-                    JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
-                    WHERE kw.id_kegiatan_detail_proses = ' . $this->userModel->db->escape($kegiatanProsesFilter) . '
-                    AND kw.id_kabupaten = ' . $this->userModel->db->escape($idKabupaten) . '
-                )
-            )');
-        } else {
-            // Tanpa filter: tampilkan SEMUA petugas di wilayah, tidak harus yang terlibat di kegiatan
-            // Hapus filter kegiatan, cukup filter berdasarkan kabupaten saja
+            u.sobat_id IN (
+                SELECT pml.sobat_id 
+                FROM pml 
+                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+                WHERE kw.id_kegiatan_detail_proses = ' . $this->userModel->db->escape($kegiatanProsesFilter) . '
+                AND kw.id_kabupaten = ' . $this->userModel->db->escape($idKabupaten) . '
+            )
+            OR u.sobat_id IN (
+                SELECT pcl.sobat_id 
+                FROM pcl
+                JOIN pml ON pcl.id_pml = pml.id_pml
+                JOIN kegiatan_wilayah kw ON pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah
+                WHERE kw.id_kegiatan_detail_proses = ' . $this->userModel->db->escape($kegiatanProsesFilter) . '
+                AND kw.id_kabupaten = ' . $this->userModel->db->escape($idKabupaten) . '
+            )
+        )');
         }
 
         $builder->groupBy('u.sobat_id, u.nama_user, u.is_active')
             ->orderBy('u.nama_user', 'ASC');
 
         return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Get rata-rata rating petugas dari semua kegiatan PCL
+     */
+    private function getAverageRating($sobatId, $idKabupaten, $kegiatanProsesFilter = null)
+    {
+        $builder = $this->pclModel->db->table('pcl')
+            ->selectAvg('pcl.rating', 'avg_rating')
+            ->select('COUNT(pcl.id_pcl) as total_kegiatan')
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->where('pcl.sobat_id', $sobatId)
+            ->where('kw.id_kabupaten', $idKabupaten);
+
+        if ($kegiatanProsesFilter) {
+            $builder->where('kw.id_kegiatan_detail_proses', $kegiatanProsesFilter);
+        }
+
+        $result = $builder->get()->getRowArray();
+
+        return [
+            'avg_rating' => $result['avg_rating'] ? round($result['avg_rating'], 1) : 0,
+            'total_kegiatan' => (int) $result['total_kegiatan']
+        ];
     }
 
     /**
@@ -477,6 +538,8 @@ class DataPetugasController extends BaseController
         ];
     }
 
+
+
     /**
      * Get Pantau Progress via AJAX
      */
@@ -579,6 +642,7 @@ class DataPetugasController extends BaseController
 
         $idPCL = $this->request->getPost('id_pcl');
         $feedback = trim($this->request->getPost('feedback'));
+        $rating = (int) $this->request->getPost('rating'); // TAMBAHKAN INI
 
         if (empty($idPCL)) {
             return $this->response->setJSON([
@@ -591,6 +655,14 @@ class DataPetugasController extends BaseController
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Feedback tidak boleh kosong'
+            ]);
+        }
+
+        // VALIDASI RATING
+        if ($rating < 1 || $rating > 5) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Rating harus antara 1-5'
             ]);
         }
 
@@ -625,21 +697,24 @@ class DataPetugasController extends BaseController
             ]);
         }
 
+        // UPDATE DENGAN RATING
         $updated = $this->pclModel->update($idPCL, [
             'feedback_admin' => $feedback,
+            'rating' => $rating,  // TAMBAHKAN INI
             'updated_at' => date('Y-m-d H:i:s')
         ]);
 
         if ($updated) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Feedback berhasil disimpan',
-                'feedback' => $feedback
+                'message' => 'Feedback dan rating berhasil disimpan',
+                'feedback' => $feedback,
+                'rating' => $rating  // TAMBAHKAN INI
             ]);
         } else {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Gagal menyimpan feedback'
+                'message' => 'Gagal menyimpan feedback dan rating'
             ]);
         }
     }
@@ -705,4 +780,6 @@ class DataPetugasController extends BaseController
 
         return view('AdminSurveiKab/DataPetugas/detail_pml', $data);
     }
+
+
 }
