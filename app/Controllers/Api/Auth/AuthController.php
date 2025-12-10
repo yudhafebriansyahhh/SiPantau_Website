@@ -135,4 +135,75 @@ class AuthController extends BaseController
             return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
         }
     }
+
+    public function updateProfile()
+{
+    $authHeader = $this->request->getHeaderLine('Authorization');
+    if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        return $this->failUnauthorized('Token tidak ditemukan');
+    }
+
+    $token = $matches[1];
+
+    try {
+        // Decode token JWT
+        $decoded = JWT::decode($token, new Key($this->jwtKey, 'HS256'));
+        $userData = (array) $decoded->data;
+
+        $sobatId = $userData['sobat_id'];
+
+        // Ambil input JSON atau form-data
+        if ($this->request->getHeaderLine('Content-Type') === 'application/json') {
+            $input = $this->request->getJSON(true);
+        } else {
+            $input = $this->request->getPost();
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->where('sobat_id', $sobatId)->first();
+
+        if (!$user) {
+            return $this->failNotFound("User tidak ditemukan");
+        }
+
+        // Data yang boleh diupdate
+        $updateData = [];
+
+        // Update nama
+        if (!empty($input['nama_user'])) {
+            $updateData['nama_user'] = $input['nama_user'];
+        }
+
+        // Update nomor hp
+        if (!empty($input['hp'])) {
+            $updateData['hp'] = $input['hp'];
+        }
+
+        // Update password → TIDAK di-hash di sini
+        if (!empty($input['password'])) {
+            $updateData['password'] = $input['password']; // Model akan hash otomatis
+        }
+
+        // Jika tidak ada yang diupdate
+        if (empty($updateData)) {
+            return $this->failValidationErrors("Tidak ada data yang diupdate");
+        }
+
+        // Update ke database
+        $userModel->update($sobatId, $updateData);
+
+        return $this->respond([
+            'status' => 'success',
+            'message' => 'Profil berhasil diperbarui',
+            'updated_data' => $updateData
+        ]);
+
+    } catch (\Firebase\JWT\ExpiredException $e) {
+        return $this->failUnauthorized('Token kadaluarsa');
+    } catch (\Exception $e) {
+        return $this->failUnauthorized('Token tidak valid: ' . $e->getMessage());
+    }
+}
+
+
 }

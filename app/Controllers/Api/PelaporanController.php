@@ -73,7 +73,7 @@ class PelaporanController extends BaseController
 
         $laporan = $builder->findAll();
 
-        // 🖼️ Ubah imagepath jadi URL lengkap
+        // Ubah imagepath jadi URL lengkap
         foreach ($laporan as &$item) {
             $item['image_url'] = !empty($item['imagepath'])
                 ? base_url($item['imagepath'])

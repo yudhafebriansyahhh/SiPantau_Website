@@ -8,6 +8,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Models\PMLModel;
 use App\Models\PCLModel;
+use App\Models\SipantauUserAchievementModel;
 
 class KegiatanController extends BaseController
 {
@@ -163,7 +164,6 @@ class KegiatanController extends BaseController
 
     public function totalKegiatanPCL()
 {
-    // Ambil & cek token
     $authHeader = $this->request->getHeaderLine('Authorization');
     if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
         return $this->failUnauthorized('Token tidak ditemukan');
@@ -176,17 +176,39 @@ class KegiatanController extends BaseController
         $sobat_id = $decoded->data->sobat_id;
 
         $pclModel = new PCLModel();
+        $achModel = new SipantauUserAchievementModel();
+
+        // Total semua kegiatan PCL
         $total = $pclModel->where('sobat_id', $sobat_id)->countAllResults();
+
+        // Total kegiatan aktif
+        $totalAktif = $pclModel
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->where('pcl.sobat_id', $sobat_id)
+            ->where('mkdp.tanggal_mulai <=', date('Y-m-d'))
+            ->where('mkdp.tanggal_selesai >=', date('Y-m-d'))
+            ->countAllResults();
+
+        // 🔥 TOTAL ACHIEVEMENT USER BERDASARKAN sobat_id
+        $totalAchievement = $achModel
+            ->where('sobat_id', $sobat_id)
+            ->countAllResults();
 
         return $this->respond([
             'status' => 'success',
             'sobat_id' => $sobat_id,
-            'total_kegiatan_pcl' => $total
+            'total_kegiatan_pcl' => $total,
+            'total_kegiatan_pcl_aktif' => $totalAktif,
+            'total_achievement' => $totalAchievement
         ]);
 
     } catch (\Exception $e) {
         return $this->failUnauthorized("Token tidak valid: " . $e->getMessage());
     }
 }
+
+
 
 }
