@@ -300,6 +300,7 @@ $routes->group('pemantau-kabupaten', ['filter' => 'role:3'], static function ($r
 // ================== API AUTH LOGIN ==================
 $routes->group('api/auth', ['namespace' => 'App\Controllers\Api\Auth'], static function ($routes) {
     $routes->post('login', 'AuthController::login');
+    $routes->post('update-profile','AuthController::updateProfile',['filter' => 'jwt']);
     $routes->get('me', 'AuthController::me', ['filter' => 'jwt']);
 });
 
