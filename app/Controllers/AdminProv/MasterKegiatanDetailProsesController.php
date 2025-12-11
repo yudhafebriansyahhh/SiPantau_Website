@@ -334,12 +334,15 @@ class MasterKegiatanDetailProsesController extends BaseController
         $isKurvaNeedsUpdate = (
             $existingData['target'] != $input['target'] ||
             $existingData['persentase_target_awal'] != $input['persentase_target_awal'] ||
+            $existingData['tanggal_mulai'] != $input['tanggal_mulai'] ||
+            $existingData['tanggal_selesai'] != $input['tanggal_selesai'] ||
             $existingData['tanggal_selesai_target'] != $input['tanggal_selesai_target']
         );
 
         if ($isKurvaNeedsUpdate) {
-            $kurvaModel = new KurvaSProvinsiModel();
-            $kurvaModel->where('id_kegiatan_detail_proses', $id)->delete();
+            // 1. Regenerate Kurva Provinsi
+            $kurvaProvinsiModel = new KurvaSProvinsiModel();
+            $kurvaProvinsiModel->where('id_kegiatan_detail_proses', $id)->delete();
 
             $this->generateKurvaS(
                 $id,
@@ -349,6 +352,59 @@ class MasterKegiatanDetailProsesController extends BaseController
                 $tanggal100Persen,
                 $tanggalSelesai
             );
+
+            // 2. Regenerate Kurva Kabupaten yang terkait
+            $kurvaKabModel = new \App\Models\KurvaSkabModel();
+            $kegiatanWilayahModel = new \App\Models\MasterKegiatanWilayahModel();
+
+            $kegiatanWilayahList = $kegiatanWilayahModel
+                ->where('id_kegiatan_detail_proses', $id)
+                ->findAll();
+
+            foreach ($kegiatanWilayahList as $kw) {
+                // Hapus kurva lama
+                $kurvaKabModel->where('id_kegiatan_wilayah', $kw['id_kegiatan_wilayah'])->delete();
+
+                // Generate kurva baru
+                $this->generateKurvaSKab(
+                    $kw['id_kegiatan_wilayah'],
+                    $kw['target_wilayah'],
+                    $input['persentase_target_awal'],
+                    $tanggalMulai,
+                    $tanggal100Persen,
+                    $tanggalSelesai
+                );
+            }
+
+            // 3. Regenerate Kurva Petugas (PCL) yang terkait
+            $kurvaPetugasModel = new \App\Models\KurvaPetugasModel();
+            $pmlModel = new \App\Models\PMLModel();
+            $pclModel = new \App\Models\PCLModel();
+
+            foreach ($kegiatanWilayahList as $kw) {
+                // Get semua PML di kegiatan wilayah ini
+                $pmlList = $pmlModel->where('id_kegiatan_wilayah', $kw['id_kegiatan_wilayah'])->findAll();
+
+                foreach ($pmlList as $pml) {
+                    // Get semua PCL di bawah PML ini
+                    $pclList = $pclModel->where('id_pml', $pml['id_pml'])->findAll();
+
+                    foreach ($pclList as $pcl) {
+                        // Hapus kurva lama
+                        $kurvaPetugasModel->where('id_pcl', $pcl['id_pcl'])->delete();
+
+                        // Generate kurva baru
+                        $this->generateKurvaPetugas(
+                            $pcl['id_pcl'],
+                            $pcl['target'],
+                            $input['persentase_target_awal'],
+                            $tanggalMulai,
+                            $tanggal100Persen,
+                            $tanggalSelesai
+                        );
+                    }
+                }
+            }
         }
 
         return redirect()
@@ -499,7 +555,6 @@ class MasterKegiatanDetailProsesController extends BaseController
                 'target_harian_absolut' => $row['harian'],
                 'target_kumulatif_absolut' => $row['kumulatif'],
                 'is_hari_kerja' => 1,
-                'created_at' => date('Y-m-d H:i:s'),
             ]);
         }
 
@@ -515,7 +570,160 @@ class MasterKegiatanDetailProsesController extends BaseController
                 'target_harian_absolut' => 0,
                 'target_kumulatif_absolut' => $totalTarget,
                 'is_hari_kerja' => 1,
-                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+    }
+
+    private function generateKurvaSKab($idWilayah, $target, $persenAwal, $tanggalMulai, $tanggal100, $tanggalSelesai)
+    {
+        $kurvaModel = new \App\Models\KurvaSkabModel();
+
+        $totalTarget = (int) $target;
+        $persenAwal = (float) $persenAwal;
+
+        $start = new DateTime($tanggalMulai);
+        $tgl100 = new DateTime($tanggal100);
+        $end = new DateTime($tanggalSelesai);
+        $end->modify('+1 day');
+
+        $interval = new DateInterval('P1D');
+        $periodTotal = iterator_to_array(new DatePeriod($start, $interval, $end));
+        $workdays = array_filter($periodTotal, fn($d) => $d->format('N') <= 5);
+        $workdays = array_values($workdays);
+        $workdaysUntil100 = array_filter($workdays, fn($d) => $d <= $tgl100);
+        $workdaysUntil100 = array_values($workdaysUntil100);
+
+        $daysSigmoid = max(count($workdaysUntil100), 2);
+        $k = 8;
+        $x0 = 0.5;
+        $sigmoidMin = 1 / (1 + exp(-$k * (0 - $x0)));
+        $sigmoidMax = 1 / (1 + exp(-$k * (1 - $x0)));
+
+        $workdayData = [];
+        foreach ($workdaysUntil100 as $i => $date) {
+            $progress = $i / ($daysSigmoid - 1);
+            $sigmoid = 1 / (1 + exp(-$k * ($progress - $x0)));
+            $normalizedSigmoid = ($sigmoid - $sigmoidMin) / ($sigmoidMax - $sigmoidMin);
+            $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $normalizedSigmoid;
+            $workdayData[$date->format('Y-m-d')] = min($kumulatifPersen, 100);
+        }
+
+        $kumulatifAbsolut = 0;
+        $insertData = [];
+        foreach ($workdaysUntil100 as $date) {
+            $current = $date->format('Y-m-d');
+            $kumulatifPersen = $workdayData[$current];
+            $harianAbsolut = round(($totalTarget * ($kumulatifPersen / 100)) - $kumulatifAbsolut);
+            $kumulatifAbsolut += $harianAbsolut;
+
+            $insertData[] = [
+                'id_kegiatan_wilayah' => $idWilayah,
+                'tanggal_target' => $current,
+                'target_persen_kumulatif' => round($kumulatifPersen, 2),
+                'target_harian_absolut' => $harianAbsolut,
+                'target_kumulatif_absolut' => $kumulatifAbsolut,
+                'is_hari_kerja' => 1,
+            ];
+        }
+
+        $selisih = $totalTarget - $kumulatifAbsolut;
+        if (!empty($insertData) && $selisih !== 0) {
+            $insertData[count($insertData) - 1]['target_harian_absolut'] += $selisih;
+            $insertData[count($insertData) - 1]['target_kumulatif_absolut'] += $selisih;
+        }
+
+        $workdaysAfter100 = array_filter($workdays, fn($d) => $d > $tgl100);
+        foreach ($workdaysAfter100 as $date) {
+            $insertData[] = [
+                'id_kegiatan_wilayah' => $idWilayah,
+                'tanggal_target' => $date->format('Y-m-d'),
+                'target_persen_kumulatif' => 100,
+                'target_harian_absolut' => 0,
+                'target_kumulatif_absolut' => $totalTarget,
+                'is_hari_kerja' => 1,
+            ];
+        }
+
+        $kurvaModel->insertBatch($insertData);
+    }
+
+    private function generateKurvaPetugas($idPCL, $target, $persenAwal, $tanggalMulai, $tanggal100, $tanggalSelesai)
+    {
+        $kurvaModel = new \App\Models\KurvaPetugasModel();
+
+        $totalTarget = (int) $target;
+        $persenAwal = (float) $persenAwal;
+
+        $start = new DateTime($tanggalMulai);
+        $tgl100 = new DateTime($tanggal100);
+        $end = new DateTime($tanggalSelesai);
+        $end->modify('+1 day');
+
+        $interval = new DateInterval('P1D');
+        $periodTotal = iterator_to_array(new DatePeriod($start, $interval, $end));
+        $workdays = array_filter($periodTotal, fn($d) => $d->format('N') <= 5);
+        $workdays = array_values($workdays);
+        $workdaysUntil100 = array_filter($workdays, fn($d) => $d <= $tgl100);
+        $workdaysUntil100 = array_values($workdaysUntil100);
+
+        $daysSigmoid = max(count($workdaysUntil100), 2);
+        $k = 8;
+        $x0 = 0.5;
+        $sigmoidMin = 1 / (1 + exp(-$k * (0 - $x0)));
+        $sigmoidMax = 1 / (1 + exp(-$k * (1 - $x0)));
+
+        $workdayData = [];
+        foreach ($workdaysUntil100 as $i => $date) {
+            $progress = $i / ($daysSigmoid - 1);
+            $sigmoid = 1 / (1 + exp(-$k * ($progress - $x0)));
+            $normalizedSigmoid = ($sigmoid - $sigmoidMin) / ($sigmoidMax - $sigmoidMin);
+            $kumulatifPersen = $persenAwal + (100 - $persenAwal) * $normalizedSigmoid;
+            if ($kumulatifPersen > 100)
+                $kumulatifPersen = 100;
+            $workdayData[$date->format('Y-m-d')] = $kumulatifPersen;
+        }
+
+        $kumulatifAbsolut = 0;
+        $insertData = [];
+        foreach ($workdaysUntil100 as $date) {
+            $currentDate = $date->format('Y-m-d');
+            $kumulatifPersen = $workdayData[$currentDate];
+            $harianAbsolut = round(($totalTarget * ($kumulatifPersen / 100)) - $kumulatifAbsolut);
+            $kumulatifAbsolut += $harianAbsolut;
+
+            $insertData[] = [
+                'id_pcl' => $idPCL,
+                'tanggal_target' => $currentDate,
+                'target_persen_kumulatif' => round($kumulatifPersen, 2),
+                'target_harian_absolut' => $harianAbsolut,
+                'target_kumulatif_absolut' => $kumulatifAbsolut,
+                'is_hari_kerja' => 1
+            ];
+        }
+
+        $selisih = $totalTarget - $kumulatifAbsolut;
+        if (!empty($insertData) && $selisih !== 0) {
+            $insertData[count($insertData) - 1]['target_harian_absolut'] += $selisih;
+            $insertData[count($insertData) - 1]['target_kumulatif_absolut'] += $selisih;
+            $kumulatifAbsolut = $totalTarget;
+        }
+
+        foreach ($insertData as $row) {
+            $kurvaModel->insert($row);
+        }
+
+        $workdaysAfter100 = array_filter($workdays, fn($d) => $d > $tgl100);
+        $workdaysAfter100 = array_values($workdaysAfter100);
+
+        foreach ($workdaysAfter100 as $date) {
+            $currentDate = $date->format('Y-m-d');
+            $kurvaModel->insert([
+                'id_pcl' => $idPCL,
+                'tanggal_target' => $currentDate,
+                'target_persen_kumulatif' => 100,
+                'target_harian_absolut' => 0,
+                'target_kumulatif_absolut' => $totalTarget,
+                'is_hari_kerja' => 1
             ]);
         }
     }

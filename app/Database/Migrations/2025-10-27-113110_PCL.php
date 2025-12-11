@@ -42,6 +42,11 @@ class PCL extends Migration
                 'type' => 'TEXT',
                 'null' => true,
             ],
+            'rating' => [
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => 3,
+            ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,

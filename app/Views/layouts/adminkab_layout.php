@@ -1,3 +1,15 @@
+<?php
+// Get kabupaten name for display
+$kabupatenName = '';
+if (session()->has('user_kabupaten_id')) {
+    $db = \Config\Database::connect();
+    $kab = $db->table('master_kabupaten')
+        ->where('id_kabupaten', session()->get('user_kabupaten_id'))
+        ->get()
+        ->getRowArray();
+    $kabupatenName = $kab['nama_kabupaten'] ?? '';
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -102,6 +114,14 @@
                     <button onclick="toggleSidebar()" class="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
+
+                    <!-- Kabupaten Badge -->
+                    <?php if ($kabupatenName): ?>
+                    <div class="hidden sm:flex items-center px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                        <i class="fas fa-map-marker-alt text-blue-600 text-sm mr-2"></i>
+                        <span class="text-sm font-medium text-blue-900"><?= esc($kabupatenName) ?></span>
+                    </div>
+                    <?php endif; ?>
 
                     <!-- Right Section -->
                     <div class="flex items-center space-x-4 ml-auto">

@@ -4,7 +4,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <div class="flex items-center text-sm text-gray-600 mb-4">
-        <a href="<?= base_url('pemantau') ?>" class="hover:text-blue-600 transition-colors">
+        <a href="<?= base_url('pemantau-provinsi') ?>" class="hover:text-blue-600 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Back
         </a>
     </div>
@@ -17,7 +17,7 @@
 <!-- Main Card -->
 <div class="card">
     <!-- Search dan Filter Section -->
-    <div style="display: grid; grid-template-columns: 1fr 200px 250px; gap: 1rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: 1fr 200px 400px; gap: 1rem; margin-bottom: 1.5rem;">
         <!-- Search Box -->
         <div>
             <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">
@@ -205,7 +205,7 @@
         if (perPage) params.append('perPage', perPage);
         if (kegiatanDetail) params.append('kegiatan_detail', kegiatanDetail);
 
-        window.location.href = '<?= base_url('pemantau/master-kegiatan-detail-proses') ?>?' + params.toString();
+        window.location.href = '<?= base_url('pemantau-provinsi/detail-proses') ?>?' + params.toString();
     }
 
     // Update submit filter untuk preserve perPage
@@ -217,7 +217,7 @@
         if (perPage) params.append('perPage', perPage);
         if (kegiatanDetail) params.append('kegiatan_detail', kegiatanDetail);
 
-        window.location.href = '<?= base_url('pemantau/master-kegiatan-detail-proses') ?>?' + params.toString();
+        window.location.href = '<?= base_url('pemantau-provinsi/detail-proses') ?>?' + params.toString();
     });
 </script>
 

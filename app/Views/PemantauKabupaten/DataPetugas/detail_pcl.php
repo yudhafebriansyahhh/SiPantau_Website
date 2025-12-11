@@ -224,7 +224,27 @@
         <!-- Feedback Tab -->
         <div id="contentFeedback" class="tab-content hidden">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Feedback untuk PCL</h3>
+
+            <!-- Rating Display -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Rating:</label>
+                <div class="flex items-center gap-2">
+                    <div id="currentRatingStars" class="flex gap-1">
+                        <?php
+                        $currentRating = $pcl['rating'] ?? 3;
+                        for ($i = 1; $i <= 5; $i++):
+                            ?>
+                            <i class="fas fa-star text-xl"
+                                style="color: <?= $i <= $currentRating ? '#fbbf24' : '#d1d5db' ?>;"></i>
+                        <?php endfor; ?>
+                    </div>
+                    <span class="text-sm text-gray-600">(<?= $currentRating ?>/5)</span>
+                </div>
+            </div>
+
+            <!-- Feedback Display -->
             <div class="bg-gray-50 rounded-lg p-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Feedback:</label>
                 <p class="text-sm text-gray-700" id="currentFeedback">
                     <?= !empty($pcl['feedback_admin']) ? esc($pcl['feedback_admin']) : '<em class="text-gray-400">Belum ada feedback</em>' ?>
                 </p>

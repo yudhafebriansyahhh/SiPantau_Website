@@ -15,6 +15,7 @@ class PCLModel extends Model
         'status_approval',
         'tanggal_approval',
         'feedback_admin',
+        'rating',  
         'created_at',
         'updated_at'
     ];
