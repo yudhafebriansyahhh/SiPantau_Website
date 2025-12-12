@@ -135,7 +135,6 @@ class KegiatanController extends BaseController
 
     public function totalKegiatanPML()
 {
-    // Ambil & cek token
     $authHeader = $this->request->getHeaderLine('Authorization');
     if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
         return $this->failUnauthorized('Token tidak ditemukan');
@@ -148,18 +147,42 @@ class KegiatanController extends BaseController
         $sobat_id = $decoded->data->sobat_id;
 
         $pmlModel = new PMLModel();
-        $total = $pmlModel->where('sobat_id', $sobat_id)->countAllResults();
+        $pclModel = new PCLModel();
+        $achModel = new SipantauUserAchievementModel();
+
+        // ✔ Total kegiatan PML (tidak dihapus, tetap seperti permintaan)
+        $totalKegiatan = $pmlModel
+            ->where('sobat_id', $sobat_id)
+            ->countAllResults();
+
+        // ✔ Total kegiatan aktif PML
+        $totalAktif = $pmlModel
+            ->join('kegiatan_wilayah kw', 'pml.id_kegiatan_wilayah = kw.id_kegiatan_wilayah')
+            ->join('master_kegiatan_detail_proses mkdp', 'kw.id_kegiatan_detail_proses = mkdp.id_kegiatan_detail_proses')
+            ->where('pml.sobat_id', $sobat_id)
+            ->where('mkdp.tanggal_mulai <=', date('Y-m-d'))
+            ->where('mkdp.tanggal_selesai >=', date('Y-m-d'))
+            ->countAllResults();
+
+        // ✔ Total PCL yang dibawahi PML (jumlah anak PCL)
+        $totalPCL = $pclModel
+            ->join('pml', 'pcl.id_pml = pml.id_pml')
+            ->where('pml.sobat_id', $sobat_id)
+            ->countAllResults();        
 
         return $this->respond([
             'status' => 'success',
             'sobat_id' => $sobat_id,
-            'total_kegiatan_pml' => $total
+            'total_kegiatan_pml' => $totalKegiatan,
+            'total_kegiatan_pml_aktif' => $totalAktif,
+            'total_pcl' => $totalPCL,
         ]);
 
     } catch (\Exception $e) {
         return $this->failUnauthorized("Token tidak valid: " . $e->getMessage());
     }
 }
+
 
 
     public function totalKegiatanPCL()
