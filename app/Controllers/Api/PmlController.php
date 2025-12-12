@@ -6,8 +6,6 @@ use App\Controllers\BaseController;
 use CodeIgniter\API\ResponseTrait;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-
-// GANTI INI SAJA SESUAI FILE MODEL YANG DI SERVER
 use App\Models\PMLModel as PmlModel;
 use App\Models\PCLModel as PclModel;
 
