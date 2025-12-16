@@ -14,6 +14,9 @@ class LoginController extends BaseController
     private const ALLOWED_WEB_ROLES = [1, 2, 3]; // Super Admin, Pemantau Provinsi, Pemantau Kabupaten
     private const MOBILE_ONLY_ROLES = [4, 5]; // Role 4 = Petugas, Role 5 = lainnya (mobile only)
 
+    public function Home() {
+        return view('auth/home');
+    }
     public function index()
     {
         $session = session();
@@ -266,7 +269,7 @@ class LoginController extends BaseController
     }
 
     // Login user dengan role tertentu
-    private function loginWithRole($user, $roleData)
+    public function loginWithRole($user, $roleData)
     {
         $session = session();
         $roleId = $roleData['id'];
@@ -572,12 +575,21 @@ class LoginController extends BaseController
     }
 
     public function logout()
-    {
-        $session = session();
-        $session->destroy();
+{
+    $session = session();
 
-        return redirect()
-            ->to(base_url('login'))
-            ->with('success', 'Anda telah logout.');
-    }
+    // Ambil token jika ingin (opsional, tapi berguna)
+    $accessToken = $session->get('access_token');
+
+    // Destroy session lokal
+    $session->destroy();
+
+    // Redirect ke logout SSO
+    $sso = new \App\Libraries\SSOLibrary();
+
+    return redirect()->to(
+        $sso->getLogoutUrl(base_url('login'))
+    );
+}
+
 }

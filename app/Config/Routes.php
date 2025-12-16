@@ -8,7 +8,7 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // ================== AUTH ==================
-$routes->get('/', 'Auth\LoginController::index');
+$routes->get('/', 'Auth\LoginController::home');
 $routes->get('login', 'Auth\LoginController::index');
 $routes->post('auth/login', 'Auth\LoginController::process');
 $routes->get('logout', 'Auth\LoginController::logout');
@@ -332,3 +332,8 @@ $routes->group('api', [
     $routes->get('achievement/leaderboard', 'AchievementLeaderboardController::index');
     $routes->delete('achievement/reset/(:num)', 'AchievementResetController::resetUser/$1');
 });
+
+//======================SSO=================================
+$routes->get('login/sso/callback', 'Auth\SSOLoginController::callback');
+$routes->get('login/sso', 'Auth\SSOLoginController::login');
+$routes->get('home', 'Auth\LoginController::Home');
